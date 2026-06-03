@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Cesta de Presentes</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: #f5f5f5; color: #1a1a1a; }
+    
+    header { background: #1a1a1a; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
+    header h1 { font-size: 18px; }
+    
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+    .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+    .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
+    .stat-card .value { font-size: 28px; font-weight: 600; color: #c0392b; margin-top: 4px; }
+
+    .table-wrap { max-width: 1200px; margin: 0 auto 40px; padding: 0 24px; overflow-x: auto; }
+    table { width: 100%; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-collapse: collapse; }
+    th { background: #f8f8f8; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #888; }
+    td { padding: 14px 16px; border-top: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
+    tr:hover td { background: #fafafa; }
+
+    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .status-pending  { background: #fff3cd; color: #856404; }
+    .status-paid     { background: #d1e7dd; color: #0a5c36; }
+    .status-enviado  { background: #cfe2ff; color: #084298; }
+    .status-cancelled{ background: #f8d7da; color: #842029; }
+
+    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; font-weight: 500; }
+    .btn-green { background: #d1e7dd; color: #0a5c36; }
+    .btn-blue  { background: #cfe2ff; color: #084298; }
+    .btn-red   { background: #f8d7da; color: #842029; }
+    
+    input[type=text] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 160px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <span>🎁</span>
+  <h1>Painel de Pedidos — Cesta de Presentes</h1>
+</header>
+
+{% set paid = pedidos | selectattr('status', 'equalto', 'paid') | list %}
+{% set pending = pedidos | selectattr('status', 'equalto', 'pending') | list %}
+{% set total_receita = paid | sum(attribute='valor_total') %}
+
+<div class="stats">
+  <div class="stat-card">
+    <div class="label">Total de pedidos</div>
+    <div class="value">{{ pedidos | length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Pedidos pagos</div>
+    <div class="value" style="color:#0a5c36">{{ paid | length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Aguardando pagamento</div>
+    <div class="value" style="color:#856404">{{ pending | length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Receita confirmada</div>
+    <div class="value">R$ {{ "%.0f"|format(total_receita) }}</div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Pedido</th>
+        <th>Cliente</th>
+        <th>E-mail</th>
+        <th>Entrega</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Data</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pedidos %}
+      <tr id="row-{{ p.id }}">
+        <td><strong>#{{ p.numero }}</strong></td>
+        <td>{{ p.nome }}</td>
+        <td style="color:#888">{{ p.email }}</td>
+        <td>
+          {% if p.tipo_entrega == 'retirada' %}
+            <span>🏪 Retirada</span>
+          {% else %}
+            <span title="{{ p.endereco }}">🚚 {{ p.servico_frete or 'Envio' }}</span>
+            {% if p.codigo_rastreio %}
+              <br><small style="color:#084298">{{ p.codigo_rastreio }}</small>
+            {% endif %}
+          {% endif %}
+        </td>
+        <td><strong>R$ {{ "%.2f"|format(p.valor_total) }}</strong></td>
+        <td>
+          <span class="status-badge status-{{ p.status }}">
+            {% if p.status == 'pending' %}Aguardando
+            {% elif p.status == 'paid' %}Pago
+            {% elif p.status == 'enviado' %}Enviado
+            {% elif p.status == 'cancelled' %}Cancelado
+            {% else %}{{ p.status }}{% endif %}
+          </span>
+        </td>
+        <td style="color:#888;font-size:12px">{{ p.criado_em.strftime('%d/%m %H:%M') }}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap">
+          {% if p.status == 'paid' and p.tipo_entrega == 'envio' and not p.codigo_rastreio %}
+          <div style="display:flex;gap:4px">
+            <input type="text" placeholder="Código rastreio" id="rastreio-{{ p.id }}">
+            <button class="btn-sm btn-blue" onclick="enviarRastreio('{{ p.id }}')">✉️ Enviar</button>
+          </div>
+          {% endif %}
+          {% if p.status == 'pending' %}
+          <button class="btn-sm btn-green" onclick="setStatus('{{ p.id }}', 'paid')">✓ Marcar pago</button>
+          {% endif %}
+          {% if p.status not in ['cancelled'] %}
+          <button class="btn-sm btn-red" onclick="setStatus('{{ p.id }}', 'cancelled')">✕</button>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="8" style="text-align:center;color:#888;padding:40px">Nenhum pedido ainda.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<script>
+async function setStatus(id, status) {
+  if (!confirm(`Confirmar status: ${status}?`)) return;
+  await fetch(`/admin/pedido/${id}/status`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ status })
+  });
+  location.reload();
+}
+
+async function enviarRastreio(id) {
+  const codigo = document.getElementById(`rastreio-${id}`).value.trim();
+  if (!codigo) return alert('Digite o código de rastreio');
+  await fetch(`/admin/pedido/${id}/rastreio`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ codigo })
+  });
+  alert('Rastreio enviado por e-mail!');
+  location.reload();
+}
+</script>
+</body>
+</html>

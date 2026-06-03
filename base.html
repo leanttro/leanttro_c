@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Pedido Confirmado — Cesta de Presentes{% endblock %}
+{% block content %}
+<div style="max-width:560px;margin:80px auto;padding:0 24px;text-align:center">
+  <div style="font-size:80px;margin-bottom:24px">🎉</div>
+  <h1 style="font-size:36px;color:var(--brown);margin-bottom:12px">Pedido recebido!</h1>
+  <p style="color:var(--brown-light);font-size:16px;line-height:1.6;margin-bottom:32px">
+    Obrigado, <strong>{{ pedido.nome.split()[0] }}</strong>! Seu pedido <strong>#{{ pedido.numero }}</strong> foi registrado.
+    Você vai receber um e-mail de confirmação em breve.
+  </p>
+  
+  <div style="background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(90,62,43,.08);text-align:left;margin-bottom:32px">
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Pedido</span>
+      <strong>#{{ pedido.numero }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Total</span>
+      <strong style="color:var(--red)">R$ {{ "%.2f"|format(pedido.valor_total)|replace('.', ',') }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Entrega</span>
+      <strong>{{ 'Retirada no local' if pedido.tipo_entrega == 'retirada' else 'Envio pelos Correios' }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0">
+      <span style="color:var(--brown-light)">Status</span>
+      <span class="badge {% if pedido.status == 'paid' %}badge-gold{% else %}badge-red{% endif %}">
+        {{ 'Pago ✓' if pedido.status == 'paid' else 'Aguardando pagamento' }}
+      </span>
+    </div>
+  </div>
+
+  {% if pedido.tipo_entrega == 'retirada' %}
+  <div style="background:var(--warm);border-radius:12px;padding:20px;margin-bottom:32px">
+    <p style="font-size:14px;color:var(--brown)">📍 <strong>Retirada no local</strong> — entraremos em contato pelo WhatsApp para combinar o horário.</p>
+  </div>
+  {% endif %}
+
+  <a href="/" class="btn btn-primary">Ver outras cestas</a>
+</div>
+{% endblock %}

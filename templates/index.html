@@ -3,146 +3,358 @@
 {% block description %}Cestas de café da manhã e presentes para o Dia dos Namorados. Entrega em São Paulo ou retirada no local. Feitas com amor!{% endblock %}
 
 {% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --red: #c60909;
+    --rose: #ff9393;
+    --rose-light: #fff0f0;
+    --off-white: #faf9f7;
+    --ink: #1a1a1a;
+    --ink-muted: #6b6560;
+    --border: #e8e0dc;
+  }
+
+  /* ANNOUNCEMENT BAR */
+  .urgencia-bar {
+    background: var(--red);
+    color: #fff;
+    text-align: center;
+    padding: 11px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+  }
+  .urgencia-bar strong { font-weight: 500; }
+
   /* HERO */
   .hero {
-    background: linear-gradient(135deg, #2d1f14 0%, #5a3e2b 50%, #7a3520 100%);
-    padding: 80px 24px;
+    background: var(--off-white);
+    padding: 100px 24px 80px;
     text-align: center;
     position: relative;
     overflow: hidden;
+    border-bottom: 1px solid var(--border);
   }
   .hero::before {
     content: '';
-    position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(198,9,9,0.06) 0%, transparent 70%);
+    pointer-events: none;
   }
-  .hero-tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3);
-    color: var(--gold); padding: 6px 16px; border-radius: 20px;
-    font-size: 13px; font-weight: 500; margin-bottom: 20px;
+  .hero-eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 24px;
   }
   .hero h1 {
-    font-size: clamp(32px, 6vw, 64px); color: #fff; line-height: 1.1;
-    margin-bottom: 16px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 300;
+    color: var(--ink);
+    line-height: 1.05;
+    margin-bottom: 24px;
+    letter-spacing: -0.01em;
   }
-  .hero h1 em { color: var(--gold); font-style: italic; }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--red);
+  }
   .hero p {
-    font-size: 17px; color: rgba(255,255,255,.7); max-width: 520px;
-    margin: 0 auto 32px; line-height: 1.7;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    color: var(--ink-muted);
+    max-width: 460px;
+    margin: 0 auto 40px;
+    line-height: 1.75;
+    font-weight: 300;
   }
-  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-actions {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  }
   .hero-trust {
-    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
-    margin-top: 48px; padding-top: 32px;
-    border-top: 1px solid rgba(255,255,255,.1);
+    display: flex; gap: 40px; justify-content: center; flex-wrap: wrap;
+    margin-top: 64px; padding-top: 40px;
+    border-top: 1px solid var(--border);
   }
-  .trust-item { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.6); font-size: 13px; }
-  .trust-item strong { color: #fff; }
+  .trust-item {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    color: var(--ink-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .trust-item strong {
+    display: block;
+    color: var(--ink);
+    font-weight: 500;
+    font-size: 13px;
+    margin-bottom: 2px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
 
   /* CESTAS */
-  #cestas { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
-  .section-header { text-align: center; margin-bottom: 48px; }
-  .section-header h2 { font-size: 36px; color: var(--brown); margin-bottom: 8px; }
-  .section-header p { color: var(--brown-light); font-size: 16px; }
+  #cestas {
+    padding: 96px 24px;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 64px;
+  }
+  .section-header .label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 16px;
+  }
+  .section-header h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 4vw, 48px);
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .section-header p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink-muted);
+    font-weight: 300;
+  }
 
   .cestas-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 28px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 2px;
+    background: var(--border);
+    border: 1px solid var(--border);
   }
   .cesta-card {
     background: #fff;
-    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 2px 16px rgba(90,62,43,.08);
-    transition: transform .25s, box-shadow .25s;
     position: relative;
+    transition: background 0.2s;
   }
-  .cesta-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(90,62,43,.15); }
-  .cesta-card.destaque { border: 2px solid var(--gold); }
+  .cesta-card:hover { background: var(--rose-light); }
+  .cesta-card.destaque { background: var(--ink); }
+  .cesta-card.destaque:hover { background: #2a2a2a; }
   .destaque-badge {
-    position: absolute; top: 16px; right: 16px;
-    background: var(--gold); color: #fff;
-    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px;
+    position: absolute; top: 20px; left: 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    background: #fff;
+    padding: 4px 10px;
   }
   .cesta-img {
-    width: 100%; height: 220px; object-fit: cover;
-    background: linear-gradient(135deg, var(--warm), #e8d5b7);
+    width: 100%; height: 260px;
+    background: var(--rose-light);
     display: flex; align-items: center; justify-content: center;
-    font-size: 80px;
+    overflow: hidden;
   }
-  .cesta-body { padding: 24px; }
-  .cesta-body h3 { font-size: 22px; color: var(--brown); margin-bottom: 6px; }
-  .cesta-body .descricao { font-size: 14px; color: var(--brown-light); line-height: 1.6; margin-bottom: 16px; }
-  .cesta-itens { list-style: none; margin-bottom: 20px; }
-  .cesta-itens li { font-size: 13px; color: var(--brown-light); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
-  .cesta-itens li::before { content: '✓'; color: var(--gold); font-weight: bold; }
-  .cesta-preco { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-  .preco-valor { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--red); font-weight: 700; }
-  .preco-label { font-size: 12px; color: var(--brown-light); display: block; }
+  .cesta-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cesta-body { padding: 28px 32px 32px; }
+  .cesta-body h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .cesta-card.destaque .cesta-body h3 { color: #fff; }
+  .cesta-body .descricao {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 20px;
+    font-weight: 300;
+  }
+  .cesta-card.destaque .descricao { color: rgba(255,255,255,0.5); }
+  .cesta-itens { list-style: none; margin-bottom: 28px; }
+  .cesta-itens li {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cesta-card.destaque .cesta-itens li { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.08); }
+  .cesta-itens li::before {
+    content: '';
+    width: 4px; height: 4px;
+    background: var(--red);
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .cesta-preco {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .cesta-card.destaque .cesta-preco { border-color: rgba(255,255,255,0.12); }
+  .preco-label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
+  .preco-valor {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 400;
+    color: var(--red);
+    line-height: 1;
+  }
+  .cesta-card.destaque .preco-valor { color: var(--rose); }
 
   /* COMO FUNCIONA */
-  #como-funciona { background: var(--warm); padding: 80px 24px; }
-  #como-funciona > * { max-width: 900px; margin: 0 auto; }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-top: 48px; }
-  .step { text-align: center; }
-  .step-icon { width: 64px; height: 64px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(90,62,43,.1); }
-  .step h4 { font-size: 16px; color: var(--brown); margin-bottom: 6px; }
-  .step p { font-size: 13px; color: var(--brown-light); line-height: 1.6; }
-
-  /* URGÊNCIA */
-  .urgencia-bar {
-    background: linear-gradient(90deg, var(--red), #e74c3c);
-    color: #fff; text-align: center;
-    padding: 12px 24px; font-size: 14px; font-weight: 500;
+  #como-funciona {
+    background: var(--ink);
+    padding: 96px 24px;
   }
-  .urgencia-bar strong { font-weight: 700; }
+  #como-funciona .inner { max-width: 960px; margin: 0 auto; }
+  #como-funciona .section-header .label { color: var(--rose); }
+  #como-funciona .section-header h2 { color: #fff; }
+  #como-funciona .section-header p { color: rgba(255,255,255,0.4); }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0;
+    margin-top: 64px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .step {
+    padding: 40px 32px;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+  .step:last-child { border-right: none; }
+  .step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--red);
+    opacity: 0.5;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+  .step h4 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 10px;
+  }
+  .step p {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase !important;
+    background: var(--red) !important;
+    color: #fff !important;
+    padding: 14px 28px !important;
+    border-radius: 0 !important;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s !important;
+  }
+  .btn-primary:hover { background: #a00707 !important; }
+  .btn-outline {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--ink);
+    padding: 14px 28px;
+    border-radius: 0;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, color 0.2s;
+  }
+  .btn-outline:hover { background: var(--ink); color: #fff; }
 </style>
 {% endblock %}
 
 {% block content %}
 
 <div class="urgencia-bar">
-  🎀 <strong>Dia dos Namorados — 12 de junho!</strong> Garanta seu presente com tempo. Últimas unidades disponíveis.
+  <strong>Dia dos Namorados — 12 de junho.</strong> Últimas unidades disponíveis. Garanta agora.
 </div>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-tag">🎁 Presentes especiais para momentos únicos</div>
-  <h1>Cestas que<br><em>encantam</em> de verdade</h1>
-  <p>Presentes artesanais feitos com carinho para quem você ama. Café da manhã, Dia dos Namorados, aniversário e muito mais.</p>
+  <p class="hero-eyebrow">Presentes artesanais · São Paulo</p>
+  <h1>Cestas que<br><em>encantam</em></h1>
+  <p>Feitas à mão com ingredientes selecionados. Para o café da manhã, Dia dos Namorados, aniversário — ou qualquer momento que mereça.</p>
   <div class="hero-actions">
-    <a href="#cestas" class="btn btn-primary">Ver cestas 🧺</a>
-    <a href="https://wa.me/5511999999999" target="_blank" class="btn" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)">💬 Falar no WhatsApp</a>
+    <a href="#cestas" class="btn-primary">Ver cestas</a>
+    <a href="https://wa.me/5511999999999" target="_blank" class="btn-outline">Falar no WhatsApp</a>
   </div>
   <div class="hero-trust">
-    <div class="trust-item">✅ <strong>Pagamento seguro</strong> via Mercado Pago</div>
-    <div class="trust-item">🚚 <strong>Entrega</strong> em São Paulo</div>
-    <div class="trust-item">🎀 <strong>Embalagem</strong> premium inclusa</div>
-    <div class="trust-item">💌 <strong>Mensagem</strong> personalizada grátis</div>
+    <div class="trust-item"><strong>Pagamento seguro</strong>Mercado Pago</div>
+    <div class="trust-item"><strong>Entrega</strong>São Paulo</div>
+    <div class="trust-item"><strong>Embalagem premium</strong>inclusa</div>
+    <div class="trust-item"><strong>Mensagem</strong>personalizada grátis</div>
   </div>
 </section>
 
 <!-- CESTAS -->
 <section id="cestas">
   <div class="section-header">
+    <span class="label">Nossos presentes</span>
     <h2>Escolha sua cesta</h2>
-    <p>Todas com embalagem premium, laço e cartão personalizado inclusos</p>
+    <p>Todas com embalagem premium, laço e cartão personalizado</p>
   </div>
 
   <div class="cestas-grid">
     {% for produto in produtos %}
     <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}">
-      {% if loop.index == 2 %}<div class="destaque-badge">⭐ Mais Vendida</div>{% endif %}
-      
+      {% if loop.index == 2 %}<div class="destaque-badge">Mais vendida</div>{% endif %}
+
       <div class="cesta-img">
         {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
-          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" style="width:100%;height:100%;object-fit:cover">
-        {% else %}
-          🧺
+          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}">
         {% endif %}
       </div>
 
@@ -163,7 +375,7 @@
             <span class="preco-label">A partir de</span>
             <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
           </div>
-          <a href="/produto/{{ produto.slug }}" class="btn btn-primary">Quero essa 🎁</a>
+          <a href="/produto/{{ produto.slug }}" class="btn-primary">Pedir esta</a>
         </div>
       </div>
     </div>
@@ -173,30 +385,31 @@
 
 <!-- COMO FUNCIONA -->
 <section id="como-funciona">
-  <div>
+  <div class="inner">
     <div class="section-header">
-      <h2>Como funciona?</h2>
+      <span class="label">Processo</span>
+      <h2>Como funciona</h2>
       <p>Simples, rápido e seguro</p>
     </div>
     <div class="steps">
       <div class="step">
-        <div class="step-icon">🧺</div>
-        <h4>1. Escolha a cesta</h4>
+        <div class="step-num">01</div>
+        <h4>Escolha a cesta</h4>
         <p>Selecione o modelo ideal para a ocasião e o presenteado</p>
       </div>
       <div class="step">
-        <div class="step-icon">💳</div>
-        <h4>2. Pague com segurança</h4>
+        <div class="step-num">02</div>
+        <h4>Pague com segurança</h4>
         <p>Pix, cartão ou boleto via Mercado Pago — 100% seguro</p>
       </div>
       <div class="step">
-        <div class="step-icon">🎀</div>
-        <h4>3. Montamos com carinho</h4>
+        <div class="step-num">03</div>
+        <h4>Montamos com cuidado</h4>
         <p>Sua cesta é montada e embalada com muito capricho</p>
       </div>
       <div class="step">
-        <div class="step-icon">🚚</div>
-        <h4>4. Entregamos ou retirada</h4>
+        <div class="step-num">04</div>
+        <h4>Entregamos ou retirada</h4>
         <p>Enviamos pelo Melhor Envio ou retire no local sem custo</p>
       </div>
     </div>

@@ -354,10 +354,8 @@
             </td>
             <td>
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-                <!-- Ver detalhes -->
                 <button class="btn btn-ghost btn-sm" onclick="verDetalhe('{{ p.id }}')">👁</button>
 
-                <!-- Rastreio -->
                 {% if p.status == 'paid' and p.tipo_entrega == 'envio' and not p.codigo_rastreio %}
                 <div class="rastreio-form">
                   <input type="text" placeholder="Rastreio" id="rastreio-{{ p.id }}">
@@ -365,12 +363,10 @@
                 </div>
                 {% endif %}
 
-                <!-- Marcar pago -->
                 {% if p.status == 'pending' %}
                 <button class="btn btn-sm btn-green-sm" onclick="setStatus('{{ p.id }}', 'paid')">✓ Pago</button>
                 {% endif %}
 
-                <!-- Cancelar -->
                 {% if p.status not in ['cancelled'] %}
                 <button class="btn btn-sm btn-red-sm" onclick="setStatus('{{ p.id }}', 'cancelled')" title="Cancelar">✕</button>
                 {% endif %}
@@ -665,12 +661,11 @@ async function enviarRastreio(id) {
 const PEDIDOS = {{ pedidos | tojson }};
 
 function verDetalhe(id) {
-  const p = PEDIDOS.find(x => x.id === id);
+  const p = PEDIDOS.find(x => x.id == id);
   if (!p) return;
 
   document.getElementById('detalhe-titulo').textContent = `Pedido #${p.numero}`;
 
-  const statusLabel = { pending: '⏳ Aguardando', paid: '✓ Pago', enviado: '📦 Enviado', cancelled: '✕ Cancelado' };
   const itens = (p.itens || []).map(i => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)">
     <span>${i.nome_produto} × ${i.quantidade}</span>
     <span style="color:var(--accent)">R$ ${parseFloat(i.preco_unitario).toFixed(2)}</span>
@@ -735,7 +730,8 @@ function abrirModalProduto() {
   document.getElementById('produto-modal-titulo').textContent = 'Novo Produto';
   document.getElementById('produto-id').value = '';
   ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura','comprimento'].forEach(f => {
-    document.getElementById('produto-' + f).value = '';
+    const el = document.getElementById('produto-' + f);
+    if (el) el.value = '';
   });
   document.getElementById('modal-produto').classList.add('open');
 }
@@ -759,27 +755,44 @@ async function salvarProduto() {
     comprimento: parseInt(document.getElementById('produto-comprimento').value) || 20,
   };
 
-  if (!payload.nome || !payload.slug || !payload.preco) {
-    return toast('Preencha nome, slug e preço', 'error');
+  if (!payload.nome || !payload.slug || isNaN(payload.preco)) {
+    toast('Preencha nome, slug e preço', 'error');
+    return;
   }
 
-  // Sempre usa POST (backend tem POST para criar e editar)
-  const url = id ? `/admin/produto/${id}` : '/admin/produto';
-  const method = 'POST';
+  // Se tem ID numérico, usa a rota de edição; senão, cria novo
+  let url = '/admin/produto';
+  let method = 'POST';
+  if (id && !isNaN(parseInt(id))) {
+    url = `/admin/produto/${parseInt(id)}`;
+    method = 'POST'; // backend aceita POST para editar
+  }
 
-  const r = await fetch(url, {
-    method,
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(payload)
-  });
+  try {
+    const r = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-  if (r.ok) {
-    toast(id ? 'Produto atualizado!' : 'Produto criado!');
-    fecharModal('modal-produto');
-    setTimeout(() => location.reload(), 800);
-  } else {
-    const err = await r.json().catch(() => ({}));
-    toast(err.erro || 'Erro ao salvar produto', 'error');
+    if (r.ok) {
+      toast(id ? 'Produto atualizado!' : 'Produto criado!');
+      fecharModal('modal-produto');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      let erroMsg = `Erro ${r.status}`;
+      try {
+        const errData = await r.json();
+        erroMsg = errData.erro || errData.message || JSON.stringify(errData);
+      } catch(e) {
+        erroMsg = await r.text();
+      }
+      toast(`Erro: ${erroMsg}`, 'error');
+      console.error('Resposta do servidor:', erroMsg);
+    }
+  } catch (err) {
+    toast('Erro de rede: ' + err.message, 'error');
+    console.error(err);
   }
 }
 
@@ -815,40 +828,58 @@ document.getElementById('produto-nome').addEventListener('input', function() {
 
 // Inicializa contagem
 filtrarPedidos();
-</script>
 
-<script>
+// Mapeamento de produtos para edição
 const PRODUTOS_MAP = {
   {% for p in produtos %}
-  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo} | tojson }}{{ "," if not loop.last }}
+  "{{ p.id }}": {
+    id: {{ p.id }},
+    nome: {{ p.nome|tojson }},
+    slug: {{ p.slug|tojson }},
+    descricao: {{ p.descricao|tojson }},
+    itens: {{ p.itens|tojson }},
+    preco: {{ p.preco }},
+    imagem: {{ p.imagem|tojson }},
+    peso: {{ p.peso }},
+    altura: {{ p.altura }},
+    largura: {{ p.largura }},
+    comprimento: {{ p.comprimento }},
+    ativo: {{ p.ativo|tojson }}
+  }{% if not loop.last %},{% endif %}
   {% endfor %}
 };
 
 function editarProduto(id) {
   const dados = PRODUTOS_MAP[id];
-  if (!dados) return;
+  if (!dados) {
+    toast('Produto não encontrado', 'error');
+    return;
+  }
   document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
-  document.getElementById('produto-id').value = id;
+  document.getElementById('produto-id').value = dados.id;
   document.getElementById('produto-nome').value = dados.nome || '';
   document.getElementById('produto-slug').value = dados.slug || '';
   document.getElementById('produto-preco').value = dados.preco || '';
   document.getElementById('produto-descricao').value = dados.descricao || '';
+  // Converter itens (pode ser array ou string JSON) para texto com quebra de linha
+  let itensText = '';
+  if (Array.isArray(dados.itens)) {
+    itensText = dados.itens.join('\n');
+  } else if (typeof dados.itens === 'string') {
+    try {
+      const parsed = JSON.parse(dados.itens);
+      if (Array.isArray(parsed)) itensText = parsed.join('\n');
+      else itensText = dados.itens;
+    } catch(e) {
+      itensText = dados.itens;
+    }
+  }
+  document.getElementById('produto-itens').value = itensText;
   document.getElementById('produto-imagem').value = dados.imagem || '';
   document.getElementById('produto-peso').value = dados.peso || '';
   document.getElementById('produto-altura').value = dados.altura || '';
   document.getElementById('produto-largura').value = dados.largura || '';
   document.getElementById('produto-comprimento').value = dados.comprimento || '';
-
-  let itens = dados.itens || '[]';
-  if (typeof itens === 'string') {
-    // Se for uma string JSON, converte para array e junta com \n
-    if (itens.startsWith('[')) {
-      try { itens = JSON.parse(itens); } catch(e) { itens = []; }
-    } else {
-      itens = itens.split('\n').filter(l => l.trim());
-    }
-  }
-  document.getElementById('produto-itens').value = Array.isArray(itens) ? itens.join('\n') : '';
   document.getElementById('modal-produto').classList.add('open');
 }
 </script>

@@ -748,11 +748,12 @@ async function salvarProduto() {
     slug: document.getElementById('produto-slug').value.trim(),
     preco: parseFloat(document.getElementById('produto-preco').value),
     descricao: document.getElementById('produto-descricao').value.trim(),
-    itens: JSON.stringify(itensList),
+    itens: document.getElementById('produto-itens').value,
     imagem: document.getElementById('produto-imagem').value.trim(),
     peso: parseFloat(document.getElementById('produto-peso').value) || 2.0,
     altura: parseInt(document.getElementById('produto-altura').value) || 20,
     largura: parseInt(document.getElementById('produto-largura').value) || 30,
+    comprimento: parseInt(document.getElementById('produto-comprimento').value) || 30,
   };
 
   if (!payload.nome || !payload.slug || !payload.preco) {
@@ -760,7 +761,7 @@ async function salvarProduto() {
   }
 
   const url = id ? `/admin/produto/${id}` : '/admin/produto';
-  const method = id ? 'PUT' : 'POST';
+  const method = 'POST';
 
   const r = await fetch(url, {
     method,

@@ -296,7 +296,7 @@ def criar_produto():
     db.session.commit()
     return jsonify({'ok': True, 'id': p.id})
 
-@app.route('/admin/produto/<int:produto_id>', methods=['POST'])
+@app.route('/admin/produto/<produto_id>', methods=['POST'])
 def editar_produto(produto_id):
     if not admin_logado(): abort(401)
     p = Produto.query.get_or_404(produto_id)
@@ -314,7 +314,7 @@ def editar_produto(produto_id):
     db.session.commit()
     return jsonify({'ok': True})
 
-@app.route('/admin/produto/<int:produto_id>', methods=['DELETE'])
+@app.route('/admin/produto/<produto_id>', methods=['DELETE'])
 def excluir_produto(produto_id):
     if not admin_logado(): abort(401)
     p = Produto.query.get_or_404(produto_id)
@@ -322,7 +322,7 @@ def excluir_produto(produto_id):
     db.session.commit()
     return jsonify({'ok': True})
 
-@app.route('/admin/produto/<int:produto_id>/toggle', methods=['POST'])
+@app.route('/admin/produto/<produto_id>/toggle', methods=['POST'])
 def toggle_produto(produto_id):
     if not admin_logado(): abort(401)
     p = Produto.query.get_or_404(produto_id)

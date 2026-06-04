@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, jsonify, abort
+from flask import Flask, render_template, request, jsonify, abort, session, redirect, url_for
 from models import db, Produto, Pedido, ItemPedido
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
-import os, requests, json, hmac, hashlib
+import os, requests, json, bcrypt
 from datetime import datetime
 from decimal import Decimal
 
@@ -15,16 +15,19 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
 db.init_app(app)
 register_filters(app)
 
-MP_TOKEN = os.getenv('MP_ACCESS_TOKEN')
-ME_TOKEN = os.getenv('MELHORENVIO_TOKEN')
-ME_URL   = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
+MP_TOKEN  = os.getenv('MP_ACCESS_TOKEN')
+ME_TOKEN  = os.getenv('MELHORENVIO_TOKEN')
+ME_URL    = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
 CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
-BASE_URL = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
+BASE_URL  = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
 
 def gerar_numero_pedido():
     hoje = datetime.utcnow().strftime('%Y%m%d')
     count = Pedido.query.filter(Pedido.numero.like(f'CP-{hoje}-%')).count()
     return f"CP-{hoje}-{str(count+1).zfill(3)}"
+
+def admin_logado():
+    return session.get('admin_id') is not None
 
 # ─── ROTAS PÚBLICAS ──────────────────────────────────────────────
 
@@ -55,7 +58,7 @@ def calcular_frete():
     data = request.json
     cep = data.get('cep', '').replace('-', '')
     produto_id = data.get('produto_id')
-    
+
     if not cep or len(cep) != 8:
         return jsonify({'erro': 'CEP inválido'}), 400
 
@@ -80,14 +83,14 @@ def calcular_frete():
             'weight': produto.peso
         },
         'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False},
-        'services': '1,2,17'  # PAC, SEDEX, Mini
+        'services': '1,2,17'
     }
 
     try:
         resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
         if resp.status_code != 200:
             return jsonify({'erro': 'Erro ao calcular frete'}), 502
-        
+
         opcoes = []
         for s in resp.json():
             if s.get('error') or not s.get('price'):
@@ -100,7 +103,7 @@ def calcular_frete():
                 'prazo': s.get('delivery_time', 7),
                 'logo': s['company'].get('picture', '')
             })
-        
+
         opcoes.sort(key=lambda x: x['preco'])
         return jsonify(opcoes)
     except Exception as e:
@@ -118,7 +121,6 @@ def criar_preferencia():
     valor_frete = Decimal(str(data.get('valor_frete', 0)))
     total = produto.preco + valor_frete
 
-    # Salva pedido como pendente
     pedido = Pedido(
         numero=gerar_numero_pedido(),
         nome=data['nome'],
@@ -146,7 +148,6 @@ def criar_preferencia():
     db.session.add(item)
     db.session.commit()
 
-    # Cria preferência no MP
     preference = {
         'items': [{
             'title': produto.nome,
@@ -202,7 +203,7 @@ def webhook_mp():
         if resp.status_code == 200:
             payment = resp.json()
             pedido_id = payment.get('external_reference')
-            status_mp = payment.get('status')  # approved, rejected, pending
+            status_mp = payment.get('status')
 
             if pedido_id:
                 pedido = Pedido.query.get(pedido_id)
@@ -211,7 +212,6 @@ def webhook_mp():
                     if status_mp == 'approved' and pedido.status != 'paid':
                         pedido.status = 'paid'
                         db.session.commit()
-                        # Envia e-mails
                         email_pedido_confirmado(pedido, pedido.itens)
                         email_novo_pedido_admin(pedido, pedido.itens)
                     elif status_mp in ('rejected', 'cancelled'):
@@ -220,15 +220,52 @@ def webhook_mp():
 
     return jsonify({'status': 'ok'}), 200
 
-# ─── ADMIN ───────────────────────────────────────────────────────
+# ─── ADMIN: LOGIN ─────────────────────────────────────────────────
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if admin_logado():
+        return redirect(url_for('admin'))
+
+    erro = None
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        senha = request.form.get('senha', '')
+
+        # Busca direto no banco via psycopg2 (tabela admins não está no SQLAlchemy)
+        from sqlalchemy import text
+        row = db.session.execute(
+            text("SELECT id, senha_hash, ativo FROM admins WHERE email = :email"),
+            {'email': email}
+        ).fetchone()
+
+        if row and row.ativo and bcrypt.checkpw(senha.encode(), row.senha_hash.encode()):
+            session['admin_id'] = str(row.id)
+            session.permanent = True
+            return redirect(url_for('admin'))
+        else:
+            erro = 'E-mail ou senha incorretos.'
+
+    return render_template('admin_login.html', erro=erro)
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.clear()
+    return redirect(url_for('admin_login'))
+
+# ─── ADMIN: PAINEL ────────────────────────────────────────────────
 
 @app.route('/admin')
 def admin():
+    if not admin_logado():
+        return redirect(url_for('admin_login'))
     pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
     return render_template('admin.html', pedidos=pedidos)
 
 @app.route('/admin/pedido/<pedido_id>/rastreio', methods=['POST'])
 def atualizar_rastreio(pedido_id):
+    if not admin_logado():
+        abort(401)
     pedido = Pedido.query.get_or_404(pedido_id)
     pedido.codigo_rastreio = request.json.get('codigo')
     pedido.status = 'enviado'
@@ -238,6 +275,8 @@ def atualizar_rastreio(pedido_id):
 
 @app.route('/admin/pedido/<pedido_id>/status', methods=['POST'])
 def atualizar_status(pedido_id):
+    if not admin_logado():
+        abort(401)
     pedido = Pedido.query.get_or_404(pedido_id)
     pedido.status = request.json.get('status')
     db.session.commit()
@@ -247,7 +286,6 @@ def atualizar_status(pedido_id):
 
 with app.app_context():
     db.create_all()
-    # Seed dos 3 produtos se não existirem
     if Produto.query.count() == 0:
         produtos_seed = [
             Produto(

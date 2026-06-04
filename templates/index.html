@@ -51,7 +51,7 @@
   /* HERO */
   .hero {
     background: var(--off-white);
-    padding: 100px 24px 80px;
+    padding: 50px 24px 40px;
     text-align: center;
     position: relative;
     overflow: hidden;
@@ -69,9 +69,8 @@
   .hero-deco {
     font-size: 52px;
     line-height: 1;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     display: inline-block;
-    animation: floatHeart 3s ease-in-out infinite;
   }
   .hero-eyebrow {
     font-family: 'Montserrat', sans-serif;
@@ -80,8 +79,9 @@
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: var(--red);
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     opacity: 0.85;
+    white-space: nowrap;
   }
   .hero h1 {
     font-family: 'Montserrat', sans-serif;
@@ -89,7 +89,7 @@
     font-weight: 800;
     color: var(--ink);
     line-height: 1.08;
-    margin-bottom: 24px;
+    margin-bottom: 14px;
     letter-spacing: -0.03em;
   }
   .hero h1 em {
@@ -102,7 +102,7 @@
     font-size: 16px;
     color: var(--ink-muted);
     max-width: 480px;
-    margin: 0 auto 44px;
+    margin: 0 auto 22px;
     line-height: 1.8;
     font-weight: 400;
   }
@@ -111,7 +111,7 @@
   }
   .hero-trust {
     display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
-    margin-top: 64px; padding-top: 40px;
+    margin-top: 32px; padding-top: 20px;
     border-top: 1px solid var(--border);
   }
   .trust-item {
@@ -374,6 +374,17 @@
   .cesta-card.destaque .btn-primary {
     animation: pulse-ring 2.5s ease-in-out infinite;
   }
+
+  @media (max-width: 480px) {
+    .hero-eyebrow {
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      white-space: normal;
+    }
+    .hero-trust {
+      gap: 20px;
+    }
+  }
 </style>
 {% endblock %}
 
@@ -385,7 +396,7 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-deco">🧺</div>
+  <div class="hero-deco"><img src="data:image/jpeg;base64,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" alt="Cesta de Presentes" style="width:68px;height:68px;object-fit:contain;border-radius:16px;"></div>
   <p class="hero-eyebrow">Presentes artesanais · São Paulo</p>
   <h1>Cestas que<br><em>encantam</em></h1>
   <p>Feitas à mão com ingredientes selecionados. Para o café da manhã, Dia dos Namorados, aniversário — ou qualquer momento que mereça.</p>

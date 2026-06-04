@@ -30,30 +30,40 @@
       border-bottom: 1px solid var(--warm);
       padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
+      height: 80px;
       position: sticky; top: 0; z-index: 100;
       box-shadow: 0 2px 12px rgba(90,62,43,.06);
     }
-    .nav-logo { display: flex; align-items: center; gap: 10px; }
-    .nav-logo-icon {
-      width: 36px; height: 36px; background: linear-gradient(135deg, var(--red), #e74c3c);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-    }
-    .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--brown); }
+    .nav-logo { display: flex; align-items: center; flex-shrink: 0; }
     .nav-links { display: flex; gap: 24px; }
-    .nav-links a { font-size: 14px; color: var(--brown-light); font-weight: 500; transition: color .2s; }
+    .nav-links a { font-size: 14px; color: var(--brown-light); font-weight: 500; transition: color .2s; white-space: nowrap; }
     .nav-links a:hover { color: var(--red); }
     .nav-cart {
       background: var(--red); color: #fff; border: none; cursor: pointer;
       padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 500;
       display: flex; align-items: center; gap: 6px; transition: background .2s;
+      white-space: nowrap; flex-shrink: 0;
     }
     .nav-cart:hover { background: var(--red-dark); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+    .nav-hamburger span { display: block; width: 24px; height: 2px; background: var(--brown); border-radius: 2px; transition: all .3s; }
+    @media (max-width: 600px) {
+      nav { padding: 0 12px; height: 72px; }
+      .nav-links {
+        display: none; flex-direction: column; gap: 0;
+        position: absolute; top: 72px; left: 0; right: 0;
+        background: #fff; border-bottom: 1px solid var(--warm);
+        box-shadow: 0 4px 12px rgba(0,0,0,.08); z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 14px 20px; border-top: 1px solid var(--warm); font-size: 15px; }
+      .nav-logo img { height: 52px !important; }
+      .nav-hamburger { display: flex; }
+    }
 
     /* FOOTER */
     footer {
-      background: var(--brown); color: var(--warm);
+      background: #c60909; color: var(--warm);
       padding: 40px 24px; margin-top: 80px; text-align: center;
     }
     footer .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: #fff; margin-bottom: 8px; }
@@ -76,26 +86,33 @@
 
 <nav>
   <a href="/" class="nav-logo">
-    <div class="nav-logo-icon">🎁</div>
-    <span class="nav-logo-text">Cesta de Presentes</span>
+    <img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580758/Cesta_de_Presentes_7_syzkuc.png" alt="Cesta de Presentes" style="height:64px;width:auto;display:block;">
   </a>
   <div class="nav-links">
     <a href="/#cestas">Cestas</a>
     <a href="/#como-funciona">Como funciona</a>
     <a href="https://wa.me/5511999999999" target="_blank">WhatsApp</a>
   </div>
-  <a href="/#cestas" class="nav-cart">🛒 Comprar</a>
+  <a href="/#cestas" class="nav-cart">Comprar</a>
+  <button class="nav-hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
 
 {% block content %}{% endblock %}
 
 <footer>
-  <div class="footer-logo">🎁 Cesta de Presentes</div>
+  <div class="footer-logo"><img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580758/Cesta_de_Presentes_7_syzkuc.png" alt="Cesta de Presentes" style="height:56px;width:auto;filter:brightness(0) invert(1);"></div>
   <p style="margin:8px 0">Presenteie com amor e cuidado</p>
   <p style="margin:16px 0 4px"><a href="mailto:contato@cestadepresentes.com.br">contato@cestadepresentes.com.br</a></p>
   <p><a href="https://wa.me/5511999999999" target="_blank">WhatsApp: (11) 99999-9999</a></p>
   <p style="margin-top:24px;font-size:11px;opacity:.4">© 2024 cestadepresentes.com.br — São Paulo, SP</p>
 </footer>
+
+<a href="https://wa.me/5511999999999" target="_blank" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#25d366;color:#fff;border-radius:50px;padding:14px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;text-decoration:none;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.523 5.847L.057 23.882l6.212-1.43A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.007-1.371l-.36-.213-3.687.849.878-3.574-.234-.373A9.818 9.818 0 1 1 12 21.818z"/></svg>
+  WhatsApp
+</a>
 
 </body>
 </html>

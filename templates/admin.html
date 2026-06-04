@@ -415,7 +415,7 @@
             </span>
           </div>
           <div class="product-actions">
-            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editarProduto('{{ p.id }}', {{ p | tojson | safe }})">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editarProduto('{{ p.id }}', {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem, 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo} | tojson | safe }})">✏️ Editar</button>
             <button class="btn btn-sm {% if p.ativo %}btn-yellow-sm{% else %}btn-green-sm{% endif %}"
               onclick="toggleProduto('{{ p.id }}', {{ 'false' if p.ativo else 'true' }})">
               {% if p.ativo %}⏸ Pausar{% else %}▶ Ativar{% endif %}

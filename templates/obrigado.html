@@ -1,206 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Cestas de Presentes Artesanais — Dia dos Namorados{% endblock %}
-{% block description %}Cestas de café da manhã e presentes para o Dia dos Namorados. Entrega em São Paulo ou retirada no local. Feitas com amor!{% endblock %}
-
-{% block head %}
-<style>
-  /* HERO */
-  .hero {
-    background: linear-gradient(135deg, #2d1f14 0%, #5a3e2b 50%, #7a3520 100%);
-    padding: 80px 24px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  }
-  .hero-tag {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3);
-    color: var(--gold); padding: 6px 16px; border-radius: 20px;
-    font-size: 13px; font-weight: 500; margin-bottom: 20px;
-  }
-  .hero h1 {
-    font-size: clamp(32px, 6vw, 64px); color: #fff; line-height: 1.1;
-    margin-bottom: 16px;
-  }
-  .hero h1 em { color: var(--gold); font-style: italic; }
-  .hero p {
-    font-size: 17px; color: rgba(255,255,255,.7); max-width: 520px;
-    margin: 0 auto 32px; line-height: 1.7;
-  }
-  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-  .hero-trust {
-    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
-    margin-top: 48px; padding-top: 32px;
-    border-top: 1px solid rgba(255,255,255,.1);
-  }
-  .trust-item { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.6); font-size: 13px; }
-  .trust-item strong { color: #fff; }
-
-  /* CESTAS */
-  #cestas { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
-  .section-header { text-align: center; margin-bottom: 48px; }
-  .section-header h2 { font-size: 36px; color: var(--brown); margin-bottom: 8px; }
-  .section-header p { color: var(--brown-light); font-size: 16px; }
-
-  .cestas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 28px;
-  }
-  .cesta-card {
-    background: #fff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 2px 16px rgba(90,62,43,.08);
-    transition: transform .25s, box-shadow .25s;
-    position: relative;
-  }
-  .cesta-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(90,62,43,.15); }
-  .cesta-card.destaque { border: 2px solid var(--gold); }
-  .destaque-badge {
-    position: absolute; top: 16px; right: 16px;
-    background: var(--gold); color: #fff;
-    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
-    text-transform: uppercase; letter-spacing: .5px;
-  }
-  .cesta-img {
-    width: 100%; height: 220px; object-fit: cover;
-    background: linear-gradient(135deg, var(--warm), #e8d5b7);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 80px;
-  }
-  .cesta-body { padding: 24px; }
-  .cesta-body h3 { font-size: 22px; color: var(--brown); margin-bottom: 6px; }
-  .cesta-body .descricao { font-size: 14px; color: var(--brown-light); line-height: 1.6; margin-bottom: 16px; }
-  .cesta-itens { list-style: none; margin-bottom: 20px; }
-  .cesta-itens li { font-size: 13px; color: var(--brown-light); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
-  .cesta-itens li::before { content: '✓'; color: var(--gold); font-weight: bold; }
-  .cesta-preco { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-  .preco-valor { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--red); font-weight: 700; }
-  .preco-label { font-size: 12px; color: var(--brown-light); display: block; }
-
-  /* COMO FUNCIONA */
-  #como-funciona { background: var(--warm); padding: 80px 24px; }
-  #como-funciona > * { max-width: 900px; margin: 0 auto; }
-  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-top: 48px; }
-  .step { text-align: center; }
-  .step-icon { width: 64px; height: 64px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(90,62,43,.1); }
-  .step h4 { font-size: 16px; color: var(--brown); margin-bottom: 6px; }
-  .step p { font-size: 13px; color: var(--brown-light); line-height: 1.6; }
-
-  /* URGÊNCIA */
-  .urgencia-bar {
-    background: linear-gradient(90deg, var(--red), #e74c3c);
-    color: #fff; text-align: center;
-    padding: 12px 24px; font-size: 14px; font-weight: 500;
-  }
-  .urgencia-bar strong { font-weight: 700; }
-</style>
-{% endblock %}
-
+{% block title %}Pedido Confirmado — Cesta de Presentes{% endblock %}
 {% block content %}
+<div style="max-width:560px;margin:80px auto;padding:0 24px;text-align:center">
+  <div style="font-size:80px;margin-bottom:24px">🎉</div>
+  <h1 style="font-size:36px;color:var(--brown);margin-bottom:12px">Pedido recebido!</h1>
+  <p style="color:var(--brown-light);font-size:16px;line-height:1.6;margin-bottom:32px">
+    Obrigado, <strong>{{ pedido.nome.split()[0] }}</strong>! Seu pedido <strong>#{{ pedido.numero }}</strong> foi registrado.
+    Você vai receber um e-mail de confirmação em breve.
+  </p>
+  
+  <div style="background:#fff;border-radius:16px;padding:28px;box-shadow:0 2px 16px rgba(90,62,43,.08);text-align:left;margin-bottom:32px">
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Pedido</span>
+      <strong>#{{ pedido.numero }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Total</span>
+      <strong style="color:var(--red)">R$ {{ "%.2f"|format(pedido.valor_total)|replace('.', ',') }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--warm)">
+      <span style="color:var(--brown-light)">Entrega</span>
+      <strong>{{ 'Retirada no local' if pedido.tipo_entrega == 'retirada' else 'Envio pelos Correios' }}</strong>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 0">
+      <span style="color:var(--brown-light)">Status</span>
+      <span class="badge {% if pedido.status == 'paid' %}badge-gold{% else %}badge-red{% endif %}">
+        {{ 'Pago ✓' if pedido.status == 'paid' else 'Aguardando pagamento' }}
+      </span>
+    </div>
+  </div>
 
-<div class="urgencia-bar">
-  🎀 <strong>Dia dos Namorados — 12 de junho!</strong> Garanta seu presente com tempo. Últimas unidades disponíveis.
+  {% if pedido.tipo_entrega == 'retirada' %}
+  <div style="background:var(--warm);border-radius:12px;padding:20px;margin-bottom:32px">
+    <p style="font-size:14px;color:var(--brown)">📍 <strong>Retirada no local</strong> — entraremos em contato pelo WhatsApp para combinar o horário.</p>
+  </div>
+  {% endif %}
+
+  <a href="/" class="btn btn-primary">Ver outras cestas</a>
 </div>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-tag">🎁 Presentes especiais para momentos únicos</div>
-  <h1>Cestas que<br><em>encantam</em> de verdade</h1>
-  <p>Presentes artesanais feitos com carinho para quem você ama. Café da manhã, Dia dos Namorados, aniversário e muito mais.</p>
-  <div class="hero-actions">
-    <a href="#cestas" class="btn btn-primary">Ver cestas 🧺</a>
-    <a href="https://wa.me/5511999999999" target="_blank" class="btn" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)">💬 Falar no WhatsApp</a>
-  </div>
-  <div class="hero-trust">
-    <div class="trust-item">✅ <strong>Pagamento seguro</strong> via Mercado Pago</div>
-    <div class="trust-item">🚚 <strong>Entrega</strong> em São Paulo</div>
-    <div class="trust-item">🎀 <strong>Embalagem</strong> premium inclusa</div>
-    <div class="trust-item">💌 <strong>Mensagem</strong> personalizada grátis</div>
-  </div>
-</section>
-
-<!-- CESTAS -->
-<section id="cestas">
-  <div class="section-header">
-    <h2>Escolha sua cesta</h2>
-    <p>Todas com embalagem premium, laço e cartão personalizado inclusos</p>
-  </div>
-
-  <div class="cestas-grid">
-    {% for produto in produtos %}
-    <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}">
-      {% if loop.index == 2 %}<div class="destaque-badge">⭐ Mais Vendida</div>{% endif %}
-      
-      <div class="cesta-img">
-        {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
-          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" style="width:100%;height:100%;object-fit:cover">
-        {% else %}
-          🧺
-        {% endif %}
-      </div>
-
-      <div class="cesta-body">
-        <h3>{{ produto.nome }}</h3>
-        <p class="descricao">{{ produto.descricao }}</p>
-
-        {% if produto.itens %}
-        <ul class="cesta-itens">
-          {% for item in produto.itens | fromjson %}
-          <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-
-        <div class="cesta-preco">
-          <div>
-            <span class="preco-label">A partir de</span>
-            <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
-          </div>
-          <a href="/produto/{{ produto.slug }}" class="btn btn-primary">Quero essa 🎁</a>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- COMO FUNCIONA -->
-<section id="como-funciona">
-  <div>
-    <div class="section-header">
-      <h2>Como funciona?</h2>
-      <p>Simples, rápido e seguro</p>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-icon">🧺</div>
-        <h4>1. Escolha a cesta</h4>
-        <p>Selecione o modelo ideal para a ocasião e o presenteado</p>
-      </div>
-      <div class="step">
-        <div class="step-icon">💳</div>
-        <h4>2. Pague com segurança</h4>
-        <p>Pix, cartão ou boleto via Mercado Pago — 100% seguro</p>
-      </div>
-      <div class="step">
-        <div class="step-icon">🎀</div>
-        <h4>3. Montamos com carinho</h4>
-        <p>Sua cesta é montada e embalada com muito capricho</p>
-      </div>
-      <div class="step">
-        <div class="step-icon">🚚</div>
-        <h4>4. Entregamos ou retirada</h4>
-        <p>Enviamos pelo Melhor Envio ou retire no local sem custo</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 {% endblock %}

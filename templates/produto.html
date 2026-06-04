@@ -1,157 +1,290 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Cesta de Presentes</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: #f5f5f5; color: #1a1a1a; }
-    
-    header { background: #1a1a1a; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 18px; }
-    
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
-    .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-    .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
-    .stat-card .value { font-size: 28px; font-weight: 600; color: #c0392b; margin-top: 4px; }
+{% extends "base.html" %}
+{% block title %}{{ produto.nome }} — Cesta de Presentes{% endblock %}
+{% block description %}{{ produto.descricao }}{% endblock %}
 
-    .table-wrap { max-width: 1200px; margin: 0 auto 40px; padding: 0 24px; overflow-x: auto; }
-    table { width: 100%; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-collapse: collapse; }
-    th { background: #f8f8f8; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #888; }
-    td { padding: 14px 16px; border-top: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
-    tr:hover td { background: #fafafa; }
+{% block head %}
+<style>
+  .produto-page { max-width: 1000px; margin: 60px auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+  @media(max-width:700px){ .produto-page { grid-template-columns:1fr; } }
+  
+  .produto-img-wrap {
+    background: linear-gradient(135deg, var(--warm), #e8d5b7);
+    border-radius: 20px; aspect-ratio: 1; display: flex; align-items: center;
+    justify-content: center; font-size: 120px; position: sticky; top: 80px;
+    overflow: hidden;
+  }
+  .produto-img-wrap img { width:100%; height:100%; object-fit:cover; }
 
-    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .status-pending  { background: #fff3cd; color: #856404; }
-    .status-paid     { background: #d1e7dd; color: #0a5c36; }
-    .status-enviado  { background: #cfe2ff; color: #084298; }
-    .status-cancelled{ background: #f8d7da; color: #842029; }
+  .produto-info h1 { font-size: 36px; color: var(--brown); margin-bottom: 8px; }
+  .produto-preco { font-family: 'Playfair Display', serif; font-size: 44px; color: var(--red); margin: 16px 0; }
+  .produto-desc { color: var(--brown-light); line-height: 1.7; margin-bottom: 24px; }
+  
+  .itens-lista { background: var(--cream); border: 1px solid var(--warm); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
+  .itens-lista h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--brown-light); margin-bottom: 12px; }
+  .itens-lista ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .itens-lista li { font-size: 13px; color: var(--brown); display: flex; align-items: center; gap: 6px; }
+  .itens-lista li::before { content: '🎀'; font-size: 10px; }
 
-    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; font-weight: 500; }
-    .btn-green { background: #d1e7dd; color: #0a5c36; }
-    .btn-blue  { background: #cfe2ff; color: #084298; }
-    .btn-red   { background: #f8d7da; color: #842029; }
-    
-    input[type=text] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 160px; }
-  </style>
-</head>
-<body>
+  /* FORM CHECKOUT */
+  .checkout-form { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 2px 20px rgba(90,62,43,.08); }
+  .checkout-form h3 { font-size: 20px; color: var(--brown); margin-bottom: 20px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--brown-light); margin-bottom: 6px; }
+  .form-group input, .form-group textarea, .form-group select {
+    width: 100%; padding: 12px 14px; border: 1px solid #e8ddd4; border-radius: 8px;
+    font-size: 14px; font-family: inherit; color: var(--text);
+    background: var(--cream); outline: none; transition: border .2s;
+  }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--red); }
+  
+  .entrega-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+  .entrega-tab {
+    padding: 12px; border: 2px solid #e8ddd4; border-radius: 8px;
+    text-align: center; cursor: pointer; transition: all .2s; font-size: 14px;
+  }
+  .entrega-tab.ativo { border-color: var(--red); background: #fde8e8; color: var(--red); font-weight: 600; }
 
-<header>
-  <span>🎁</span>
-  <h1>Painel de Pedidos — Cesta de Presentes</h1>
-</header>
+  .frete-opcoes { margin: 12px 0; }
+  .frete-opcao {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border: 1px solid #e8ddd4; border-radius: 8px; margin-bottom: 6px; cursor: pointer;
+    transition: border .2s; font-size: 13px;
+  }
+  .frete-opcao:hover, .frete-opcao.selecionado { border-color: var(--red); background: #fde8e8; }
+  
+  .total-row { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--warm); margin-top: 8px; }
+  .total-row.final { font-size: 20px; font-weight: 700; color: var(--red); border-top: 2px solid var(--warm); }
 
-{% set paid = pedidos | selectattr('status', 'equalto', 'paid') | list %}
-{% set pending = pedidos | selectattr('status', 'equalto', 'pending') | list %}
-{% set total_receita = paid | sum(attribute='valor_total') %}
+  #btn-pagar { width: 100%; margin-top: 20px; padding: 16px; font-size: 16px; }
+  #btn-pagar:disabled { opacity: .5; cursor: not-allowed; }
 
-<div class="stats">
-  <div class="stat-card">
-    <div class="label">Total de pedidos</div>
-    <div class="value">{{ pedidos | length }}</div>
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="produto-page">
+
+  <!-- IMAGEM -->
+  <div class="produto-img-wrap">
+    {% if produto.imagem %}
+      <img src="{{ produto.imagem }}" alt="{{ produto.nome }}">
+    {% else %}
+      🧺
+    {% endif %}
   </div>
-  <div class="stat-card">
-    <div class="label">Pedidos pagos</div>
-    <div class="value" style="color:#0a5c36">{{ paid | length }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Aguardando pagamento</div>
-    <div class="value" style="color:#856404">{{ pending | length }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Receita confirmada</div>
-    <div class="value">R$ {{ "%.0f"|format(total_receita) }}</div>
-  </div>
-</div>
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Pedido</th>
-        <th>Cliente</th>
-        <th>E-mail</th>
-        <th>Entrega</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Data</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in pedidos %}
-      <tr id="row-{{ p.id }}">
-        <td><strong>#{{ p.numero }}</strong></td>
-        <td>{{ p.nome }}</td>
-        <td style="color:#888">{{ p.email }}</td>
-        <td>
-          {% if p.tipo_entrega == 'retirada' %}
-            <span>🏪 Retirada</span>
-          {% else %}
-            <span title="{{ p.endereco }}">🚚 {{ p.servico_frete or 'Envio' }}</span>
-            {% if p.codigo_rastreio %}
-              <br><small style="color:#084298">{{ p.codigo_rastreio }}</small>
-            {% endif %}
-          {% endif %}
-        </td>
-        <td><strong>R$ {{ "%.2f"|format(p.valor_total) }}</strong></td>
-        <td>
-          <span class="status-badge status-{{ p.status }}">
-            {% if p.status == 'pending' %}Aguardando
-            {% elif p.status == 'paid' %}Pago
-            {% elif p.status == 'enviado' %}Enviado
-            {% elif p.status == 'cancelled' %}Cancelado
-            {% else %}{{ p.status }}{% endif %}
-          </span>
-        </td>
-        <td style="color:#888;font-size:12px">{{ p.criado_em.strftime('%d/%m %H:%M') }}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
-          {% if p.status == 'paid' and p.tipo_entrega == 'envio' and not p.codigo_rastreio %}
-          <div style="display:flex;gap:4px">
-            <input type="text" placeholder="Código rastreio" id="rastreio-{{ p.id }}">
-            <button class="btn-sm btn-blue" onclick="enviarRastreio('{{ p.id }}')">✉️ Enviar</button>
+  <!-- INFO + CHECKOUT -->
+  <div>
+    <span class="badge badge-red" style="margin-bottom:12px">🎁 Presente especial</span>
+    <h1>{{ produto.nome }}</h1>
+    <p class="produto-desc">{{ produto.descricao }}</p>
+
+    {% if produto.itens %}
+    <div class="itens-lista">
+      <h4>O que vem na cesta</h4>
+      <ul>
+        {% for item in produto.itens | fromjson %}
+        <li>{{ item }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+
+    <!-- FORM CHECKOUT -->
+    <div class="checkout-form">
+      <h3>🛍️ Finalizar pedido</h3>
+
+      <div class="form-group">
+        <label>Seu nome completo</label>
+        <input type="text" id="nome" placeholder="Maria da Silva" required>
+      </div>
+      <div class="form-group">
+        <label>E-mail (para confirmação)</label>
+        <input type="email" id="email" placeholder="maria@email.com" required>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="tel" id="telefone" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Mensagem no cartão (opcional)</label>
+        <textarea id="mensagem" rows="2" placeholder="Ex: Para o amor da minha vida 💕"></textarea>
+      </div>
+
+      <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--brown-light);margin-bottom:8px;display:block">Forma de entrega</label>
+      <div class="entrega-tabs">
+        <div class="entrega-tab ativo" onclick="setEntrega('retirada', this)">🏪 Retirada grátis</div>
+        <div class="entrega-tab" onclick="setEntrega('envio', this)">🚚 Envio</div>
+      </div>
+
+      <div id="secao-envio" style="display:none">
+        <div class="form-group">
+          <label>CEP de entrega</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1" oninput="mascara_cep(this)">
+            <button onclick="calcularFrete()" class="btn btn-outline" style="padding:0 16px;white-space:nowrap">Calcular</button>
           </div>
-          {% endif %}
-          {% if p.status == 'pending' %}
-          <button class="btn-sm btn-green" onclick="setStatus('{{ p.id }}', 'paid')">✓ Marcar pago</button>
-          {% endif %}
-          {% if p.status not in ['cancelled'] %}
-          <button class="btn-sm btn-red" onclick="setStatus('{{ p.id }}', 'cancelled')">✕</button>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="8" style="text-align:center;color:#888;padding:40px">Nenhum pedido ainda.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        </div>
+        <div id="frete-opcoes" class="frete-opcoes"></div>
+        <div id="endereco-wrap" style="display:none" class="form-group">
+          <label>Endereço completo</label>
+          <input type="text" id="endereco" placeholder="Rua, número, complemento, bairro">
+        </div>
+      </div>
+
+      <!-- RESUMO -->
+      <div style="margin-top:16px">
+        <div class="total-row">
+          <span>Cesta: {{ produto.nome }}</span>
+          <span>R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
+        </div>
+        <div class="total-row" id="frete-row" style="display:none">
+          <span>Frete</span>
+          <span id="frete-valor">R$ 0,00</span>
+        </div>
+        <div class="total-row final">
+          <span>Total</span>
+          <span id="total-valor">R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
+        </div>
+      </div>
+
+      <button id="btn-pagar" class="btn btn-primary" onclick="pagar()">
+        🔒 Pagar com segurança
+      </button>
+      <p style="text-align:center;font-size:11px;color:var(--brown-light);margin-top:8px">Pix, cartão ou boleto via Mercado Pago</p>
+    </div>
+  </div>
 </div>
+
+<!-- OUTROS PRODUTOS -->
+{% if outros %}
+<div style="max-width:1000px;margin:0 auto 60px;padding:0 24px">
+  <h2 style="font-size:24px;color:var(--brown);margin-bottom:24px">Outras cestas</h2>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
+    {% for p in outros %}
+    <a href="/produto/{{ p.slug }}" style="background:#fff;border-radius:12px;overflow:hidden;display:block;box-shadow:0 2px 12px rgba(90,62,43,.07);transition:transform .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
+      <div style="height:140px;background:linear-gradient(135deg,var(--warm),#e8d5b7);display:flex;align-items:center;justify-content:center;font-size:60px">🧺</div>
+      <div style="padding:16px">
+        <h4 style="font-size:16px;color:var(--brown)">{{ p.nome }}</h4>
+        <p style="color:var(--red);font-size:18px;font-weight:700;margin-top:4px">R$ {{ "%.0f"|format(p.preco) }}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
 
 <script>
-async function setStatus(id, status) {
-  if (!confirm(`Confirmar status: ${status}?`)) return;
-  await fetch(`/admin/pedido/${id}/status`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ status })
-  });
-  location.reload();
+const PRODUTO_ID = '{{ produto.id }}';
+const PRECO_BASE = {{ produto.preco }};
+let tipoEntrega = 'retirada';
+let freteValor = 0;
+let servicoFrete = '';
+let cepFinal = '';
+let enderecoFinal = '';
+
+function setEntrega(tipo, el) {
+  tipoEntrega = tipo;
+  document.querySelectorAll('.entrega-tab').forEach(t => t.classList.remove('ativo'));
+  el.classList.add('ativo');
+  document.getElementById('secao-envio').style.display = tipo === 'envio' ? 'block' : 'none';
+  if (tipo === 'retirada') {
+    freteValor = 0; servicoFrete = '';
+    document.getElementById('frete-row').style.display = 'none';
+    atualizarTotal();
+  }
 }
 
-async function enviarRastreio(id) {
-  const codigo = document.getElementById(`rastreio-${id}`).value.trim();
-  if (!codigo) return alert('Digite o código de rastreio');
-  await fetch(`/admin/pedido/${id}/rastreio`, {
+function mascara_cep(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
+  input.value = v;
+}
+
+async function calcularFrete() {
+  const cep = document.getElementById('cep').value.replace(/\D/g,'');
+  if (cep.length !== 8) return alert('Digite um CEP válido');
+  cepFinal = cep;
+  
+  const div = document.getElementById('frete-opcoes');
+  div.innerHTML = '<p style="color:var(--brown-light);font-size:13px">Calculando...</p>';
+
+  const resp = await fetch('/api/frete', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ codigo })
+    body: JSON.stringify({ cep, produto_id: PRODUTO_ID })
   });
-  alert('Rastreio enviado por e-mail!');
-  location.reload();
+  const opcoes = await resp.json();
+
+  if (!opcoes.length) { div.innerHTML = '<p style="color:red;font-size:13px">Não foi possível calcular o frete para este CEP.</p>'; return; }
+
+  div.innerHTML = opcoes.slice(0, 4).map(op => `
+    <div class="frete-opcao" onclick="selecionarFrete(this, ${op.preco}, '${op.nome}')" data-preco="${op.preco}" data-nome="${op.nome}">
+      <input type="radio" name="frete" style="accent-color:var(--red)">
+      <div style="flex:1">
+        <strong style="font-size:13px">${op.empresa} ${op.nome}</strong>
+        <span style="color:var(--brown-light);font-size:12px;margin-left:8px">${op.prazo} dias úteis</span>
+      </div>
+      <strong style="color:var(--red)">R$ ${op.preco.toFixed(2).replace('.',',')}</strong>
+    </div>
+  `).join('');
+
+  document.getElementById('endereco-wrap').style.display = 'block';
+}
+
+function selecionarFrete(el, preco, nome) {
+  document.querySelectorAll('.frete-opcao').forEach(e => e.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  el.querySelector('input').checked = true;
+  freteValor = preco; servicoFrete = nome;
+  document.getElementById('frete-row').style.display = 'flex';
+  document.getElementById('frete-valor').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
+  atualizarTotal();
+}
+
+function atualizarTotal() {
+  const total = PRECO_BASE + freteValor;
+  document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+}
+
+async function pagar() {
+  const nome = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!nome || !email) return alert('Preencha nome e e-mail');
+  if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
+
+  const btn = document.getElementById('btn-pagar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processando...';
+
+  enderecoFinal = document.getElementById('endereco')?.value || '';
+
+  const resp = await fetch('/api/criar-preferencia', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      produto_id: PRODUTO_ID,
+      nome, email,
+      telefone: document.getElementById('telefone').value,
+      mensagem: document.getElementById('mensagem').value,
+      tipo_entrega: tipoEntrega,
+      cep: cepFinal,
+      endereco: enderecoFinal,
+      servico_frete: servicoFrete,
+      valor_frete: freteValor
+    })
+  });
+
+  const data = await resp.json();
+  if (data.init_point) {
+    window.location.href = data.init_point;
+  } else {
+    alert('Erro ao processar pedido. Tente novamente.');
+    btn.disabled = false;
+    btn.innerHTML = '🔒 Pagar com segurança';
+  }
 }
 </script>
-</body>
-</html>
+{% endblock %}

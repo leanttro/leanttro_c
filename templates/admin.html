@@ -662,7 +662,7 @@ async function enviarRastreio(id) {
 }
 
 // ── DETALHE PEDIDO ──
-const PEDIDOS = {{ pedidos | tojson }};
+const PEDIDOS = {{ pedidos_json | tojson }};
 
 function verDetalhe(id) {
   const p = PEDIDOS.find(x => x.id === id);

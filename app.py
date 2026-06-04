@@ -1,101 +1,287 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Cesta de Presentes{% endblock %} | cestadepresentes.com.br</title>
-  <meta name="description" content="{% block description %}Cestas de presentes artesanais para todas as ocasiões. Café da manhã, Dia dos Namorados, aniversário e muito mais. Entrega em São Paulo.{% endblock %}">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <style>
-    :root {
-      --cream: #fdf6ee;
-      --warm: #f5e6d0;
-      --red: #c0392b;
-      --red-dark: #962d22;
-      --gold: #c9a84c;
-      --brown: #5a3e2b;
-      --brown-light: #7a6152;
-      --text: #2d1f14;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); }
-    h1,h2,h3 { font-family: 'Playfair Display', serif; }
-    a { text-decoration: none; color: inherit; }
+from flask import Flask, render_template, request, jsonify, abort
+from models import db, Produto, Pedido, ItemPedido
+from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
+from filters import register_filters
+from dotenv import load_dotenv
+import os, requests, json, hmac, hashlib
+from datetime import datetime
+from decimal import Decimal
+
+load_dotenv()
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
+db.init_app(app)
+register_filters(app)
+
+MP_TOKEN = os.getenv('MP_ACCESS_TOKEN')
+ME_TOKEN = os.getenv('MELHORENVIO_TOKEN')
+ME_URL   = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
+CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
+BASE_URL = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
+
+def gerar_numero_pedido():
+    hoje = datetime.utcnow().strftime('%Y%m%d')
+    count = Pedido.query.filter(Pedido.numero.like(f'CP-{hoje}-%')).count()
+    return f"CP-{hoje}-{str(count+1).zfill(3)}"
+
+# ─── ROTAS PÚBLICAS ──────────────────────────────────────────────
+
+@app.route('/')
+def index():
+    produtos = Produto.query.filter_by(ativo=True).order_by(Produto.preco).all()
+    return render_template('index.html', produtos=produtos)
+
+@app.route('/produto/<slug>')
+def produto(slug):
+    p = Produto.query.filter_by(slug=slug, ativo=True).first_or_404()
+    outros = Produto.query.filter(Produto.ativo==True, Produto.id!=p.id).limit(2).all()
+    return render_template('produto.html', produto=p, outros=outros)
+
+@app.route('/checkout')
+def checkout():
+    return render_template('checkout.html')
+
+@app.route('/obrigado/<numero>')
+def obrigado(numero):
+    pedido = Pedido.query.filter_by(numero=numero).first_or_404()
+    return render_template('obrigado.html', pedido=pedido)
+
+# ─── API: FRETE ──────────────────────────────────────────────────
+
+@app.route('/api/frete', methods=['POST'])
+def calcular_frete():
+    data = request.json
+    cep = data.get('cep', '').replace('-', '')
+    produto_id = data.get('produto_id')
     
-    /* NAV */
-    nav {
-      background: #fff;
-      border-bottom: 1px solid var(--warm);
-      padding: 0 24px;
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-      position: sticky; top: 0; z-index: 100;
-      box-shadow: 0 2px 12px rgba(90,62,43,.06);
+    if not cep or len(cep) != 8:
+        return jsonify({'erro': 'CEP inválido'}), 400
+
+    produto = Produto.query.get(produto_id)
+    if not produto:
+        return jsonify({'erro': 'Produto não encontrado'}), 404
+
+    headers = {
+        'Authorization': f'Bearer {ME_TOKEN}',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'cestadepresentes.com.br (contato@cestadepresentes.com.br)'
     }
-    .nav-logo { display: flex; align-items: center; gap: 10px; }
-    .nav-logo-icon {
-      width: 36px; height: 36px; background: linear-gradient(135deg, var(--red), #e74c3c);
-      border-radius: 10px; display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
+
+    payload = {
+        'from': {'postal_code': CEP_ORIGEM},
+        'to': {'postal_code': cep},
+        'package': {
+            'height': produto.altura,
+            'width': produto.largura,
+            'length': produto.comprimento,
+            'weight': produto.peso
+        },
+        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False},
+        'services': '1,2,17'  # PAC, SEDEX, Mini
     }
-    .nav-logo-text { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--brown); }
-    .nav-links { display: flex; gap: 24px; }
-    .nav-links a { font-size: 14px; color: var(--brown-light); font-weight: 500; transition: color .2s; }
-    .nav-links a:hover { color: var(--red); }
-    .nav-cart {
-      background: var(--red); color: #fff; border: none; cursor: pointer;
-      padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 500;
-      display: flex; align-items: center; gap: 6px; transition: background .2s;
+
+    try:
+        resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
+        if resp.status_code != 200:
+            return jsonify({'erro': 'Erro ao calcular frete'}), 502
+        
+        opcoes = []
+        for s in resp.json():
+            if s.get('error') or not s.get('price'):
+                continue
+            opcoes.append({
+                'id': s['id'],
+                'nome': s['name'],
+                'empresa': s['company']['name'],
+                'preco': float(s['price']),
+                'prazo': s.get('delivery_time', 7),
+                'logo': s['company'].get('picture', '')
+            })
+        
+        opcoes.sort(key=lambda x: x['preco'])
+        return jsonify(opcoes)
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+
+# ─── API: CRIAR PREFERÊNCIA MERCADO PAGO ─────────────────────────
+
+@app.route('/api/criar-preferencia', methods=['POST'])
+def criar_preferencia():
+    data = request.json
+    produto = Produto.query.get(data.get('produto_id'))
+    if not produto:
+        return jsonify({'erro': 'Produto não encontrado'}), 404
+
+    valor_frete = Decimal(str(data.get('valor_frete', 0)))
+    total = produto.preco + valor_frete
+
+    # Salva pedido como pendente
+    pedido = Pedido(
+        numero=gerar_numero_pedido(),
+        nome=data['nome'],
+        email=data['email'],
+        telefone=data.get('telefone', ''),
+        tipo_entrega=data.get('tipo_entrega', 'retirada'),
+        cep=data.get('cep', ''),
+        endereco=data.get('endereco', ''),
+        servico_frete=data.get('servico_frete', ''),
+        valor_frete=valor_frete,
+        valor_total=total,
+        mensagem=data.get('mensagem', ''),
+        status='pending'
+    )
+    db.session.add(pedido)
+    db.session.flush()
+
+    item = ItemPedido(
+        pedido_id=pedido.id,
+        produto_id=produto.id,
+        nome_produto=produto.nome,
+        preco_unitario=produto.preco,
+        quantidade=1
+    )
+    db.session.add(item)
+    db.session.commit()
+
+    # Cria preferência no MP
+    preference = {
+        'items': [{
+            'title': produto.nome,
+            'quantity': 1,
+            'unit_price': float(total),
+            'currency_id': 'BRL'
+        }],
+        'payer': {'name': data['nome'], 'email': data['email']},
+        'back_urls': {
+            'success': f'{BASE_URL}/obrigado/{pedido.numero}',
+            'failure': f'{BASE_URL}/checkout?erro=pagamento',
+            'pending': f'{BASE_URL}/obrigado/{pedido.numero}'
+        },
+        'auto_return': 'approved',
+        'external_reference': pedido.id,
+        'notification_url': f'{BASE_URL}/api/webhook/mp',
+        'statement_descriptor': 'CESTADEPRESENTES',
+        'expires': False
     }
-    .nav-cart:hover { background: var(--red-dark); }
 
-    /* FOOTER */
-    footer {
-      background: var(--brown); color: var(--warm);
-      padding: 40px 24px; margin-top: 80px; text-align: center;
-    }
-    footer .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: #fff; margin-bottom: 8px; }
-    footer p { font-size: 13px; opacity: .7; }
-    footer a { color: var(--gold); }
+    resp = requests.post(
+        'https://api.mercadopago.com/checkout/preferences',
+        json=preference,
+        headers={'Authorization': f'Bearer {MP_TOKEN}', 'Content-Type': 'application/json'}
+    )
 
-    /* UTILS */
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border-radius: 10px; font-weight: 500; font-size: 15px; cursor: pointer; transition: all .2s; border: none; }
-    .btn-primary { background: var(--red); color: #fff; }
-    .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(192,57,43,.3); }
-    .btn-outline { background: transparent; border: 2px solid var(--red); color: var(--red); }
-    .btn-outline:hover { background: var(--red); color: #fff; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
-    .badge-gold { background: #fef3cd; color: #9a6f00; }
-    .badge-red { background: #fde8e8; color: var(--red); }
-  </style>
-  {% block head %}{% endblock %}
-</head>
-<body>
+    if resp.status_code != 201:
+        return jsonify({'erro': 'Erro ao criar preferência MP'}), 502
 
-<nav>
-  <a href="/" class="nav-logo">
-    <div class="nav-logo-icon">🎁</div>
-    <span class="nav-logo-text">Cesta de Presentes</span>
-  </a>
-  <div class="nav-links">
-    <a href="/#cestas">Cestas</a>
-    <a href="/#como-funciona">Como funciona</a>
-    <a href="https://wa.me/5511999999999" target="_blank">WhatsApp</a>
-  </div>
-  <a href="/#cestas" class="nav-cart">🛒 Comprar</a>
-</nav>
+    pref_data = resp.json()
+    pedido.mp_preference_id = pref_data['id']
+    db.session.commit()
 
-{% block content %}{% endblock %}
+    return jsonify({
+        'preference_id': pref_data['id'],
+        'init_point': pref_data['init_point'],
+        'numero': pedido.numero
+    })
 
-<footer>
-  <div class="footer-logo">🎁 Cesta de Presentes</div>
-  <p style="margin:8px 0">Presenteie com amor e cuidado</p>
-  <p style="margin:16px 0 4px"><a href="mailto:contato@cestadepresentes.com.br">contato@cestadepresentes.com.br</a></p>
-  <p><a href="https://wa.me/5511999999999" target="_blank">WhatsApp: (11) 99999-9999</a></p>
-  <p style="margin-top:24px;font-size:11px;opacity:.4">© 2024 cestadepresentes.com.br — São Paulo, SP</p>
-</footer>
+# ─── WEBHOOK MERCADO PAGO ─────────────────────────────────────────
 
-</body>
-</html>
+@app.route('/api/webhook/mp', methods=['POST'])
+def webhook_mp():
+    data = request.json or {}
+    topic = data.get('type') or request.args.get('topic')
+    resource_id = data.get('data', {}).get('id') or request.args.get('id')
+
+    if topic == 'payment' and resource_id:
+        resp = requests.get(
+            f'https://api.mercadopago.com/v1/payments/{resource_id}',
+            headers={'Authorization': f'Bearer {MP_TOKEN}'}
+        )
+        if resp.status_code == 200:
+            payment = resp.json()
+            pedido_id = payment.get('external_reference')
+            status_mp = payment.get('status')  # approved, rejected, pending
+
+            if pedido_id:
+                pedido = Pedido.query.get(pedido_id)
+                if pedido:
+                    pedido.mp_payment_id = str(resource_id)
+                    if status_mp == 'approved' and pedido.status != 'paid':
+                        pedido.status = 'paid'
+                        db.session.commit()
+                        # Envia e-mails
+                        email_pedido_confirmado(pedido, pedido.itens)
+                        email_novo_pedido_admin(pedido, pedido.itens)
+                    elif status_mp in ('rejected', 'cancelled'):
+                        pedido.status = 'cancelled'
+                    db.session.commit()
+
+    return jsonify({'status': 'ok'}), 200
+
+# ─── ADMIN ───────────────────────────────────────────────────────
+
+@app.route('/admin')
+def admin():
+    pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
+    return render_template('admin.html', pedidos=pedidos)
+
+@app.route('/admin/pedido/<pedido_id>/rastreio', methods=['POST'])
+def atualizar_rastreio(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    pedido.codigo_rastreio = request.json.get('codigo')
+    pedido.status = 'enviado'
+    db.session.commit()
+    email_pedido_enviado(pedido)
+    return jsonify({'ok': True})
+
+@app.route('/admin/pedido/<pedido_id>/status', methods=['POST'])
+def atualizar_status(pedido_id):
+    pedido = Pedido.query.get_or_404(pedido_id)
+    pedido.status = request.json.get('status')
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ─── INICIALIZAÇÃO ────────────────────────────────────────────────
+
+with app.app_context():
+    db.create_all()
+    # Seed dos 3 produtos se não existirem
+    if Produto.query.count() == 0:
+        produtos_seed = [
+            Produto(
+                nome='Café com Carinho',
+                slug='cafe-com-carinho',
+                descricao='Uma cestinha especial com os melhores produtos para um café da manhã inesquecível. Perfeita para surpreender quem você ama com um presente cheio de carinho.',
+                itens=json.dumps(['Cestinha de palha', 'Biscoito recheado', 'Torrada', 'Geleia importada', 'Achocolatado', 'Caneca', 'Chocolate', 'Laço e embalagem']),
+                preco=Decimal('119.00'),
+                imagem='/static/img/cesta1.jpg',
+                peso=1.5, altura=20, largura=25, comprimento=25
+            ),
+            Produto(
+                nome='Manhã Especial',
+                slug='manha-especial',
+                descricao='Nossa cesta mais vendida! Tudo que você precisa para uma manhã perfeita, com itens selecionados e toque personalizado com o nome do presenteado.',
+                itens=json.dumps(['Tudo da Cesta Básica', 'Suco natural', 'Mel', 'Cookie artesanal', 'Nutella', 'Tag personalizada com nome', 'Papel de seda premium']),
+                preco=Decimal('189.00'),
+                imagem='/static/img/cesta2.jpg',
+                peso=2.5, altura=25, largura=30, comprimento=30
+            ),
+            Produto(
+                nome='Grande Amor',
+                slug='grande-amor',
+                descricao='O presente mais completo e luxuoso para momentos verdadeiramente especiais. Caixa premium com espumante, chocolates finos e muito mais.',
+                itens=json.dumps(['Tudo da Cesta Intermediária', 'Espumante Chandon Mini', 'Ferrero Rocher (3un)', 'Vela aromática', 'Caixa kraft premium', 'Fita cetim e laço elaborado']),
+                preco=Decimal('329.00'),
+                imagem='/static/img/cesta3.jpg',
+                peso=4.0, altura=30, largura=35, comprimento=35
+            ),
+        ]
+        for p in produtos_seed:
+            db.session.add(p)
+        db.session.commit()
+        print("✅ Produtos criados!")
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)

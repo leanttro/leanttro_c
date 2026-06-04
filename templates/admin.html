@@ -572,6 +572,10 @@
           <label>Largura (cm)</label>
           <input type="number" class="form-control" id="produto-largura" placeholder="30">
         </div>
+        <div class="form-row">
+          <label>Comprimento (cm)</label>
+          <input type="number" class="form-control" id="produto-comprimento" placeholder="30">
+        </div>
       </div>
     </div>
     <div class="modal-footer">
@@ -730,7 +734,7 @@ function exportarCSV() {
 function abrirModalProduto() {
   document.getElementById('produto-modal-titulo').textContent = 'Novo Produto';
   document.getElementById('produto-id').value = '';
-  ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura'].forEach(f => {
+  ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura','comprimento'].forEach(f => {
     document.getElementById('produto-' + f).value = '';
   });
   document.getElementById('modal-produto').classList.add('open');
@@ -833,6 +837,7 @@ function editarProduto(id) {
   document.getElementById('produto-peso').value = dados.peso || '';
   document.getElementById('produto-altura').value = dados.altura || '';
   document.getElementById('produto-largura').value = dados.largura || '';
+  document.getElementById('produto-comprimento').value = dados.comprimento || '';
 
   let itens = dados.itens || '[]';
   if (typeof itens === 'string') {

@@ -415,12 +415,12 @@
             </span>
           </div>
           <div class="product-actions">
-            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editarProduto('{{ p.id }}', {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem, 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo} | tojson | safe }})">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editarProduto('{{ p.id }}')">✏️ Editar</button>
             <button class="btn btn-sm {% if p.ativo %}btn-yellow-sm{% else %}btn-green-sm{% endif %}"
               onclick="toggleProduto('{{ p.id }}', {{ 'false' if p.ativo else 'true' }})">
               {% if p.ativo %}⏸ Pausar{% else %}▶ Ativar{% endif %}
             </button>
-            <button class="btn btn-sm btn-red-sm" onclick="excluirProduto('{{ p.id }}', '{{ p.nome }}')">🗑</button>
+            <button class="btn btn-sm btn-red-sm" onclick="excluirProduto('{{ p.id }}')">🗑</button>
           </div>
         </div>
       </div>
@@ -736,25 +736,7 @@ function abrirModalProduto() {
   document.getElementById('modal-produto').classList.add('open');
 }
 
-function editarProduto(id, dados) {
-  document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
-  document.getElementById('produto-id').value = id;
-  document.getElementById('produto-nome').value = dados.nome || '';
-  document.getElementById('produto-slug').value = dados.slug || '';
-  document.getElementById('produto-preco').value = dados.preco || '';
-  document.getElementById('produto-descricao').value = dados.descricao || '';
-  document.getElementById('produto-imagem').value = dados.imagem || '';
-  document.getElementById('produto-peso').value = dados.peso || '';
-  document.getElementById('produto-altura').value = dados.altura || '';
-  document.getElementById('produto-largura').value = dados.largura || '';
 
-  let itens = dados.itens || '[]';
-  if (typeof itens === 'string') {
-    try { itens = JSON.parse(itens); } catch(e) { itens = []; }
-  }
-  document.getElementById('produto-itens').value = Array.isArray(itens) ? itens.join('\n') : '';
-  document.getElementById('modal-produto').classList.add('open');
-}
 
 async function salvarProduto() {
   const id = document.getElementById('produto-id').value;
@@ -806,7 +788,8 @@ async function toggleProduto(id, ativar) {
   else toast('Erro', 'error');
 }
 
-async function excluirProduto(id, nome) {
+async function excluirProduto(id) {
+  const nome = (PRODUTOS_MAP[id] && PRODUTOS_MAP[id].nome) || 'este produto';
   if (!confirm(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return;
   const r = await fetch(`/admin/produto/${id}`, { method: 'DELETE' });
   if (r.ok) { toast('Produto excluído!'); setTimeout(() => location.reload(), 800); }
@@ -827,6 +810,36 @@ document.getElementById('produto-nome').addEventListener('input', function() {
 
 // Inicializa contagem
 filtrarPedidos();
+</script>
+
+<script>
+const PRODUTOS_MAP = {
+  {% for p in produtos %}
+  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo} | tojson }}{{ "," if not loop.last }}
+  {% endfor %}
+};
+
+function editarProduto(id) {
+  const dados = PRODUTOS_MAP[id];
+  if (!dados) return;
+  document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
+  document.getElementById('produto-id').value = id;
+  document.getElementById('produto-nome').value = dados.nome || '';
+  document.getElementById('produto-slug').value = dados.slug || '';
+  document.getElementById('produto-preco').value = dados.preco || '';
+  document.getElementById('produto-descricao').value = dados.descricao || '';
+  document.getElementById('produto-imagem').value = dados.imagem || '';
+  document.getElementById('produto-peso').value = dados.peso || '';
+  document.getElementById('produto-altura').value = dados.altura || '';
+  document.getElementById('produto-largura').value = dados.largura || '';
+
+  let itens = dados.itens || '[]';
+  if (typeof itens === 'string') {
+    try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+  }
+  document.getElementById('produto-itens').value = Array.isArray(itens) ? itens.join('\n') : '';
+  document.getElementById('modal-produto').classList.add('open');
+}
 </script>
 </body>
 </html>

@@ -4,154 +4,829 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — Cesta de Presentes</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Google Analytics — troque G-XXXXXXXXXX pelo seu ID -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
+
   <style>
+    :root {
+      --bg: #f4f5f7;
+      --surface: #ffffff;
+      --surface2: #f0f1f3;
+      --border: #e2e4e8;
+      --accent: #c0392b;
+      --accent2: #e74c3c;
+      --text: #1a1a2e;
+      --muted: #7f8c9a;
+      --green: #27ae60;
+      --blue: #2980b9;
+      --yellow: #e67e22;
+      --red: #e74c3c;
+      --radius: 10px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', sans-serif; background: #f5f5f5; color: #1a1a1a; }
-    
-    header { background: #1a1a1a; color: #fff; padding: 16px 24px; display: flex; align-items: center; gap: 12px; }
-    header h1 { font-size: 18px; }
-    
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
-    .stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-    .stat-card .label { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: .5px; }
-    .stat-card .value { font-size: 28px; font-weight: 600; color: #c0392b; margin-top: 4px; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    .table-wrap { max-width: 1200px; margin: 0 auto 40px; padding: 0 24px; overflow-x: auto; }
-    table { width: 100%; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); border-collapse: collapse; }
-    th { background: #f8f8f8; padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: #888; }
-    td { padding: 14px 16px; border-top: 1px solid #f0f0f0; font-size: 14px; vertical-align: middle; }
-    tr:hover td { background: #fafafa; }
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0; width: 220px; height: 100vh;
+      background: var(--surface); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 100; padding: 24px 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 24px; border-bottom: 1px solid var(--border);
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 17px; color: var(--accent);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .sidebar-logo span { font-size: 22px; }
+    .nav-section { padding: 16px 12px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+      font-size: 14px; color: #555; cursor: pointer; border-radius: 0;
+      transition: all .15s; border: none; background: none; width: 100%; text-align: left;
+      text-decoration: none;
+    }
+    .nav-item:hover, .nav-item.active { color: var(--text); background: var(--surface2); }
+    .nav-item.active { border-left: 3px solid var(--accent); padding-left: 17px; }
+    .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+    .sidebar-footer { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+    .sidebar-footer a { font-size: 13px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .sidebar-footer a:hover { color: var(--red); }
 
-    .status-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-    .status-pending  { background: #fff3cd; color: #856404; }
-    .status-paid     { background: #d1e7dd; color: #0a5c36; }
-    .status-enviado  { background: #cfe2ff; color: #084298; }
-    .status-cancelled{ background: #f8d7da; color: #842029; }
+    /* ── MAIN ── */
+    .main { margin-left: 220px; padding: 32px; min-height: 100vh; }
+    .page-header { margin-bottom: 28px; }
+    .page-title { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700; }
+    .page-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
 
-    .btn-sm { padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; font-weight: 500; }
-    .btn-green { background: #d1e7dd; color: #0a5c36; }
-    .btn-blue  { background: #cfe2ff; color: #084298; }
-    .btn-red   { background: #f8d7da; color: #842029; }
-    
-    input[type=text] { padding: 6px 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 160px; }
+    /* ── TABS ── */
+    .tabs { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; margin-bottom: 24px; width: fit-content; }
+    .tab { padding: 8px 20px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: none; color: var(--muted); transition: all .15s; }
+    .tab.active { background: var(--surface2); color: var(--text); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── STAT CARDS ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 8px; }
+    .stat-value { font-family: 'Inter', sans-serif; font-size: 30px; font-weight: 700; }
+    .stat-value.green { color: var(--green); }
+    .stat-value.yellow { color: var(--yellow); }
+    .stat-value.accent { color: var(--accent); }
+    .stat-value.red { color: var(--red); }
+    .stat-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+    /* ── TOOLBAR ── */
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .search-box {
+      display: flex; align-items: center; gap: 8px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 14px;
+      flex: 1; min-width: 200px;
+    }
+    .search-box input { background: none; border: none; outline: none; color: var(--text); font-size: 14px; width: 100%; font-family: 'Inter', sans-serif; }
+    .search-box input::placeholder { color: var(--muted); }
+    .filter-select {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 8px 14px; color: var(--text); font-size: 14px; cursor: pointer;
+      font-family: 'Inter', sans-serif; outline: none;
+    }
+    .btn { padding: 9px 18px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all .15s; font-family: 'Inter', sans-serif; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-accent:hover { opacity: .85; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: #444; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 6px; }
+    .btn-green-sm { background: rgba(46,204,113,.15); color: #2ecc71; }
+    .btn-blue-sm  { background: rgba(52,152,219,.15); color: #3498db; }
+    .btn-red-sm   { background: rgba(231,76,60,.15);  color: #e74c3c; }
+    .btn-yellow-sm{ background: rgba(243,156,18,.15); color: #f39c12; }
+    .btn-sm:hover { opacity: .75; cursor: pointer; }
+
+    /* ── TABLE ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); background: var(--surface2); font-weight: 500; }
+    tbody td { padding: 14px 16px; font-size: 13px; border-top: 1px solid var(--border); vertical-align: middle; }
+    tbody tr { transition: background .1s; }
+    tbody tr:hover td { background: var(--surface2); }
+    .no-data { text-align: center; padding: 48px; color: var(--muted); }
+
+    /* ── BADGES ── */
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; }
+    .badge-pending  { background: rgba(243,156,18,.15); color: #f39c12; }
+    .badge-paid     { background: rgba(46,204,113,.15);  color: #2ecc71; }
+    .badge-enviado  { background: rgba(52,152,219,.15);  color: #3498db; }
+    .badge-cancelled{ background: rgba(231,76,60,.15);   color: #e74c3c; }
+    .badge-active   { background: rgba(46,204,113,.15);  color: #2ecc71; }
+    .badge-inactive { background: rgba(231,76,60,.15);   color: #e74c3c; }
+
+    /* ── MODAL ── */
+    .modal-backdrop {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35);
+      z-index: 200; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(4px);
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      width: 100%; max-width: 640px; max-height: 90vh; overflow-y: auto;
+    }
+    .modal-header { padding: 24px 28px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .modal-title { font-family: 'Inter', sans-serif; font-size: 18px; font-weight: 700; }
+    .modal-close { background: var(--surface2); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-close:hover { color: var(--text); }
+    .modal-body { padding: 24px 28px; }
+    .modal-footer { padding: 16px 28px 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+    /* ── FORM ── */
+    .form-row { margin-bottom: 18px; }
+    .form-row label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); margin-bottom: 7px; }
+    .form-control {
+      width: 100%; background: #fff; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px; color: var(--text);
+      font-size: 14px; font-family: 'Inter', sans-serif; outline: none; transition: border .15s;
+    }
+    .form-control:focus { border-color: var(--accent); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── DETAIL GRID ── */
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .detail-block { background: var(--surface2); border-radius: var(--radius); padding: 16px; }
+    .detail-block-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 10px; }
+    .detail-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+    .detail-row span:first-child { color: var(--muted); }
+    .detail-row span:last-child { font-weight: 500; text-align: right; max-width: 60%; }
+    .detail-msg { background: var(--surface2); border-radius: var(--radius); padding: 14px; font-size: 13px; color: #ccc; font-style: italic; margin-top: 16px; border-left: 3px solid var(--accent); }
+
+    /* ── RASTREIO INLINE ── */
+    .rastreio-form { display: flex; gap: 6px; align-items: center; }
+    .rastreio-form input { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; color: var(--text); font-size: 12px; width: 140px; font-family: 'Inter', sans-serif; outline: none; }
+    .rastreio-form input:focus { border-color: var(--blue); }
+
+    /* ── PRODUCT CARDS ── */
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .product-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; transition: border-color .15s; }
+    .product-card:hover { border-color: #3a3a3a; }
+    .product-img { width: 100%; height: 160px; object-fit: cover; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    .product-body { padding: 16px; }
+    .product-name { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+    .product-price { color: var(--accent); font-size: 20px; font-weight: 600; margin-bottom: 10px; }
+    .product-desc { font-size: 12px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .product-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+    .product-tag { background: var(--surface2); border-radius: 4px; padding: 3px 8px; font-size: 11px; color: var(--muted); }
+    .product-actions { display: flex; gap: 6px; }
+
+    /* ── ANALYTICS HINT ── */
+    .analytics-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+    .analytics-card h3 { font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .analytics-card p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .analytics-steps { list-style: none; counter-reset: steps; }
+    .analytics-steps li { counter-increment: steps; display: flex; gap: 12px; font-size: 13px; margin-bottom: 10px; color: #ccc; }
+    .analytics-steps li::before { content: counter(steps); background: var(--accent); color: #0e0e0e; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .code-block { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-family: 'Courier New', monospace; font-size: 12px; color: var(--accent); margin-top: 12px; word-break: break-all; }
+
+    /* ── TOAST ── */
+    #toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+    .toast-item { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; font-size: 13px; display: flex; align-items: center; gap: 10px; animation: slideIn .2s ease; box-shadow: 0 4px 20px rgba(0,0,0,.1); }
+    .toast-item.success { border-left: 3px solid var(--green); }
+    .toast-item.error   { border-left: 3px solid var(--red); }
+    @keyframes slideIn { from { transform: translateX(60px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* ── SCROLLBAR ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-state p { color: var(--muted); font-size: 14px; }
+
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 20px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
-<header>
-  <span>🎁</span>
-  <h1>Painel de Pedidos — Cesta de Presentes</h1>
-</header>
+<!-- ── SIDEBAR ── -->
+<nav class="sidebar">
+  <div class="sidebar-logo"><span>🎁</span> Cesta Admin</div>
+  <div class="nav-section">Principal</div>
+  <button class="nav-item active" onclick="setTab('pedidos')"><span class="icon">📦</span> Pedidos</button>
+  <button class="nav-item" onclick="setTab('produtos')"><span class="icon">🛒</span> Produtos</button>
+  <button class="nav-item" onclick="setTab('analytics')"><span class="icon">📊</span> Analytics</button>
+  <div class="sidebar-footer">
+    <a href="/admin/logout">🚪 Sair</a>
+  </div>
+</nav>
 
-{% set paid = pedidos | selectattr('status', 'equalto', 'paid') | list %}
-{% set pending = pedidos | selectattr('status', 'equalto', 'pending') | list %}
-{% set total_receita = paid | sum(attribute='valor_total') %}
+<!-- ── MAIN ── -->
+<main class="main">
 
-<div class="stats">
-  <div class="stat-card">
-    <div class="label">Total de pedidos</div>
-    <div class="value">{{ pedidos | length }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Pedidos pagos</div>
-    <div class="value" style="color:#0a5c36">{{ paid | length }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Aguardando pagamento</div>
-    <div class="value" style="color:#856404">{{ pending | length }}</div>
-  </div>
-  <div class="stat-card">
-    <div class="label">Receita confirmada</div>
-    <div class="value">R$ {{ "%.0f"|format(total_receita) }}</div>
-  </div>
-</div>
+  <!-- ═══ PEDIDOS ═══ -->
+  <div id="tab-pedidos" class="tab-content active">
+    <div class="page-header">
+      <div class="page-title">Pedidos</div>
+      <div class="page-sub">Todos os pedidos recebidos</div>
+    </div>
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Pedido</th>
-        <th>Cliente</th>
-        <th>E-mail</th>
-        <th>Entrega</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Data</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for p in pedidos %}
-      <tr id="row-{{ p.id }}">
-        <td><strong>#{{ p.numero }}</strong></td>
-        <td>{{ p.nome }}</td>
-        <td style="color:#888">{{ p.email }}</td>
-        <td>
-          {% if p.tipo_entrega == 'retirada' %}
-            <span>🏪 Retirada</span>
+    <!-- Stats -->
+    {% set paid      = pedidos | selectattr('status', 'equalto', 'paid')      | list %}
+    {% set pending   = pedidos | selectattr('status', 'equalto', 'pending')   | list %}
+    {% set enviados  = pedidos | selectattr('status', 'equalto', 'enviado')   | list %}
+    {% set cancelled = pedidos | selectattr('status', 'equalto', 'cancelled') | list %}
+    {% set receita   = paid | sum(attribute='valor_total') %}
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Total de pedidos</div>
+        <div class="stat-value">{{ pedidos | length }}</div>
+        <div class="stat-sub">todos os tempos</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Pagos</div>
+        <div class="stat-value green">{{ paid | length }}</div>
+        <div class="stat-sub">confirmados</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Aguardando</div>
+        <div class="stat-value yellow">{{ pending | length }}</div>
+        <div class="stat-sub">pendentes</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Receita confirmada</div>
+        <div class="stat-value accent">R$ {{ "%.0f"|format(receita) }}</div>
+        <div class="stat-sub">pedidos pagos</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" id="busca-pedidos" placeholder="Buscar por nome, e-mail, número..." oninput="filtrarPedidos()">
+      </div>
+      <select class="filter-select" id="filtro-status" onchange="filtrarPedidos()">
+        <option value="">Todos os status</option>
+        <option value="pending">Aguardando</option>
+        <option value="paid">Pago</option>
+        <option value="enviado">Enviado</option>
+        <option value="cancelled">Cancelado</option>
+      </select>
+      <button class="btn btn-ghost btn-sm" onclick="exportarCSV()">📥 Exportar CSV</button>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pedido</th>
+            <th>Cliente</th>
+            <th>Produto</th>
+            <th>Entrega</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tabela-pedidos">
+          {% for p in pedidos %}
+          <tr id="row-{{ p.id }}"
+              data-nome="{{ p.nome | lower }}"
+              data-email="{{ p.email | lower }}"
+              data-numero="{{ p.numero | lower }}"
+              data-status="{{ p.status }}">
+            <td>
+              <strong style="font-family:'Inter',sans-serif">#{{ p.numero }}</strong>
+            </td>
+            <td>
+              <div style="font-weight:500">{{ p.nome }}</div>
+              <div style="font-size:12px;color:var(--muted)">{{ p.email }}</div>
+            </td>
+            <td style="font-size:12px;color:#aaa">
+              {% for item in p.itens %}{{ item.nome_produto }}{% if not loop.last %}, {% endif %}{% endfor %}
+            </td>
+            <td>
+              {% if p.tipo_entrega == 'retirada' %}
+                <span style="font-size:12px">🏪 Retirada</span>
+              {% else %}
+                <span style="font-size:12px" title="{{ p.endereco }}">🚚 {{ p.servico_frete or 'Envio' }}</span>
+                {% if p.codigo_rastreio %}
+                  <br><code style="font-size:11px;color:var(--blue)">{{ p.codigo_rastreio }}</code>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>
+              <strong style="color:var(--accent)">R$ {{ "%.2f"|format(p.valor_total) }}</strong>
+              {% if p.valor_frete and p.valor_frete > 0 %}
+                <div style="font-size:11px;color:var(--muted)">+ R$ {{ "%.2f"|format(p.valor_frete) }} frete</div>
+              {% endif %}
+            </td>
+            <td>
+              <span class="badge badge-{{ p.status }}">
+                {% if p.status == 'pending' %}⏳ Aguardando
+                {% elif p.status == 'paid' %}✓ Pago
+                {% elif p.status == 'enviado' %}📦 Enviado
+                {% elif p.status == 'cancelled' %}✕ Cancelado
+                {% else %}{{ p.status }}{% endif %}
+              </span>
+            </td>
+            <td style="font-size:12px;color:var(--muted);white-space:nowrap">
+              {{ p.criado_em.strftime('%d/%m/%y') }}<br>
+              <span style="font-size:11px">{{ p.criado_em.strftime('%H:%M') }}</span>
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+                <!-- Ver detalhes -->
+                <button class="btn btn-ghost btn-sm" onclick="verDetalhe('{{ p.id }}')">👁</button>
+
+                <!-- Rastreio -->
+                {% if p.status == 'paid' and p.tipo_entrega == 'envio' and not p.codigo_rastreio %}
+                <div class="rastreio-form">
+                  <input type="text" placeholder="Rastreio" id="rastreio-{{ p.id }}">
+                  <button class="btn btn-sm btn-blue-sm" onclick="enviarRastreio('{{ p.id }}')">✉️</button>
+                </div>
+                {% endif %}
+
+                <!-- Marcar pago -->
+                {% if p.status == 'pending' %}
+                <button class="btn btn-sm btn-green-sm" onclick="setStatus('{{ p.id }}', 'paid')">✓ Pago</button>
+                {% endif %}
+
+                <!-- Cancelar -->
+                {% if p.status not in ['cancelled'] %}
+                <button class="btn btn-sm btn-red-sm" onclick="setStatus('{{ p.id }}', 'cancelled')" title="Cancelar">✕</button>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
           {% else %}
-            <span title="{{ p.endereco }}">🚚 {{ p.servico_frete or 'Envio' }}</span>
-            {% if p.codigo_rastreio %}
-              <br><small style="color:#084298">{{ p.codigo_rastreio }}</small>
-            {% endif %}
-          {% endif %}
-        </td>
-        <td><strong>R$ {{ "%.2f"|format(p.valor_total) }}</strong></td>
-        <td>
-          <span class="status-badge status-{{ p.status }}">
-            {% if p.status == 'pending' %}Aguardando
-            {% elif p.status == 'paid' %}Pago
-            {% elif p.status == 'enviado' %}Enviado
-            {% elif p.status == 'cancelled' %}Cancelado
-            {% else %}{{ p.status }}{% endif %}
-          </span>
-        </td>
-        <td style="color:#888;font-size:12px">{{ p.criado_em.strftime('%d/%m %H:%M') }}</td>
-        <td style="display:flex;gap:6px;flex-wrap:wrap">
-          {% if p.status == 'paid' and p.tipo_entrega == 'envio' and not p.codigo_rastreio %}
-          <div style="display:flex;gap:4px">
-            <input type="text" placeholder="Código rastreio" id="rastreio-{{ p.id }}">
-            <button class="btn-sm btn-blue" onclick="enviarRastreio('{{ p.id }}')">✉️ Enviar</button>
+          <tr><td colspan="8" class="no-data">Nenhum pedido ainda.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)" id="total-filtrado"></div>
+  </div>
+
+  <!-- ═══ PRODUTOS ═══ -->
+  <div id="tab-produtos" class="tab-content">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title">Produtos</div>
+        <div class="page-sub">Gerencie o catálogo de cestas</div>
+      </div>
+      <button class="btn btn-accent" onclick="abrirModalProduto()">＋ Novo produto</button>
+    </div>
+
+    <div class="products-grid" id="grid-produtos">
+      {% for p in produtos %}
+      <div class="product-card" id="pcard-{{ p.id }}">
+        <div class="product-img">
+          {% if p.imagem %}<img src="{{ p.imagem }}" alt="{{ p.nome }}" style="width:100%;height:100%;object-fit:cover">
+          {% else %}🎁{% endif %}
+        </div>
+        <div class="product-body">
+          <div class="product-name">{{ p.nome }}</div>
+          <div class="product-price">R$ {{ "%.2f"|format(p.preco) }}</div>
+          <div class="product-desc">{{ p.descricao }}</div>
+          <div class="product-meta">
+            <span class="product-tag">{{ p.peso }}kg</span>
+            <span class="product-tag">{{ p.altura }}×{{ p.largura }}×{{ p.comprimento }}cm</span>
+            <span class="badge {% if p.ativo %}badge-active{% else %}badge-inactive{% endif %}">
+              {% if p.ativo %}Ativo{% else %}Inativo{% endif %}
+            </span>
           </div>
-          {% endif %}
-          {% if p.status == 'pending' %}
-          <button class="btn-sm btn-green" onclick="setStatus('{{ p.id }}', 'paid')">✓ Marcar pago</button>
-          {% endif %}
-          {% if p.status not in ['cancelled'] %}
-          <button class="btn-sm btn-red" onclick="setStatus('{{ p.id }}', 'cancelled')">✕</button>
-          {% endif %}
-        </td>
-      </tr>
+          <div class="product-actions">
+            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="editarProduto('{{ p.id }}', {{ p | tojson | safe }})">✏️ Editar</button>
+            <button class="btn btn-sm {% if p.ativo %}btn-yellow-sm{% else %}btn-green-sm{% endif %}"
+              onclick="toggleProduto('{{ p.id }}', {{ 'false' if p.ativo else 'true' }})">
+              {% if p.ativo %}⏸ Pausar{% else %}▶ Ativar{% endif %}
+            </button>
+            <button class="btn btn-sm btn-red-sm" onclick="excluirProduto('{{ p.id }}', '{{ p.nome }}')">🗑</button>
+          </div>
+        </div>
+      </div>
       {% else %}
-      <tr><td colspan="8" style="text-align:center;color:#888;padding:40px">Nenhum pedido ainda.</td></tr>
+      <div class="empty-state" style="grid-column:1/-1">
+        <div class="icon">📦</div>
+        <p>Nenhum produto cadastrado. Crie o primeiro!</p>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
+  </div>
+
+  <!-- ═══ ANALYTICS ═══ -->
+  <div id="tab-analytics" class="tab-content">
+    <div class="page-header">
+      <div class="page-title">Analytics</div>
+      <div class="page-sub">Rastreamento de visitas e leads</div>
+    </div>
+
+    <div class="analytics-card">
+      <h3>📊 Google Analytics 4 (GA4)</h3>
+      <p>Recomendamos o GA4 por ser gratuito, poderoso e não precisar de tabelas extras no seu banco. Você consegue ver visitas, de onde vieram, quais produtos foram mais vistos, e quantos chegaram ao checkout.</p>
+      <ol class="analytics-steps">
+        <li>Acesse <strong>analytics.google.com</strong> e crie uma conta/propriedade GA4</li>
+        <li>Copie o ID de medição (formato <code style="color:var(--accent)">G-XXXXXXXXXX</code>)</li>
+        <li>Substitua <code style="color:var(--accent)">G-XXXXXXXXXX</code> no <code>&lt;head&gt;</code> de todos os templates HTML (index, produto, checkout, obrigado)</li>
+        <li>Opcional: adicione eventos customizados no checkout para rastrear conversões</li>
+      </ol>
+      <div class="code-block">
+        &lt;!-- Cole isso no &lt;head&gt; de index.html, produto.html, checkout.html --&gt;<br>
+        &lt;script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"&gt;&lt;/script&gt;<br>
+        &lt;script&gt;<br>
+        &nbsp;&nbsp;window.dataLayer = window.dataLayer || [];<br>
+        &nbsp;&nbsp;function gtag(){"{"}dataLayer.push(arguments){"}"}<br>
+        &nbsp;&nbsp;gtag('js', new Date());<br>
+        &nbsp;&nbsp;gtag('config', 'G-XXXXXXXXXX');<br>
+        &lt;/script&gt;
+      </div>
+    </div>
+
+    <div class="analytics-card">
+      <h3>🎯 Eventos de conversão recomendados</h3>
+      <p>Cole esses trechos no JavaScript das páginas correspondentes para rastrear funil completo no GA4:</p>
+      <div class="code-block">
+        // No checkout.html — quando abrir o checkout:<br>
+        gtag('event', 'begin_checkout', {"{"} currency: 'BRL', value: total {"}"});<br><br>
+        // No obrigado.html — quando pedido for criado:<br>
+        gtag('event', 'purchase', {"{"} transaction_id: numero, value: total, currency: 'BRL' {"}"});
+      </div>
+    </div>
+
+    <div class="analytics-card">
+      <h3>📈 Métricas do seu banco (tempo real)</h3>
+      <p>Com base nos pedidos já registrados:</p>
+      <div class="stats" style="margin-top:16px">
+        {% set paid_list = pedidos | selectattr('status', 'equalto', 'paid') | list %}
+        {% set total_todos = pedidos | length %}
+        <div class="stat">
+          <div class="stat-label">Taxa de conversão</div>
+          <div class="stat-value accent">
+            {% if total_todos > 0 %}{{ "%.0f"|format((paid_list|length / total_todos) * 100) }}%{% else %}—{% endif %}
+          </div>
+          <div class="stat-sub">pagos / total pedidos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Ticket médio</div>
+          <div class="stat-value">
+            {% if paid_list %}
+              R$ {{ "%.0f"|format((paid_list | sum(attribute='valor_total')) / paid_list|length) }}
+            {% else %}—{% endif %}
+          </div>
+          <div class="stat-sub">pedidos pagos</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Pedidos enviados</div>
+          <div class="stat-value blue">{{ pedidos | selectattr('status', 'equalto', 'enviado') | list | length }}</div>
+          <div class="stat-sub">com rastreio</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Receita total</div>
+          <div class="stat-value green">R$ {{ "%.0f"|format(paid_list | sum(attribute='valor_total')) }}</div>
+          <div class="stat-sub">pedidos pagos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ MODAL: DETALHE DO PEDIDO ═══ -->
+<div class="modal-backdrop" id="modal-detalhe">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="detalhe-titulo">Detalhes do Pedido</div>
+      <button class="modal-close" onclick="fecharModal('modal-detalhe')">✕</button>
+    </div>
+    <div class="modal-body" id="detalhe-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-detalhe')">Fechar</button>
+    </div>
+  </div>
 </div>
+
+<!-- ═══ MODAL: PRODUTO ═══ -->
+<div class="modal-backdrop" id="modal-produto">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="produto-modal-titulo">Novo Produto</div>
+      <button class="modal-close" onclick="fecharModal('modal-produto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="produto-id">
+      <div class="form-grid">
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Nome da cesta</label>
+          <input type="text" class="form-control" id="produto-nome" placeholder="Ex: Manhã Especial">
+        </div>
+        <div class="form-row">
+          <label>Slug (URL)</label>
+          <input type="text" class="form-control" id="produto-slug" placeholder="manha-especial">
+        </div>
+        <div class="form-row">
+          <label>Preço (R$)</label>
+          <input type="number" class="form-control" id="produto-preco" placeholder="119.00" step="0.01">
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Descrição</label>
+          <textarea class="form-control" id="produto-descricao" placeholder="Descreva a cesta..."></textarea>
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Itens (um por linha)</label>
+          <textarea class="form-control" id="produto-itens" placeholder="Cestinha de palha&#10;Biscoito recheado&#10;Geleia importada" style="min-height:100px"></textarea>
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>URL da imagem</label>
+          <input type="text" class="form-control" id="produto-imagem" placeholder="/static/img/cesta1.jpg">
+        </div>
+      </div>
+      <div class="form-grid-3">
+        <div class="form-row">
+          <label>Peso (kg)</label>
+          <input type="number" class="form-control" id="produto-peso" placeholder="2.0" step="0.1">
+        </div>
+        <div class="form-row">
+          <label>Altura (cm)</label>
+          <input type="number" class="form-control" id="produto-altura" placeholder="20">
+        </div>
+        <div class="form-row">
+          <label>Largura (cm)</label>
+          <input type="number" class="form-control" id="produto-largura" placeholder="30">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-produto')">Cancelar</button>
+      <button class="btn btn-accent" onclick="salvarProduto()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
 
 <script>
+// ── TABS ──
+function setTab(nome) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('tab-' + nome).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ── TOAST ──
+function toast(msg, tipo = 'success') {
+  const el = document.createElement('div');
+  el.className = `toast-item ${tipo}`;
+  el.innerHTML = (tipo === 'success' ? '✓ ' : '✕ ') + msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ── MODALS ──
+function fecharModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ── FILTRO PEDIDOS ──
+function filtrarPedidos() {
+  const busca = document.getElementById('busca-pedidos').value.toLowerCase();
+  const status = document.getElementById('filtro-status').value;
+  const rows = document.querySelectorAll('#tabela-pedidos tr[id^="row-"]');
+  let visivel = 0;
+  rows.forEach(row => {
+    const nome = row.dataset.nome || '';
+    const email = row.dataset.email || '';
+    const numero = row.dataset.numero || '';
+    const st = row.dataset.status || '';
+    const matchBusca = !busca || nome.includes(busca) || email.includes(busca) || numero.includes(busca);
+    const matchStatus = !status || st === status;
+    const show = matchBusca && matchStatus;
+    row.style.display = show ? '' : 'none';
+    if (show) visivel++;
+  });
+  const total = rows.length;
+  document.getElementById('total-filtrado').textContent =
+    visivel < total ? `Mostrando ${visivel} de ${total} pedidos` : `${total} pedidos`;
+}
+
+// ── AÇÕES PEDIDO ──
 async function setStatus(id, status) {
-  if (!confirm(`Confirmar status: ${status}?`)) return;
-  await fetch(`/admin/pedido/${id}/status`, {
+  const labels = { paid: 'Pago', cancelled: 'Cancelado' };
+  if (!confirm(`Confirmar: marcar como ${labels[status] || status}?`)) return;
+  const r = await fetch(`/admin/pedido/${id}/status`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ status })
   });
-  location.reload();
+  if (r.ok) { toast('Status atualizado!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao atualizar status', 'error');
 }
 
 async function enviarRastreio(id) {
   const codigo = document.getElementById(`rastreio-${id}`).value.trim();
-  if (!codigo) return alert('Digite o código de rastreio');
-  await fetch(`/admin/pedido/${id}/rastreio`, {
+  if (!codigo) return toast('Digite o código de rastreio', 'error');
+  const r = await fetch(`/admin/pedido/${id}/rastreio`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ codigo })
   });
-  alert('Rastreio enviado por e-mail!');
-  location.reload();
+  if (r.ok) { toast('Rastreio enviado por e-mail!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao enviar rastreio', 'error');
 }
+
+// ── DETALHE PEDIDO ──
+const PEDIDOS = {{ pedidos | tojson }};
+
+function verDetalhe(id) {
+  const p = PEDIDOS.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById('detalhe-titulo').textContent = `Pedido #${p.numero}`;
+
+  const statusLabel = { pending: '⏳ Aguardando', paid: '✓ Pago', enviado: '📦 Enviado', cancelled: '✕ Cancelado' };
+  const itens = (p.itens || []).map(i => `<div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border)">
+    <span>${i.nome_produto} × ${i.quantidade}</span>
+    <span style="color:var(--accent)">R$ ${parseFloat(i.preco_unitario).toFixed(2)}</span>
+  </div>`).join('');
+
+  document.getElementById('detalhe-body').innerHTML = `
+    <div class="detail-grid" style="margin-bottom:16px">
+      <div class="detail-block">
+        <div class="detail-block-title">Cliente</div>
+        <div class="detail-row"><span>Nome</span><span>${p.nome}</span></div>
+        <div class="detail-row"><span>E-mail</span><span>${p.email}</span></div>
+        <div class="detail-row"><span>Telefone</span><span>${p.telefone || '—'}</span></div>
+      </div>
+      <div class="detail-block">
+        <div class="detail-block-title">Entrega</div>
+        <div class="detail-row"><span>Tipo</span><span>${p.tipo_entrega === 'retirada' ? '🏪 Retirada' : '🚚 Envio'}</span></div>
+        ${p.tipo_entrega === 'envio' ? `
+        <div class="detail-row"><span>Serviço</span><span>${p.servico_frete || '—'}</span></div>
+        <div class="detail-row"><span>CEP</span><span>${p.cep || '—'}</span></div>
+        <div class="detail-row"><span>Endereço</span><span>${p.endereco || '—'}</span></div>
+        <div class="detail-row"><span>Rastreio</span><span style="color:var(--blue)">${p.codigo_rastreio || '—'}</span></div>
+        ` : ''}
+      </div>
+    </div>
+    <div class="detail-block" style="margin-bottom:16px">
+      <div class="detail-block-title">Itens</div>
+      ${itens || '<div style="color:var(--muted);font-size:13px">—</div>'}
+      <div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:600;font-size:14px">
+        <span>Total</span>
+        <span style="color:var(--accent)">R$ ${parseFloat(p.valor_total).toFixed(2)}</span>
+      </div>
+    </div>
+    ${p.mensagem ? `<div class="detail-msg">💬 "${p.mensagem}"</div>` : ''}
+    <div style="margin-top:16px;font-size:12px;color:var(--muted)">
+      ID MP: ${p.mp_payment_id || '—'} &nbsp;|&nbsp; Criado: ${new Date(p.criado_em).toLocaleString('pt-BR')}
+    </div>
+  `;
+  document.getElementById('modal-detalhe').classList.add('open');
+}
+
+// ── EXPORTAR CSV ──
+function exportarCSV() {
+  const rows = [['Numero','Nome','Email','Telefone','Status','Total','Frete','Entrega','Rastreio','Data']];
+  PEDIDOS.forEach(p => {
+    rows.push([
+      p.numero, p.nome, p.email, p.telefone || '',
+      p.status, p.valor_total, p.valor_frete || 0,
+      p.tipo_entrega, p.codigo_rastreio || '',
+      new Date(p.criado_em).toLocaleDateString('pt-BR')
+    ]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `pedidos_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// ── PRODUTOS: abrir modal ──
+function abrirModalProduto() {
+  document.getElementById('produto-modal-titulo').textContent = 'Novo Produto';
+  document.getElementById('produto-id').value = '';
+  ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura'].forEach(f => {
+    document.getElementById('produto-' + f).value = '';
+  });
+  document.getElementById('modal-produto').classList.add('open');
+}
+
+function editarProduto(id, dados) {
+  document.getElementById('produto-modal-titulo').textContent = 'Editar Produto';
+  document.getElementById('produto-id').value = id;
+  document.getElementById('produto-nome').value = dados.nome || '';
+  document.getElementById('produto-slug').value = dados.slug || '';
+  document.getElementById('produto-preco').value = dados.preco || '';
+  document.getElementById('produto-descricao').value = dados.descricao || '';
+  document.getElementById('produto-imagem').value = dados.imagem || '';
+  document.getElementById('produto-peso').value = dados.peso || '';
+  document.getElementById('produto-altura').value = dados.altura || '';
+  document.getElementById('produto-largura').value = dados.largura || '';
+
+  let itens = dados.itens || '[]';
+  if (typeof itens === 'string') {
+    try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+  }
+  document.getElementById('produto-itens').value = Array.isArray(itens) ? itens.join('\n') : '';
+  document.getElementById('modal-produto').classList.add('open');
+}
+
+async function salvarProduto() {
+  const id = document.getElementById('produto-id').value;
+  const itensRaw = document.getElementById('produto-itens').value;
+  const itensList = itensRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+  const payload = {
+    nome: document.getElementById('produto-nome').value.trim(),
+    slug: document.getElementById('produto-slug').value.trim(),
+    preco: parseFloat(document.getElementById('produto-preco').value),
+    descricao: document.getElementById('produto-descricao').value.trim(),
+    itens: JSON.stringify(itensList),
+    imagem: document.getElementById('produto-imagem').value.trim(),
+    peso: parseFloat(document.getElementById('produto-peso').value) || 2.0,
+    altura: parseInt(document.getElementById('produto-altura').value) || 20,
+    largura: parseInt(document.getElementById('produto-largura').value) || 30,
+  };
+
+  if (!payload.nome || !payload.slug || !payload.preco) {
+    return toast('Preencha nome, slug e preço', 'error');
+  }
+
+  const url = id ? `/admin/produto/${id}` : '/admin/produto';
+  const method = id ? 'PUT' : 'POST';
+
+  const r = await fetch(url, {
+    method,
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+
+  if (r.ok) {
+    toast(id ? 'Produto atualizado!' : 'Produto criado!');
+    fecharModal('modal-produto');
+    setTimeout(() => location.reload(), 800);
+  } else {
+    const err = await r.json().catch(() => ({}));
+    toast(err.erro || 'Erro ao salvar produto', 'error');
+  }
+}
+
+async function toggleProduto(id, ativar) {
+  const r = await fetch(`/admin/produto/${id}/toggle`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ ativo: ativar === 'true' || ativar === true })
+  });
+  if (r.ok) { toast(ativar ? 'Produto ativado!' : 'Produto pausado!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro', 'error');
+}
+
+async function excluirProduto(id, nome) {
+  if (!confirm(`Excluir "${nome}"? Esta ação não pode ser desfeita.`)) return;
+  const r = await fetch(`/admin/produto/${id}`, { method: 'DELETE' });
+  if (r.ok) { toast('Produto excluído!'); setTimeout(() => location.reload(), 800); }
+  else {
+    const err = await r.json().catch(() => ({}));
+    toast(err.erro || 'Erro ao excluir', 'error');
+  }
+}
+
+// ── AUTO-SLUG ──
+document.getElementById('produto-nome').addEventListener('input', function() {
+  if (!document.getElementById('produto-id').value) {
+    document.getElementById('produto-slug').value = this.value
+      .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+});
+
+// Inicializa contagem
+filtrarPedidos();
 </script>
 </body>
 </html>

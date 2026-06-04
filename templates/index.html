@@ -3,7 +3,7 @@
 {% block description %}Cestas de café da manhã e presentes para o Dia dos Namorados. Entrega em São Paulo ou retirada no local. Feitas com amor!{% endblock %}
 
 {% block head %}
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
 <style>
   :root {
     --red: #c60909;
@@ -34,6 +34,10 @@
     70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
     100% { box-shadow: 0 0 0 0 rgba(198,9,9,0); }
   }
+  @keyframes logoReveal {
+    from { opacity: 0; transform: translateY(-16px) scale(0.92); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
 
   /* ANNOUNCEMENT BAR */
   .urgencia-bar {
@@ -50,39 +54,58 @@
 
   /* HERO */
   .hero {
-    background: var(--off-white);
-    padding: 50px 24px 40px;
-    text-align: center;
     position: relative;
+    padding: 64px 24px 52px;
+    text-align: center;
     overflow: hidden;
     border-bottom: 1px solid var(--border);
     animation: fadeUp 0.7s ease both;
   }
+
+  /* Background image layer */
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image: url('https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    opacity: 0.55;
+    z-index: 0;
+  }
+
+  /* Color overlay */
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: #ffc0c0;
+    opacity: 0.45;
+    z-index: 1;
+  }
+
+  /* Radial glow on top */
   .hero::before {
     content: '';
     position: absolute;
     top: -80px; left: 50%; transform: translateX(-50%);
     width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(255,147,147,0.18) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(255,147,147,0.22) 0%, transparent 65%);
     pointer-events: none;
+    z-index: 2;
   }
-  .hero-deco {
-    font-size: 52px;
-    line-height: 1;
-    margin-bottom: 16px;
-    display: inline-block;
+
+  .hero > * { position: relative; z-index: 3; }
+
+  /* LOGO */
+  .hero-logo {
+    display: block;
+    margin: 0 auto 24px;
+    width: clamp(140px, 26vw, 220px);
+    height: auto;
+    animation: logoReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+    filter: drop-shadow(0 4px 24px rgba(198,9,9,0.22)) drop-shadow(0 2px 8px rgba(0,0,0,0.12));
   }
-  .hero-eyebrow {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--red);
-    margin-bottom: 16px;
-    opacity: 0.85;
-    white-space: nowrap;
-  }
+
   .hero h1 {
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(42px, 6.5vw, 80px);
@@ -98,37 +121,83 @@
     font-weight: 300;
   }
   .hero p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 16px;
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
     color: var(--ink-muted);
     max-width: 480px;
-    margin: 0 auto 22px;
+    margin: 0 auto 0;
     line-height: 1.8;
     font-weight: 400;
-  }
-  .hero-actions {
-    display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+    font-style: italic;
   }
   .hero-trust {
-    display: flex; gap: 32px; justify-content: center; flex-wrap: wrap;
-    margin-top: 32px; padding-top: 20px;
-    border-top: 1px solid var(--border);
+    display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
+    margin-top: 36px; padding-top: 0;
+    border-top: none;
   }
   .trust-item {
     font-family: 'Montserrat', sans-serif;
     font-size: 11px;
     color: var(--ink-muted);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px 28px;
+    position: relative;
+    background: rgba(255,255,255,0.62);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.8);
+    border-radius: 14px;
+    margin: 4px;
+    min-width: 130px;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .trust-item:hover {
+    background: rgba(255,255,255,0.85);
+    transform: translateY(-3px);
+  }
+  .trust-item .trust-icon {
+    width: 36px; height: 36px;
+    background: var(--red);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .trust-item .trust-icon svg {
+    width: 17px; height: 17px;
+    stroke: #fff; fill: none;
+    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
   }
   .trust-item strong {
     display: block;
     color: var(--ink);
     font-weight: 700;
     font-size: 12px;
-    margin-bottom: 3px;
-    letter-spacing: 0;
+    letter-spacing: -0.01em;
     text-transform: none;
+    text-align: center;
+  }
+  .trust-item span.sub {
+    display: block;
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  @media (max-width: 600px) {
+    .hero-trust {
+      gap: 0;
+    }
+    .trust-item {
+      padding: 14px 16px;
+      min-width: calc(50% - 8px);
+      flex: 1 1 calc(50% - 8px);
+    }
   }
 
   /* CESTAS */
@@ -152,12 +221,12 @@
     margin-bottom: 14px;
   }
   .section-header h2 {
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-size: clamp(28px, 3.5vw, 44px);
-    font-weight: 800;
+    font-weight: 700;
     color: var(--ink);
     margin-bottom: 12px;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.01em;
   }
   .section-header p {
     font-family: 'Montserrat', sans-serif;
@@ -211,12 +280,12 @@
   .cesta-img img { width: 100%; height: 100%; object-fit: cover; }
   .cesta-body { padding: 28px 28px 32px; }
   .cesta-body h3 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 22px;
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
     font-weight: 700;
     color: var(--ink);
     margin-bottom: 10px;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
   .cesta-card.destaque .cesta-body h3 { color: #fff; }
   .cesta-body .descricao {
@@ -269,7 +338,7 @@
   }
   .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
   .preco-valor {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     font-size: 38px;
     font-weight: 900;
     color: var(--red);
@@ -302,9 +371,9 @@
   }
   .step:hover { background: rgba(198,9,9,0.12); }
   .step-num {
-    font-family: 'Nunito', sans-serif;
+    font-family: 'Playfair Display', serif;
     font-size: 44px;
-    font-weight: 900;
+    font-weight: 700;
     color: var(--red);
     opacity: 0.6;
     line-height: 1;
@@ -376,10 +445,8 @@
   }
 
   @media (max-width: 480px) {
-    .hero-eyebrow {
-      font-size: 9px;
-      letter-spacing: 0.12em;
-      white-space: normal;
+    .hero-logo {
+      width: clamp(120px, 52vw, 180px);
     }
     .hero-trust {
       gap: 20px;
@@ -396,24 +463,49 @@
 
 <!-- HERO -->
 <section class="hero">
-  <p class="hero-eyebrow">Presentes artesanais · São Paulo</p>
+  <!-- Background layers -->
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+
+  <!-- Logo -->
+  <img
+    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580746/Cesta_de_Presentes_8_oivt9w.png"
+    alt="Cestas de Presentes"
+    class="hero-logo"
+  >
+
   <h1>Cestas que<br><em>encantam</em></h1>
   <p>Feitas à mão com ingredientes selecionados. Para o café da manhã, Dia dos Namorados, aniversário — ou qualquer momento que mereça.</p>
-  <div class="hero-actions">
-    <a href="#cestas" class="btn-primary">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-      Ver cestas
-    </a>
-    <a href="https://wa.me/5511999999999" target="_blank" class="btn-outline">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-      Falar no WhatsApp
-    </a>
-  </div>
+
   <div class="hero-trust">
-    <div class="trust-item"><strong>Pagamento seguro</strong>Mercado Pago</div>
-    <div class="trust-item"><strong>Entrega</strong>São Paulo</div>
-    <div class="trust-item"><strong>Embalagem premium</strong>inclusa</div>
-    <div class="trust-item"><strong>Mensagem</strong>personalizada grátis</div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <strong>Pagamento seguro</strong>
+      <span class="sub">Mercado Pago</span>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+      </div>
+      <strong>Entrega</strong>
+      <span class="sub">São Paulo</span>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
+      </div>
+      <strong>Embalagem premium</strong>
+      <span class="sub">Inclusa</span>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><path d="M21 15l-3-3 3-3"/><path d="M16 12h5"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <strong>Mensagem</strong>
+      <span class="sub">Personalizada grátis</span>
+    </div>
   </div>
 </section>
 

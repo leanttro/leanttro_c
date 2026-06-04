@@ -232,15 +232,14 @@ def admin_login():
         email = request.form.get('email', '').strip().lower()
         senha = request.form.get('senha', '')
 
-        # Busca direto no banco via psycopg2 (tabela admins não está no SQLAlchemy)
         from sqlalchemy import text
         row = db.session.execute(
             text("SELECT id, senha_hash, ativo FROM admins WHERE email = :email"),
             {'email': email}
-        ).fetchone()
+        ).mappings().fetchone()
 
-        if row and row.ativo and bcrypt.checkpw(senha.encode(), row.senha_hash.encode()):
-            session['admin_id'] = str(row.id)
+        if row and row['ativo'] and bcrypt.checkpw(senha.encode(), row['senha_hash'].encode()):
+            session['admin_id'] = str(row['id'])
             session.permanent = True
             return redirect(url_for('admin'))
         else:

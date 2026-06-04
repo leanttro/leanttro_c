@@ -1,290 +1,206 @@
 {% extends "base.html" %}
-{% block title %}{{ produto.nome }} — Cesta de Presentes{% endblock %}
-{% block description %}{{ produto.descricao }}{% endblock %}
+{% block title %}Cestas de Presentes Artesanais — Dia dos Namorados{% endblock %}
+{% block description %}Cestas de café da manhã e presentes para o Dia dos Namorados. Entrega em São Paulo ou retirada no local. Feitas com amor!{% endblock %}
 
 {% block head %}
 <style>
-  .produto-page { max-width: 1000px; margin: 60px auto; padding: 0 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
-  @media(max-width:700px){ .produto-page { grid-template-columns:1fr; } }
-  
-  .produto-img-wrap {
-    background: linear-gradient(135deg, var(--warm), #e8d5b7);
-    border-radius: 20px; aspect-ratio: 1; display: flex; align-items: center;
-    justify-content: center; font-size: 120px; position: sticky; top: 80px;
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #2d1f14 0%, #5a3e2b 50%, #7a3520 100%);
+    padding: 80px 24px;
+    text-align: center;
+    position: relative;
     overflow: hidden;
   }
-  .produto-img-wrap img { width:100%; height:100%; object-fit:cover; }
-
-  .produto-info h1 { font-size: 36px; color: var(--brown); margin-bottom: 8px; }
-  .produto-preco { font-family: 'Playfair Display', serif; font-size: 44px; color: var(--red); margin: 16px 0; }
-  .produto-desc { color: var(--brown-light); line-height: 1.7; margin-bottom: 24px; }
-  
-  .itens-lista { background: var(--cream); border: 1px solid var(--warm); border-radius: 12px; padding: 20px; margin-bottom: 24px; }
-  .itens-lista h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: var(--brown-light); margin-bottom: 12px; }
-  .itens-lista ul { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .itens-lista li { font-size: 13px; color: var(--brown); display: flex; align-items: center; gap: 6px; }
-  .itens-lista li::before { content: '🎀'; font-size: 10px; }
-
-  /* FORM CHECKOUT */
-  .checkout-form { background: #fff; border-radius: 16px; padding: 28px; box-shadow: 0 2px 20px rgba(90,62,43,.08); }
-  .checkout-form h3 { font-size: 20px; color: var(--brown); margin-bottom: 20px; }
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--brown-light); margin-bottom: 6px; }
-  .form-group input, .form-group textarea, .form-group select {
-    width: 100%; padding: 12px 14px; border: 1px solid #e8ddd4; border-radius: 8px;
-    font-size: 14px; font-family: inherit; color: var(--text);
-    background: var(--cream); outline: none; transition: border .2s;
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
-  .form-group input:focus, .form-group textarea:focus { border-color: var(--red); }
-  
-  .entrega-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-  .entrega-tab {
-    padding: 12px; border: 2px solid #e8ddd4; border-radius: 8px;
-    text-align: center; cursor: pointer; transition: all .2s; font-size: 14px;
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,168,76,.15); border: 1px solid rgba(201,168,76,.3);
+    color: var(--gold); padding: 6px 16px; border-radius: 20px;
+    font-size: 13px; font-weight: 500; margin-bottom: 20px;
   }
-  .entrega-tab.ativo { border-color: var(--red); background: #fde8e8; color: var(--red); font-weight: 600; }
-
-  .frete-opcoes { margin: 12px 0; }
-  .frete-opcao {
-    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
-    border: 1px solid #e8ddd4; border-radius: 8px; margin-bottom: 6px; cursor: pointer;
-    transition: border .2s; font-size: 13px;
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 64px); color: #fff; line-height: 1.1;
+    margin-bottom: 16px;
   }
-  .frete-opcao:hover, .frete-opcao.selecionado { border-color: var(--red); background: #fde8e8; }
-  
-  .total-row { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--warm); margin-top: 8px; }
-  .total-row.final { font-size: 20px; font-weight: 700; color: var(--red); border-top: 2px solid var(--warm); }
+  .hero h1 em { color: var(--gold); font-style: italic; }
+  .hero p {
+    font-size: 17px; color: rgba(255,255,255,.7); max-width: 520px;
+    margin: 0 auto 32px; line-height: 1.7;
+  }
+  .hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero-trust {
+    display: flex; gap: 24px; justify-content: center; flex-wrap: wrap;
+    margin-top: 48px; padding-top: 32px;
+    border-top: 1px solid rgba(255,255,255,.1);
+  }
+  .trust-item { display: flex; align-items: center; gap: 8px; color: rgba(255,255,255,.6); font-size: 13px; }
+  .trust-item strong { color: #fff; }
 
-  #btn-pagar { width: 100%; margin-top: 20px; padding: 16px; font-size: 16px; }
-  #btn-pagar:disabled { opacity: .5; cursor: not-allowed; }
+  /* CESTAS */
+  #cestas { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-header { text-align: center; margin-bottom: 48px; }
+  .section-header h2 { font-size: 36px; color: var(--brown); margin-bottom: 8px; }
+  .section-header p { color: var(--brown-light); font-size: 16px; }
 
-  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .cestas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 28px;
+  }
+  .cesta-card {
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(90,62,43,.08);
+    transition: transform .25s, box-shadow .25s;
+    position: relative;
+  }
+  .cesta-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(90,62,43,.15); }
+  .cesta-card.destaque { border: 2px solid var(--gold); }
+  .destaque-badge {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--gold); color: #fff;
+    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .cesta-img {
+    width: 100%; height: 220px; object-fit: cover;
+    background: linear-gradient(135deg, var(--warm), #e8d5b7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 80px;
+  }
+  .cesta-body { padding: 24px; }
+  .cesta-body h3 { font-size: 22px; color: var(--brown); margin-bottom: 6px; }
+  .cesta-body .descricao { font-size: 14px; color: var(--brown-light); line-height: 1.6; margin-bottom: 16px; }
+  .cesta-itens { list-style: none; margin-bottom: 20px; }
+  .cesta-itens li { font-size: 13px; color: var(--brown-light); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
+  .cesta-itens li::before { content: '✓'; color: var(--gold); font-weight: bold; }
+  .cesta-preco { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .preco-valor { font-family: 'Playfair Display', serif; font-size: 30px; color: var(--red); font-weight: 700; }
+  .preco-label { font-size: 12px; color: var(--brown-light); display: block; }
+
+  /* COMO FUNCIONA */
+  #como-funciona { background: var(--warm); padding: 80px 24px; }
+  #como-funciona > * { max-width: 900px; margin: 0 auto; }
+  .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 32px; margin-top: 48px; }
+  .step { text-align: center; }
+  .step-icon { width: 64px; height: 64px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; box-shadow: 0 4px 16px rgba(90,62,43,.1); }
+  .step h4 { font-size: 16px; color: var(--brown); margin-bottom: 6px; }
+  .step p { font-size: 13px; color: var(--brown-light); line-height: 1.6; }
+
+  /* URGÊNCIA */
+  .urgencia-bar {
+    background: linear-gradient(90deg, var(--red), #e74c3c);
+    color: #fff; text-align: center;
+    padding: 12px 24px; font-size: 14px; font-weight: 500;
+  }
+  .urgencia-bar strong { font-weight: 700; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="produto-page">
 
-  <!-- IMAGEM -->
-  <div class="produto-img-wrap">
-    {% if produto.imagem %}
-      <img src="{{ produto.imagem }}" alt="{{ produto.nome }}">
-    {% else %}
-      🧺
-    {% endif %}
-  </div>
-
-  <!-- INFO + CHECKOUT -->
-  <div>
-    <span class="badge badge-red" style="margin-bottom:12px">🎁 Presente especial</span>
-    <h1>{{ produto.nome }}</h1>
-    <p class="produto-desc">{{ produto.descricao }}</p>
-
-    {% if produto.itens %}
-    <div class="itens-lista">
-      <h4>O que vem na cesta</h4>
-      <ul>
-        {% for item in produto.itens | fromjson %}
-        <li>{{ item }}</li>
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-
-    <!-- FORM CHECKOUT -->
-    <div class="checkout-form">
-      <h3>🛍️ Finalizar pedido</h3>
-
-      <div class="form-group">
-        <label>Seu nome completo</label>
-        <input type="text" id="nome" placeholder="Maria da Silva" required>
-      </div>
-      <div class="form-group">
-        <label>E-mail (para confirmação)</label>
-        <input type="email" id="email" placeholder="maria@email.com" required>
-      </div>
-      <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="tel" id="telefone" placeholder="(11) 99999-9999">
-      </div>
-      <div class="form-group">
-        <label>Mensagem no cartão (opcional)</label>
-        <textarea id="mensagem" rows="2" placeholder="Ex: Para o amor da minha vida 💕"></textarea>
-      </div>
-
-      <label style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--brown-light);margin-bottom:8px;display:block">Forma de entrega</label>
-      <div class="entrega-tabs">
-        <div class="entrega-tab ativo" onclick="setEntrega('retirada', this)">🏪 Retirada grátis</div>
-        <div class="entrega-tab" onclick="setEntrega('envio', this)">🚚 Envio</div>
-      </div>
-
-      <div id="secao-envio" style="display:none">
-        <div class="form-group">
-          <label>CEP de entrega</label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1" oninput="mascara_cep(this)">
-            <button onclick="calcularFrete()" class="btn btn-outline" style="padding:0 16px;white-space:nowrap">Calcular</button>
-          </div>
-        </div>
-        <div id="frete-opcoes" class="frete-opcoes"></div>
-        <div id="endereco-wrap" style="display:none" class="form-group">
-          <label>Endereço completo</label>
-          <input type="text" id="endereco" placeholder="Rua, número, complemento, bairro">
-        </div>
-      </div>
-
-      <!-- RESUMO -->
-      <div style="margin-top:16px">
-        <div class="total-row">
-          <span>Cesta: {{ produto.nome }}</span>
-          <span>R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
-        </div>
-        <div class="total-row" id="frete-row" style="display:none">
-          <span>Frete</span>
-          <span id="frete-valor">R$ 0,00</span>
-        </div>
-        <div class="total-row final">
-          <span>Total</span>
-          <span id="total-valor">R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
-        </div>
-      </div>
-
-      <button id="btn-pagar" class="btn btn-primary" onclick="pagar()">
-        🔒 Pagar com segurança
-      </button>
-      <p style="text-align:center;font-size:11px;color:var(--brown-light);margin-top:8px">Pix, cartão ou boleto via Mercado Pago</p>
-    </div>
-  </div>
+<div class="urgencia-bar">
+  🎀 <strong>Dia dos Namorados — 12 de junho!</strong> Garanta seu presente com tempo. Últimas unidades disponíveis.
 </div>
 
-<!-- OUTROS PRODUTOS -->
-{% if outros %}
-<div style="max-width:1000px;margin:0 auto 60px;padding:0 24px">
-  <h2 style="font-size:24px;color:var(--brown);margin-bottom:24px">Outras cestas</h2>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px">
-    {% for p in outros %}
-    <a href="/produto/{{ p.slug }}" style="background:#fff;border-radius:12px;overflow:hidden;display:block;box-shadow:0 2px 12px rgba(90,62,43,.07);transition:transform .2s" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform=''">
-      <div style="height:140px;background:linear-gradient(135deg,var(--warm),#e8d5b7);display:flex;align-items:center;justify-content:center;font-size:60px">🧺</div>
-      <div style="padding:16px">
-        <h4 style="font-size:16px;color:var(--brown)">{{ p.nome }}</h4>
-        <p style="color:var(--red);font-size:18px;font-weight:700;margin-top:4px">R$ {{ "%.0f"|format(p.preco) }}</p>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-tag">🎁 Presentes especiais para momentos únicos</div>
+  <h1>Cestas que<br><em>encantam</em> de verdade</h1>
+  <p>Presentes artesanais feitos com carinho para quem você ama. Café da manhã, Dia dos Namorados, aniversário e muito mais.</p>
+  <div class="hero-actions">
+    <a href="#cestas" class="btn btn-primary">Ver cestas 🧺</a>
+    <a href="https://wa.me/5511999999999" target="_blank" class="btn" style="background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2)">💬 Falar no WhatsApp</a>
+  </div>
+  <div class="hero-trust">
+    <div class="trust-item">✅ <strong>Pagamento seguro</strong> via Mercado Pago</div>
+    <div class="trust-item">🚚 <strong>Entrega</strong> em São Paulo</div>
+    <div class="trust-item">🎀 <strong>Embalagem</strong> premium inclusa</div>
+    <div class="trust-item">💌 <strong>Mensagem</strong> personalizada grátis</div>
+  </div>
+</section>
+
+<!-- CESTAS -->
+<section id="cestas">
+  <div class="section-header">
+    <h2>Escolha sua cesta</h2>
+    <p>Todas com embalagem premium, laço e cartão personalizado inclusos</p>
+  </div>
+
+  <div class="cestas-grid">
+    {% for produto in produtos %}
+    <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}">
+      {% if loop.index == 2 %}<div class="destaque-badge">⭐ Mais Vendida</div>{% endif %}
+      
+      <div class="cesta-img">
+        {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
+          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" style="width:100%;height:100%;object-fit:cover">
+        {% else %}
+          🧺
+        {% endif %}
       </div>
-    </a>
+
+      <div class="cesta-body">
+        <h3>{{ produto.nome }}</h3>
+        <p class="descricao">{{ produto.descricao }}</p>
+
+        {% if produto.itens %}
+        <ul class="cesta-itens">
+          {% for item in produto.itens | fromjson %}
+          <li>{{ item }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+
+        <div class="cesta-preco">
+          <div>
+            <span class="preco-label">A partir de</span>
+            <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+          </div>
+          <a href="/produto/{{ produto.slug }}" class="btn btn-primary">Quero essa 🎁</a>
+        </div>
+      </div>
+    </div>
     {% endfor %}
   </div>
-</div>
-{% endif %}
+</section>
 
-<script>
-const PRODUTO_ID = '{{ produto.id }}';
-const PRECO_BASE = {{ produto.preco }};
-let tipoEntrega = 'retirada';
-let freteValor = 0;
-let servicoFrete = '';
-let cepFinal = '';
-let enderecoFinal = '';
-
-function setEntrega(tipo, el) {
-  tipoEntrega = tipo;
-  document.querySelectorAll('.entrega-tab').forEach(t => t.classList.remove('ativo'));
-  el.classList.add('ativo');
-  document.getElementById('secao-envio').style.display = tipo === 'envio' ? 'block' : 'none';
-  if (tipo === 'retirada') {
-    freteValor = 0; servicoFrete = '';
-    document.getElementById('frete-row').style.display = 'none';
-    atualizarTotal();
-  }
-}
-
-function mascara_cep(input) {
-  let v = input.value.replace(/\D/g,'');
-  if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
-  input.value = v;
-}
-
-async function calcularFrete() {
-  const cep = document.getElementById('cep').value.replace(/\D/g,'');
-  if (cep.length !== 8) return alert('Digite um CEP válido');
-  cepFinal = cep;
-  
-  const div = document.getElementById('frete-opcoes');
-  div.innerHTML = '<p style="color:var(--brown-light);font-size:13px">Calculando...</p>';
-
-  const resp = await fetch('/api/frete', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ cep, produto_id: PRODUTO_ID })
-  });
-  const opcoes = await resp.json();
-
-  if (!opcoes.length) { div.innerHTML = '<p style="color:red;font-size:13px">Não foi possível calcular o frete para este CEP.</p>'; return; }
-
-  div.innerHTML = opcoes.slice(0, 4).map(op => `
-    <div class="frete-opcao" onclick="selecionarFrete(this, ${op.preco}, '${op.nome}')" data-preco="${op.preco}" data-nome="${op.nome}">
-      <input type="radio" name="frete" style="accent-color:var(--red)">
-      <div style="flex:1">
-        <strong style="font-size:13px">${op.empresa} ${op.nome}</strong>
-        <span style="color:var(--brown-light);font-size:12px;margin-left:8px">${op.prazo} dias úteis</span>
-      </div>
-      <strong style="color:var(--red)">R$ ${op.preco.toFixed(2).replace('.',',')}</strong>
+<!-- COMO FUNCIONA -->
+<section id="como-funciona">
+  <div>
+    <div class="section-header">
+      <h2>Como funciona?</h2>
+      <p>Simples, rápido e seguro</p>
     </div>
-  `).join('');
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">🧺</div>
+        <h4>1. Escolha a cesta</h4>
+        <p>Selecione o modelo ideal para a ocasião e o presenteado</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">💳</div>
+        <h4>2. Pague com segurança</h4>
+        <p>Pix, cartão ou boleto via Mercado Pago — 100% seguro</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🎀</div>
+        <h4>3. Montamos com carinho</h4>
+        <p>Sua cesta é montada e embalada com muito capricho</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">🚚</div>
+        <h4>4. Entregamos ou retirada</h4>
+        <p>Enviamos pelo Melhor Envio ou retire no local sem custo</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-  document.getElementById('endereco-wrap').style.display = 'block';
-}
-
-function selecionarFrete(el, preco, nome) {
-  document.querySelectorAll('.frete-opcao').forEach(e => e.classList.remove('selecionado'));
-  el.classList.add('selecionado');
-  el.querySelector('input').checked = true;
-  freteValor = preco; servicoFrete = nome;
-  document.getElementById('frete-row').style.display = 'flex';
-  document.getElementById('frete-valor').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
-  atualizarTotal();
-}
-
-function atualizarTotal() {
-  const total = PRECO_BASE + freteValor;
-  document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
-}
-
-async function pagar() {
-  const nome = document.getElementById('nome').value.trim();
-  const email = document.getElementById('email').value.trim();
-  if (!nome || !email) return alert('Preencha nome e e-mail');
-  if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
-
-  const btn = document.getElementById('btn-pagar');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Processando...';
-
-  enderecoFinal = document.getElementById('endereco')?.value || '';
-
-  const resp = await fetch('/api/criar-preferencia', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      produto_id: PRODUTO_ID,
-      nome, email,
-      telefone: document.getElementById('telefone').value,
-      mensagem: document.getElementById('mensagem').value,
-      tipo_entrega: tipoEntrega,
-      cep: cepFinal,
-      endereco: enderecoFinal,
-      servico_frete: servicoFrete,
-      valor_frete: freteValor
-    })
-  });
-
-  const data = await resp.json();
-  if (data.init_point) {
-    window.location.href = data.init_point;
-  } else {
-    alert('Erro ao processar pedido. Tente novamente.');
-    btn.disabled = false;
-    btn.innerHTML = '🔒 Pagar com segurança';
-  }
-}
-</script>
 {% endblock %}

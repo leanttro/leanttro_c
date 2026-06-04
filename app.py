@@ -330,12 +330,41 @@ def toggle_produto(produto_id):
     db.session.commit()
     return jsonify({'ok': True})
 
+def pedido_to_dict(p):
+    return {
+        'id': str(p.id),
+        'numero': p.numero,
+        'nome': p.nome,
+        'email': p.email,
+        'telefone': p.telefone or '',
+        'tipo_entrega': p.tipo_entrega,
+        'cep': p.cep or '',
+        'endereco': p.endereco or '',
+        'servico_frete': p.servico_frete or '',
+        'valor_frete': float(p.valor_frete) if p.valor_frete else 0,
+        'valor_total': float(p.valor_total),
+        'mensagem': p.mensagem or '',
+        'status': p.status,
+        'codigo_rastreio': p.codigo_rastreio or '',
+        'mp_payment_id': p.mp_payment_id or '',
+        'criado_em': p.criado_em.isoformat() if p.criado_em else '',
+        'itens': [
+            {
+                'nome_produto': i.nome_produto,
+                'preco_unitario': float(i.preco_unitario),
+                'quantidade': i.quantidade,
+            }
+            for i in p.itens
+        ],
+    }
+
 @app.route('/admin')
 def admin():
     if not admin_logado(): return redirect(url_for('admin_login'))
     pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
     produtos = Produto.query.order_by(Produto.id).all()
-    return render_template('admin.html', pedidos=pedidos, produtos=produtos)
+    pedidos_json = [pedido_to_dict(p) for p in pedidos]
+    return render_template('admin.html', pedidos=pedidos, produtos=produtos, pedidos_json=pedidos_json)
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 

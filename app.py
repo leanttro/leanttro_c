@@ -254,13 +254,6 @@ def admin_logout():
 
 # ─── ADMIN: PAINEL ────────────────────────────────────────────────
 
-@app.route('/admin')
-def admin():
-    if not admin_logado():
-        return redirect(url_for('admin_login'))
-    pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
-    return render_template('admin.html', pedidos=pedidos)
-
 @app.route('/admin/pedido/<pedido_id>/rastreio', methods=['POST'])
 def atualizar_rastreio(pedido_id):
     if not admin_logado():
@@ -280,6 +273,69 @@ def atualizar_status(pedido_id):
     pedido.status = request.json.get('status')
     db.session.commit()
     return jsonify({'ok': True})
+
+# ─── ADMIN: PRODUTOS ─────────────────────────────────────────────
+
+@app.route('/admin/produto', methods=['POST'])
+def criar_produto():
+    if not admin_logado(): abort(401)
+    d = request.json
+    p = Produto(
+        nome=d['nome'], slug=d['slug'],
+        descricao=d.get('descricao', ''),
+        itens=json.dumps([i.strip() for i in d.get('itens', '').split('\n') if i.strip()]),
+        preco=Decimal(str(d['preco'])),
+        imagem=d.get('imagem', ''),
+        peso=float(d.get('peso', 1)),
+        altura=float(d.get('altura', 20)),
+        largura=float(d.get('largura', 20)),
+        comprimento=float(d.get('comprimento', 20)),
+        ativo=True
+    )
+    db.session.add(p)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': p.id})
+
+@app.route('/admin/produto/<int:produto_id>', methods=['POST'])
+def editar_produto(produto_id):
+    if not admin_logado(): abort(401)
+    p = Produto.query.get_or_404(produto_id)
+    d = request.json
+    p.nome = d['nome']
+    p.slug = d['slug']
+    p.descricao = d.get('descricao', '')
+    p.itens = json.dumps([i.strip() for i in d.get('itens', '').split('\n') if i.strip()])
+    p.preco = Decimal(str(d['preco']))
+    p.imagem = d.get('imagem', '')
+    p.peso = float(d.get('peso', 1))
+    p.altura = float(d.get('altura', 20))
+    p.largura = float(d.get('largura', 20))
+    p.comprimento = float(d.get('comprimento', 20))
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/produto/<int:produto_id>', methods=['DELETE'])
+def excluir_produto(produto_id):
+    if not admin_logado(): abort(401)
+    p = Produto.query.get_or_404(produto_id)
+    db.session.delete(p)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/produto/<int:produto_id>/toggle', methods=['POST'])
+def toggle_produto(produto_id):
+    if not admin_logado(): abort(401)
+    p = Produto.query.get_or_404(produto_id)
+    p.ativo = request.json.get('ativo', not p.ativo)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin')
+def admin():
+    if not admin_logado(): return redirect(url_for('admin_login'))
+    pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
+    produtos = Produto.query.order_by(Produto.id).all()
+    return render_template('admin.html', pedidos=pedidos, produtos=produtos)
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 

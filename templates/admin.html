@@ -524,7 +524,7 @@
   </div>
 </div>
 
-<!-- ═══ MODAL: PRODUTO ═══ -->
+<!-- ═══ MODAL: PRODUTO (CORRIGIDO) ═══ -->
 <div class="modal-backdrop" id="modal-produto">
   <div class="modal">
     <div class="modal-header">
@@ -571,6 +571,10 @@
         <div class="form-row">
           <label>Largura (cm)</label>
           <input type="number" class="form-control" id="produto-largura" placeholder="30">
+        </div>
+        <div class="form-row">
+          <label>Comprimento (cm)</label>
+          <input type="number" class="form-control" id="produto-comprimento" placeholder="20">
         </div>
       </div>
     </div>
@@ -730,37 +734,38 @@ function exportarCSV() {
 function abrirModalProduto() {
   document.getElementById('produto-modal-titulo').textContent = 'Novo Produto';
   document.getElementById('produto-id').value = '';
-  ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura'].forEach(f => {
+  ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura','comprimento'].forEach(f => {
     document.getElementById('produto-' + f).value = '';
   });
   document.getElementById('modal-produto').classList.add('open');
 }
 
-
-
+// ── SALVAR PRODUTO (CORRIGIDO) ──
 async function salvarProduto() {
   const id = document.getElementById('produto-id').value;
+  // Envia o texto cru (com quebras de linha) - sem JSON.stringify
   const itensRaw = document.getElementById('produto-itens').value;
-  const itensList = itensRaw.split('\n').map(s => s.trim()).filter(Boolean);
 
   const payload = {
     nome: document.getElementById('produto-nome').value.trim(),
     slug: document.getElementById('produto-slug').value.trim(),
     preco: parseFloat(document.getElementById('produto-preco').value),
     descricao: document.getElementById('produto-descricao').value.trim(),
-    itens: JSON.stringify(itensList),
+    itens: itensRaw,
     imagem: document.getElementById('produto-imagem').value.trim(),
-    peso: parseFloat(document.getElementById('produto-peso').value) || 2.0,
+    peso: parseFloat(document.getElementById('produto-peso').value) || 1.0,
     altura: parseInt(document.getElementById('produto-altura').value) || 20,
-    largura: parseInt(document.getElementById('produto-largura').value) || 30,
+    largura: parseInt(document.getElementById('produto-largura').value) || 20,
+    comprimento: parseInt(document.getElementById('produto-comprimento').value) || 20,
   };
 
   if (!payload.nome || !payload.slug || !payload.preco) {
     return toast('Preencha nome, slug e preço', 'error');
   }
 
+  // Sempre usa POST (backend tem POST para criar e editar)
   const url = id ? `/admin/produto/${id}` : '/admin/produto';
-  const method = id ? 'PUT' : 'POST';
+  const method = 'POST';
 
   const r = await fetch(url, {
     method,
@@ -832,10 +837,16 @@ function editarProduto(id) {
   document.getElementById('produto-peso').value = dados.peso || '';
   document.getElementById('produto-altura').value = dados.altura || '';
   document.getElementById('produto-largura').value = dados.largura || '';
+  document.getElementById('produto-comprimento').value = dados.comprimento || '';
 
   let itens = dados.itens || '[]';
   if (typeof itens === 'string') {
-    try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+    // Se for uma string JSON, converte para array e junta com \n
+    if (itens.startsWith('[')) {
+      try { itens = JSON.parse(itens); } catch(e) { itens = []; }
+    } else {
+      itens = itens.split('\n').filter(l => l.trim());
+    }
   }
   document.getElementById('produto-itens').value = Array.isArray(itens) ? itens.join('\n') : '';
   document.getElementById('modal-produto').classList.add('open');

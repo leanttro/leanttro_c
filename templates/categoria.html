@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% block title %}{{ categoria.nome }} — Cestas de Presentes{% endblock %}
+{% block description %}{{ categoria.descricao or 'Cestas artesanais de ' ~ categoria.nome ~ '. Embalagem premium, laço e cartão personalizado. Entrega em São Paulo.' }}{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #c60909;
+    --red-dark: #a00707;
+    --rose: #ff9393;
+    --rose-light: #fff4f4;
+    --rose-mid: #ffe0e0;
+    --off-white: #fdf8f8;
+    --ink: #1a1a1a;
+    --ink-muted: #6b6560;
+    --border: #f0e4e4;
+    --card-radius: 20px;
+    --btn-radius: 50px;
+  }
+
+  * { box-sizing: border-box; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(198,9,9,0.3); }
+    70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
+    100% { box-shadow: 0 0 0 0 rgba(198,9,9,0); }
+  }
+
+  /* BREADCRUMB */
+  .breadcrumb {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    color: var(--ink-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+  }
+  .breadcrumb a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    transition: color .2s;
+  }
+  .breadcrumb a:hover { color: var(--red); }
+  .breadcrumb span { color: var(--ink); font-weight: 600; }
+  .breadcrumb-sep { opacity: 0.4; }
+
+  /* HERO DA CATEGORIA */
+  .cat-hero {
+    position: relative;
+    padding: 56px 24px 48px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp 0.7s ease both;
+  }
+  .cat-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0.35;
+    z-index: 0;
+    {% if categoria.imagem %}
+    background-image: url('{{ categoria.imagem }}');
+    {% else %}
+    background-image: url('https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png');
+    {% endif %}
+  }
+  .cat-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: #ffc0c0;
+    opacity: 0.88;
+    z-index: 1;
+  }
+  .cat-hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%; transform: translateX(-50%);
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,147,147,0.22) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  .cat-hero > * { position: relative; z-index: 3; }
+
+  .cat-hero-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 14px;
+  }
+  .cat-hero h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(36px, 5.5vw, 68px);
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.08;
+    margin-bottom: 14px;
+    letter-spacing: -0.03em;
+  }
+  .cat-hero h1 em {
+    font-style: italic;
+    color: var(--red);
+    font-weight: 300;
+  }
+  .cat-hero p {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    color: var(--ink-muted);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.8;
+    font-weight: 400;
+    font-style: italic;
+  }
+
+  /* CONTADOR DE PRODUTOS */
+  .cat-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.85);
+    border-radius: 50px;
+    padding: 8px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-muted);
+    letter-spacing: 0.04em;
+  }
+  .cat-count strong {
+    color: var(--red);
+    font-weight: 800;
+  }
+
+  /* GRID DE CESTAS */
+  #cestas {
+    padding: 48px 24px 80px;
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+  .section-header {
+    text-align: center;
+    margin-bottom: 56px;
+  }
+  .section-header .label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 14px;
+  }
+  .section-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 3.5vw, 44px);
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 12px;
+    letter-spacing: -0.01em;
+  }
+  .section-header p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  .cestas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+  }
+
+  /* CARDS — idênticos ao index */
+  .cesta-card {
+    background: #fff;
+    border-radius: var(--card-radius);
+    overflow: hidden;
+    position: relative;
+    border: 1.5px solid var(--border);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .cesta-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(198,9,9,0.12);
+  }
+  .cesta-card.destaque {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .cesta-card.destaque:hover {
+    box-shadow: 0 20px 48px rgba(0,0,0,0.28);
+  }
+  .destaque-badge {
+    position: absolute; top: 18px; left: 18px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--red);
+    background: #fff;
+    padding: 5px 12px;
+    border-radius: 50px;
+  }
+  .cesta-img {
+    width: 100%; height: 260px;
+    background: var(--rose-light);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    border-radius: var(--card-radius) var(--card-radius) 0 0;
+  }
+  .cesta-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cesta-body { padding: 28px 28px 32px; }
+  .cesta-body h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+  }
+  .cesta-card.destaque .cesta-body h3 { color: #fff; }
+  .cesta-body .descricao {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.75;
+    margin-bottom: 20px;
+    font-weight: 400;
+  }
+  .cesta-card.destaque .descricao { color: rgba(255,255,255,0.5); }
+  .cesta-itens { list-style: none; margin-bottom: 28px; padding: 0; }
+  .cesta-itens li {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    padding: 7px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cesta-card.destaque .cesta-itens li { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.08); }
+  .cesta-itens li::before {
+    content: '♥';
+    font-size: 9px;
+    color: var(--red);
+    flex-shrink: 0;
+  }
+  .cesta-card.destaque .cesta-itens li::before { color: var(--rose); }
+  .cesta-preco {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+  .cesta-card.destaque .cesta-preco { border-color: rgba(255,255,255,0.12); }
+  .preco-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
+  .preco-valor {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--red);
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+  .cesta-card.destaque .preco-valor { color: var(--rose); }
+
+  /* ESTADO VAZIO */
+  .empty-state {
+    text-align: center;
+    padding: 80px 24px;
+    grid-column: 1 / -1;
+  }
+  .empty-state .empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .empty-state h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 26px;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .empty-state p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+  }
+
+  /* OUTRAS CATEGORIAS */
+  .outras-cats {
+    background: var(--red);
+    padding: 56px 24px;
+    text-align: center;
+  }
+  .outras-cats .label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    display: block;
+    margin-bottom: 12px;
+  }
+  .outras-cats h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 3vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 36px;
+  }
+  .cats-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .cat-pill {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255,255,255,0.12);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    padding: 12px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    transition: background .2s, border-color .2s, transform .2s;
+  }
+  .cat-pill:hover {
+    background: rgba(255,255,255,0.22);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+  }
+  .cat-pill.ativa {
+    background: #fff;
+    color: var(--red);
+    border-color: #fff;
+    pointer-events: none;
+  }
+
+  /* BOTÃO */
+  .btn-primary {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    background: var(--red) !important;
+    color: #fff !important;
+    padding: 14px 28px !important;
+    border-radius: var(--btn-radius) !important;
+    text-decoration: none;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s !important;
+  }
+  .btn-primary:hover {
+    background: var(--red-dark) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important;
+  }
+  .btn-primary:active { transform: translateY(0) !important; }
+  .btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .cesta-card.destaque .btn-primary {
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+
+  @media (max-width: 600px) {
+    .cestas-grid { grid-template-columns: 1fr; }
+    .cat-hero { padding: 40px 16px 36px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- BREADCRUMB -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Início</a>
+  <span class="breadcrumb-sep">›</span>
+  <a href="/#cestas">Cestas</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>{{ categoria.nome }}</span>
+</nav>
+
+<!-- HERO DA CATEGORIA -->
+<section class="cat-hero">
+  <div class="cat-hero-bg"></div>
+  <div class="cat-hero-overlay"></div>
+
+  <span class="cat-hero-label">Categoria</span>
+  <h1>Cestas de<br><em>{{ categoria.nome }}</em></h1>
+
+  {% if categoria.descricao %}
+  <p>{{ categoria.descricao }}</p>
+  {% else %}
+  <p>Cestas artesanais feitas com amor e montadas sob encomenda. Cada detalhe pensado para surpreender quem você ama.</p>
+  {% endif %}
+
+  <div class="cat-count">
+    <strong>{{ produtos | length }}</strong>
+    {{ 'cesta disponível' if produtos | length == 1 else 'cestas disponíveis' }}
+  </div>
+</section>
+
+<!-- GRID DE CESTAS -->
+<section id="cestas">
+  <div class="section-header">
+    <span class="label">{{ categoria.nome }}</span>
+    <h2>Escolha sua cesta</h2>
+    <p>Todas com embalagem premium, laço e cartão personalizado</p>
+  </div>
+
+  <div class="cestas-grid">
+    {% if produtos %}
+      {% for produto in produtos %}
+      <div class="cesta-card {% if loop.index == 2 and produtos | length > 2 %}destaque{% endif %}">
+        {% if loop.index == 2 and produtos | length > 2 %}
+          <div class="destaque-badge">Mais vendida</div>
+        {% endif %}
+
+        <div class="cesta-img">
+          {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
+            <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" loading="lazy">
+          {% endif %}
+        </div>
+
+        <div class="cesta-body">
+          <h3>{{ produto.nome }}</h3>
+          <p class="descricao">{{ produto.descricao }}</p>
+
+          {% if produto.itens %}
+          <ul class="cesta-itens">
+            {% for item in produto.itens | fromjson %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+
+          <div class="cesta-preco">
+            <div>
+              <span class="preco-label">A partir de</span>
+              <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+            </div>
+            <a href="/produto/{{ produto.slug }}" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>
+              Pedir esta
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+
+    {% else %}
+      <div class="empty-state">
+        <span class="empty-icon">🎁</span>
+        <h3>Em breve por aqui</h3>
+        <p>Ainda estamos preparando as cestas desta categoria. Veja nossas outras opções!</p>
+        <a href="/#cestas" class="btn-primary">
+          Ver todas as cestas
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- OUTRAS CATEGORIAS -->
+{% if outras_categorias %}
+<section class="outras-cats">
+  <span class="label">Explore mais</span>
+  <h2>Outras categorias</h2>
+  <div class="cats-row">
+    {% for cat in outras_categorias %}
+    <a href="/categoria/{{ cat.slug }}"
+       class="cat-pill {% if cat.id == categoria.id %}ativa{% endif %}">
+      {{ cat.nome }}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

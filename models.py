@@ -56,6 +56,7 @@ class Pedido(db.Model):
     atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     itens = db.relationship('ItemPedido', backref='pedido', lazy=True)
+    agendamento = db.relationship('Agendamento', backref='pedido', lazy=True, uselist=False)
 
 class ItemPedido(db.Model):
     __tablename__ = 'itens_pedido'
@@ -91,3 +92,36 @@ class NumeroSorteio(db.Model):
     telefone = db.Column(db.String(20))
     pedido_id = db.Column(db.String, db.ForeignKey('pedidos.id'), nullable=True)  # se veio de compra
     reservado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ─── AGENDAMENTO ─────────────────────────────────────────────────
+
+class ConfigAgenda(db.Model):
+    """Configuração global da agenda de retiradas."""
+    __tablename__ = 'config_agenda'
+    id = db.Column(db.Integer, primary_key=True)
+    hora_abertura = db.Column(db.Integer, default=7)       # hora inteira, ex: 7 = 07:00
+    hora_fechamento = db.Column(db.Integer, default=21)    # hora inteira, ex: 21 = 21:00
+    minutos_preparo = db.Column(db.Integer, default=180)   # minutos mínimos entre pagamento e retirada (padrão: 3h)
+    max_por_horario = db.Column(db.Integer, default=1)     # máximo de retiradas simultâneas por slot
+    dias_semana = db.Column(db.String(20), default='1,2,3,4,5,6')  # 0=dom,1=seg,...,6=sab
+
+class BloqueioHorario(db.Model):
+    """Dias ou faixas de horário bloqueados pelo admin."""
+    __tablename__ = 'bloqueios_horario'
+    id = db.Column(db.Integer, primary_key=True)
+    data = db.Column(db.Date, nullable=False)              # dia do bloqueio
+    hora_inicio = db.Column(db.Integer, nullable=True)     # None = bloqueia o dia inteiro
+    hora_fim = db.Column(db.Integer, nullable=True)        # None = bloqueia o dia inteiro
+    motivo = db.Column(db.String(200))
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Agendamento(db.Model):
+    """Agendamento de retirada vinculado a um pedido."""
+    __tablename__ = 'agendamentos'
+    id = db.Column(db.String, primary_key=True, default=gen_uuid)
+    pedido_id = db.Column(db.String, db.ForeignKey('pedidos.id'), nullable=False, unique=True)
+    data_retirada = db.Column(db.Date, nullable=False)
+    hora_retirada = db.Column(db.Integer, nullable=False)  # hora inteira, ex: 14 = 14:00
+    status = db.Column(db.String(20), default='confirmado')  # confirmado | remarcado | cancelado
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

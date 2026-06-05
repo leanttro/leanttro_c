@@ -1,724 +1,118 @@
-{% extends "base.html" %}
-{% block title %}Cestas de Presentes Artesanais — Dia dos Namorados{% endblock %}
-{% block description %}Cestas de café da manhã e presentes para o Dia dos Namorados. Entrega em São Paulo ou retirada no local. Feitas com amor!{% endblock %}
-
-{% block head %}
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --red: #c60909;
-    --red-dark: #a00707;
-    --rose: #ff9393;
-    --rose-light: #fff4f4;
-    --rose-mid: #ffe0e0;
-    --off-white: #fdf8f8;
-    --ink: #1a1a1a;
-    --ink-muted: #6b6560;
-    --border: #f0e4e4;
-    --card-radius: 20px;
-    --btn-radius: 50px;
-  }
-
-  * { box-sizing: border-box; }
-
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes floatHeart {
-    0%, 100% { transform: translateY(0) rotate(-8deg); }
-    50%       { transform: translateY(-10px) rotate(8deg); }
-  }
-  @keyframes pulse-ring {
-    0%   { box-shadow: 0 0 0 0 rgba(198,9,9,0.3); }
-    70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
-    100% { box-shadow: 0 0 0 0 rgba(198,9,9,0); }
-  }
-  @keyframes logoReveal {
-    from { opacity: 0; transform: translateY(-16px) scale(0.92); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  /* ANNOUNCEMENT BAR */
-  .urgencia-bar {
-    background: var(--red);
-    color: #fff;
-    text-align: center;
-    padding: 12px 24px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.05em;
-  }
-  .urgencia-bar strong { font-weight: 700; }
-
-  /* HERO */
-  .hero {
-    position: relative;
-    padding: 64px 24px 52px;
-    text-align: center;
-    overflow: hidden;
-    border-bottom: 1px solid var(--border);
-    animation: fadeUp 0.7s ease both;
-  }
-
-  /* Background image layer */
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    background-image: url('https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0.7;
-    z-index: 0;
-  }
-
-  /* Color overlay */
-  .hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: #ffc0c0;
-    opacity: 0.92;
-    z-index: 1;
-  }
-
-  /* Radial glow on top */
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: -80px; left: 50%; transform: translateX(-50%);
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(255,147,147,0.22) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 2;
-  }
-
-  .hero > * { position: relative; z-index: 3; }
-
-  /* LOGO */
-  .hero-logo {
-    display: block;
-    margin: 0 auto 24px;
-    width: clamp(140px, 26vw, 220px);
-    height: auto;
-    animation: logoReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
-    filter: drop-shadow(0 4px 24px rgba(198,9,9,0.22)) drop-shadow(0 2px 8px rgba(0,0,0,0.12));
-  }
-
-  .hero h1 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: clamp(42px, 6.5vw, 80px);
-    font-weight: 800;
-    color: var(--ink);
-    line-height: 1.08;
-    margin-bottom: 14px;
-    letter-spacing: -0.03em;
-  }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--red);
-    font-weight: 300;
-  }
-  .hero p {
-    font-family: 'Playfair Display', serif;
-    font-size: 17px;
-    color: var(--ink-muted);
-    max-width: 480px;
-    margin: 0 auto 0;
-    line-height: 1.8;
-    font-weight: 400;
-    font-style: italic;
-  }
-  .hero-trust {
-    display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
-    margin-top: 36px; padding-top: 0;
-    border-top: none;
-  }
-  .trust-item {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 20px 28px;
-    position: relative;
-    background: rgba(255,255,255,0.62);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 14px;
-    margin: 4px;
-    min-width: 130px;
-    transition: background 0.2s, transform 0.2s;
-  }
-  .trust-item:hover {
-    background: rgba(255,255,255,0.85);
-    transform: translateY(-3px);
-  }
-  .trust-item .trust-icon {
-    width: 36px; height: 36px;
-    background: var(--red);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .trust-item .trust-icon svg {
-    width: 17px; height: 17px;
-    stroke: #fff; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-  }
-  .trust-item strong {
-    display: block;
-    color: var(--ink);
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: -0.01em;
-    text-transform: none;
-    text-align: center;
-  }
-  .trust-item span.sub {
-    display: block;
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.05em;
-    text-align: center;
-  }
-
-  @media (max-width: 600px) {
-    .hero-trust {
-      gap: 0;
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Cesta de Presentes{% endblock %} | cestadepresentes.com.br</title>
+  <meta name="description" content="{% block description %}Cestas de presentes artesanais para todas as ocasiões. Café da manhã, Dia dos Namorados, aniversário e muito mais. Entrega em São Paulo.{% endblock %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <style>
+    :root {
+      --cream: #fdf6ee;
+      --warm: #f5e6d0;
+      --red: #c0392b;
+      --red-dark: #962d22;
+      --gold: #c9a84c;
+      --brown: #5a3e2b;
+      --brown-light: #7a6152;
+      --text: #2d1f14;
     }
-    .trust-item {
-      padding: 14px 16px;
-      min-width: calc(50% - 8px);
-      flex: 1 1 calc(50% - 8px);
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); }
+    h1,h2,h3 { font-family: 'Playfair Display', serif; }
+    a { text-decoration: none; color: inherit; }
+    
+    /* NAV */
+    nav {
+      background: #fff;
+      border-bottom: 1px solid var(--warm);
+      padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 80px;
+      position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 2px 12px rgba(90,62,43,.06);
     }
-  }
-
-  /* CESTAS */
-  #cestas {
-    padding: 48px 24px;
-    max-width: 1180px;
-    margin: 0 auto;
-  }
-  .section-header {
-    text-align: center;
-    margin-bottom: 64px;
-  }
-  .section-header .label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--red);
-    display: block;
-    margin-bottom: 14px;
-  }
-  .section-header h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 3.5vw, 44px);
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
-  }
-  .section-header p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    color: var(--ink-muted);
-    font-weight: 400;
-  }
-
-  .cestas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-  }
-  .cesta-card {
-    background: #fff;
-    border-radius: var(--card-radius);
-    overflow: hidden;
-    position: relative;
-    border: 1.5px solid var(--border);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-  .cesta-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 48px rgba(198,9,9,0.12);
-  }
-  .cesta-card.destaque {
-    background: var(--ink);
-    border-color: var(--ink);
-  }
-  .cesta-card.destaque:hover {
-    box-shadow: 0 20px 48px rgba(0,0,0,0.28);
-  }
-  .destaque-badge {
-    position: absolute; top: 18px; left: 18px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--red);
-    background: #fff;
-    padding: 5px 12px;
-    border-radius: 50px;
-  }
-  .cesta-img {
-    width: 100%; height: 260px;
-    background: var(--rose-light);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-    border-radius: var(--card-radius) var(--card-radius) 0 0;
-  }
-  .cesta-img img { width: 100%; height: 100%; object-fit: cover; }
-  .cesta-body { padding: 28px 28px 32px; }
-  .cesta-body h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 10px;
-    letter-spacing: -0.01em;
-  }
-  .cesta-card.destaque .cesta-body h3 { color: #fff; }
-  .cesta-body .descricao {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: var(--ink-muted);
-    line-height: 1.75;
-    margin-bottom: 20px;
-    font-weight: 400;
-  }
-  .cesta-card.destaque .descricao { color: rgba(255,255,255,0.5); }
-  .cesta-itens { list-style: none; margin-bottom: 28px; padding: 0; }
-  .cesta-itens li {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: var(--ink-muted);
-    padding: 7px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .cesta-card.destaque .cesta-itens li { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.08); }
-  .cesta-itens li::before {
-    content: '♥';
-    font-size: 9px;
-    color: var(--red);
-    flex-shrink: 0;
-  }
-  .cesta-card.destaque .cesta-itens li::before { color: var(--rose); }
-  .cesta-preco {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
-  }
-  .cesta-card.destaque .cesta-preco { border-color: rgba(255,255,255,0.12); }
-  .preco-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: var(--ink-muted);
-    display: block;
-    margin-bottom: 4px;
-  }
-  .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
-  .preco-valor {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 38px;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-    letter-spacing: -0.02em;
-  }
-  .cesta-card.destaque .preco-valor { color: var(--rose); }
-
-  /* COMO FUNCIONA */
-  #como-funciona {
-    background: var(--ink);
-    padding: 96px 24px;
-  }
-  #como-funciona .inner { max-width: 960px; margin: 0 auto; }
-  #como-funciona .section-header .label { color: var(--rose); }
-  #como-funciona .section-header h2 { color: #fff; }
-  #como-funciona .section-header p { color: rgba(255,255,255,0.4); }
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 64px;
-  }
-  .step {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 16px;
-    padding: 36px 28px;
-    transition: background 0.2s;
-  }
-  .step:hover { background: rgba(198,9,9,0.12); }
-  .step-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 44px;
-    font-weight: 700;
-    color: var(--red);
-    opacity: 0.6;
-    line-height: 1;
-    margin-bottom: 18px;
-  }
-  .step h4 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 10px;
-    letter-spacing: -0.01em;
-  }
-  .step p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: rgba(255,255,255,0.4);
-    line-height: 1.7;
-    font-weight: 400;
-  }
-
-  /* BUTTONS */
-  .btn-primary {
-    font-family: 'Montserrat', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-    background: var(--red) !important;
-    color: #fff !important;
-    padding: 14px 28px !important;
-    border-radius: var(--btn-radius) !important;
-    text-decoration: none;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s !important;
-  }
-  .btn-primary:hover {
-    background: var(--red-dark) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important;
-  }
-  .btn-primary:active { transform: translateY(0) !important; }
-  .btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-  .btn-outline {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: transparent;
-    color: var(--ink);
-    border: 2px solid var(--border);
-    padding: 13px 28px;
-    border-radius: var(--btn-radius);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: border-color 0.2s, background 0.2s, color 0.2s;
-  }
-  .btn-outline:hover { border-color: var(--ink); background: var(--ink); color: #fff; }
-
-  /* cesta btn comprar - pulse on destaque */
-  .cesta-card.destaque .btn-primary {
-    animation: pulse-ring 2.5s ease-in-out infinite;
-  }
-
-  @media (max-width: 480px) {
-    .hero-logo {
-      width: clamp(120px, 52vw, 180px);
+    .nav-logo { display: flex; align-items: center; flex-shrink: 0; }
+    .nav-links { display: flex; gap: 24px; }
+    .nav-links a { font-size: 14px; color: var(--brown-light); font-weight: 500; transition: color .2s; white-space: nowrap; }
+    .nav-links a:hover { color: var(--red); }
+    .nav-cart {
+      background: var(--red); color: #fff; border: none; cursor: pointer;
+      padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      display: flex; align-items: center; gap: 6px; transition: background .2s;
+      white-space: nowrap; flex-shrink: 0;
     }
-    .hero-trust {
-      gap: 20px;
+    .nav-cart:hover { background: var(--red-dark); }
+    .nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+    .nav-hamburger span { display: block; width: 24px; height: 2px; background: var(--brown); border-radius: 2px; transition: all .3s; }
+    @media (max-width: 600px) {
+      nav { padding: 0 12px; height: 72px; }
+      .nav-links {
+        display: none; flex-direction: column; gap: 0;
+        position: absolute; top: 72px; left: 0; right: 0;
+        background: #fff; border-bottom: 1px solid var(--warm);
+        box-shadow: 0 4px 12px rgba(0,0,0,.08); z-index: 99;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 14px 20px; border-top: 1px solid var(--warm); font-size: 15px; }
+      .nav-logo img { height: 52px !important; }
+      .nav-hamburger { display: flex; }
     }
-  }
-  /* ── SEÇÃO SORTEIO (home) ── */
-  #sorteio-home {
-    background: linear-gradient(135deg, var(--ink) 0%, #2a0808 100%);
-    padding: 80px 24px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-  #sorteio-home::before {
-    content: '🎉';
-    position: absolute;
-    font-size: 300px;
-    opacity: 0.04;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  #sorteio-home .inner-sorteio {
-    position: relative;
-    max-width: 640px;
-    margin: 0 auto;
-  }
-  #sorteio-home .sorteio-tag {
-    display: inline-block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--red);
-    background: rgba(198,9,9,0.15);
-    border: 1px solid rgba(198,9,9,0.3);
-    border-radius: 50px;
-    padding: 6px 18px;
-    margin-bottom: 20px;
-  }
-  #sorteio-home h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 14px;
-    line-height: 1.15;
-  }
-  #sorteio-home h2 em {
-    font-style: italic;
-    color: var(--rose);
-  }
-  #sorteio-home p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    color: rgba(255,255,255,0.45);
-    line-height: 1.8;
-    margin-bottom: 36px;
-  }
-  .sorteio-home-btns {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .btn-sorteio {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: var(--red);
-    color: #fff;
-    padding: 15px 32px;
-    border-radius: var(--btn-radius);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  }
-  .btn-sorteio:hover {
-    background: var(--red-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(198,9,9,0.4);
-  }
-  .btn-sorteio-outline {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: transparent;
-    color: rgba(255,255,255,0.7);
-    border: 2px solid rgba(255,255,255,0.15);
-    padding: 14px 32px;
-    border-radius: var(--btn-radius);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-sorteio-outline:hover {
-    border-color: rgba(255,255,255,0.4);
-    color: #fff;
-  }
 
-  @media (max-width: 480px) {
-    .hero-logo {
-      width: clamp(120px, 52vw, 180px);
+    /* FOOTER */
+    footer {
+      background: #c60909; color: var(--warm);
+      padding: 40px 24px; margin-top: 80px; text-align: center;
     }
-    .hero-trust {
-      gap: 20px;
-    }
-  }
-</style>
-{% endblock %}
+    footer .footer-logo { font-family: 'Playfair Display', serif; font-size: 22px; color: #fff; margin-bottom: 8px; }
+    footer p { font-size: 13px; opacity: .7; }
+    footer a { color: var(--gold); }
 
-{% block content %}
+    /* UTILS */
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border-radius: 10px; font-weight: 500; font-size: 15px; cursor: pointer; transition: all .2s; border: none; }
+    .btn-primary { background: var(--red); color: #fff; }
+    .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(192,57,43,.3); }
+    .btn-outline { background: transparent; border: 2px solid var(--red); color: var(--red); }
+    .btn-outline:hover { background: var(--red); color: #fff; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+    .badge-gold { background: #fef3cd; color: #9a6f00; }
+    .badge-red { background: #fde8e8; color: var(--red); }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
 
-<div class="urgencia-bar">
-  <strong>Dia dos Namorados — 12 de junho.</strong> Últimas unidades disponíveis. Garanta agora.
-</div>
-
-<!-- HERO -->
-<section class="hero">
-  <!-- Background layers -->
-  <img
-    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png"
-    alt=""
-    aria-hidden="true"
-    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.35;z-index:0;pointer-events:none;"
-  >
-  <div class="hero-overlay"></div>
-
-  <!-- Logo -->
-  <img
-    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580746/Cesta_de_Presentes_8_oivt9w.png"
-    alt="Cestas de Presentes"
-    class="hero-logo"
-  >
-
-  <h1>Cestas que<br><em>encantam</em></h1>
-  <p>Feitas à mão com ingredientes selecionados. Para o café da manhã, Dia dos Namorados, aniversário — ou qualquer momento que mereça.</p>
-
-  <div class="hero-trust">
-    <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <strong>Pagamento seguro</strong>
-      <span class="sub">Mercado Pago</span>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      </div>
-      <strong>Entrega</strong>
-      <span class="sub">São Paulo</span>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
-      </div>
-      <strong>Embalagem premium</strong>
-      <span class="sub">Inclusa</span>
-    </div>
-    <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><path d="M21 15l-3-3 3-3"/><path d="M16 12h5"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
-      <strong>Mensagem</strong>
-      <span class="sub">Personalizada grátis</span>
-    </div>
+<nav>
+  <a href="/" class="nav-logo">
+    <img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580758/Cesta_de_Presentes_7_syzkuc.png" alt="Cesta de Presentes" style="height:64px;width:auto;display:block;">
+  </a>
+  <div class="nav-links">
+    <a href="/#cestas">Cestas</a>
+    <a href="/#como-funciona">Como funciona</a>
+    <a href="https://wa.me/5511999999999" target="_blank">WhatsApp</a>
   </div>
-</section>
+  <a href="/#cestas" class="nav-cart">Comprar</a>
+  <button class="nav-hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
 
-<!-- CESTAS -->
-<section id="cestas">
-  <div class="section-header">
-    <span class="label">Nossos presentes</span>
-    <h2>Escolha sua cesta</h2>
-    <p>Todas com embalagem premium, laço e cartão personalizado</p>
-  </div>
+{% block content %}{% endblock %}
 
-  <div class="cestas-grid">
-    {% for produto in produtos %}
-    <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}">
-      {% if loop.index == 2 %}<div class="destaque-badge">Mais vendida</div>{% endif %}
+<footer>
+  <div class="footer-logo"><img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580758/Cesta_de_Presentes_7_syzkuc.png" alt="Cesta de Presentes" style="height:56px;width:auto;filter:brightness(0) invert(1);"></div>
+  <p style="margin:8px 0">Presenteie com amor e cuidado</p>
+  <p style="margin:16px 0 4px"><a href="mailto:contato@cestadepresentes.com.br">contato@cestadepresentes.com.br</a></p>
+  <p><a href="https://wa.me/5511999999999" target="_blank">WhatsApp: (11) 99999-9999</a></p>
+  <p style="margin-top:24px;font-size:11px;opacity:.4">© 2024 cestadepresentes.com.br — São Paulo, SP</p>
+</footer>
 
-      <div class="cesta-img">
-        {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
-          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}">
-        {% endif %}
-      </div>
+<a href="https://wa.me/5511999999999" target="_blank" style="position:fixed;bottom:24px;right:24px;z-index:999;background:#25d366;color:#fff;border-radius:50px;padding:14px 20px;font-size:15px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.2);display:flex;align-items:center;gap:8px;text-decoration:none;">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.523 5.847L.057 23.882l6.212-1.43A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.007-1.371l-.36-.213-3.687.849.878-3.574-.234-.373A9.818 9.818 0 1 1 12 21.818z"/></svg>
+  WhatsApp
+</a>
 
-      <div class="cesta-body">
-        <h3>{{ produto.nome }}</h3>
-        <p class="descricao">{{ produto.descricao }}</p>
-
-        {% if produto.itens %}
-        <ul class="cesta-itens">
-          {% for item in produto.itens | fromjson %}
-          <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-
-        <div class="cesta-preco">
-          <div>
-            <span class="preco-label">A partir de</span>
-            <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
-          </div>
-          <a href="/produto/{{ produto.slug }}" class="btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>
-            Pedir esta
-          </a>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</section>
-
-<!-- COMO FUNCIONA -->
-<section id="como-funciona">
-  <div class="inner">
-    <div class="section-header">
-      <span class="label">Processo</span>
-      <h2>Como funciona</h2>
-      <p>Simples, rápido e seguro</p>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <h4>Escolha a cesta</h4>
-        <p>Selecione o modelo ideal para a ocasião e o presenteado</p>
-      </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <h4>Pague com segurança</h4>
-        <p>Pix, cartão ou boleto via Mercado Pago — 100% seguro</p>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <h4>Montamos com cuidado</h4>
-        <p>Sua cesta é montada e embalada com muito capricho</p>
-      </div>
-      <div class="step">
-        <div class="step-num">04</div>
-        <h4>Entregamos ou retirada</h4>
-        <p>Enviamos pelo Melhor Envio ou retire no local sem custo</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- SORTEIO DO MÊS — só exibe se houver sorteio ativo -->
-{% if sorteio %}
-<section id="sorteio-home">
-  <div class="inner-sorteio">
-    <span class="sorteio-tag">🎉 Sorteio do mês</span>
-    <h2>Compre e concorra a uma<br><em>cesta especial</em></h2>
-    <p>Todo cliente que comprar qualquer cesta ganha automaticamente um número no sorteio. Você também pode adquirir números extras e aumentar suas chances!</p>
-    <div class="sorteio-home-btns">
-      <a href="/sorteio" class="btn-sorteio">🎟️ Ver o sorteio</a>
-      <a href="#cestas" class="btn-sorteio-outline">Ver cestas</a>
-    </div>
-  </div>
-</section>
-{% endif %}
-
-{% endblock %}
+</body>
+</html>

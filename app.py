@@ -241,8 +241,7 @@ def calcular_frete():
             'length': produto.comprimento,
             'weight': produto.peso
         },
-        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False},
-        'services': '1,2,17'
+        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False}
     }
 
     try:

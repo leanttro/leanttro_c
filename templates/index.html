@@ -528,6 +528,33 @@
       gap: 20px;
     }
   }
+  .btn-primary {
+    font-family: 'Montserrat', sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    background: var(--red) !important;
+    color: #fff !important;
+    padding: 14px 28px !important;
+    border-radius: var(--btn-radius) !important;
+    text-decoration: none;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    transition: background 0.2s, transform 0.15s, box-shadow 0.2s !important;
+  }
+  .btn-primary:hover {
+    background: var(--red-dark) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important;
+  }
+  .btn-primary:active { transform: translateY(0) !important; }
+  .btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .cesta-card.destaque .btn-primary {
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+
 </style>
 {% endblock %}
 

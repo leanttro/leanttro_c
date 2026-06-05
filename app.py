@@ -247,8 +247,10 @@ def calcular_frete():
 
     try:
         resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
+        print(f"[FRETE] Status: {resp.status_code}", flush=True)
+        print(f"[FRETE] Body: {resp.text[:500]}", flush=True)
         if resp.status_code != 200:
-            return jsonify({'erro': 'Erro ao calcular frete'}), 502
+            return jsonify({'erro': f'ME erro {resp.status_code}: {resp.text[:300]}'}), 502
 
         opcoes = []
         for s in resp.json():

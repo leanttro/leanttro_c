@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, jsonify, abort, session, redirect, url_for
-from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio
+from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agendamento, BloqueioHorario, ConfigAgenda
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
 import os, requests, json, bcrypt
-from datetime import datetime
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 load_dotenv()
@@ -29,6 +29,81 @@ def gerar_numero_pedido():
 def admin_logado():
     return session.get('admin_id') is not None
 
+# ─── HELPERS DE AGENDA ────────────────────────────────────────────
+
+def get_config_agenda():
+    config = ConfigAgenda.query.first()
+    if not config:
+        config = ConfigAgenda()
+        db.session.add(config)
+        db.session.commit()
+    return config
+
+def horarios_disponiveis(pedido_pago_em=None):
+    """
+    Retorna lista de dicts {'data': date, 'hora': int} disponíveis
+    a partir de agora + tempo de preparo, respeitando config e bloqueios.
+    Retorna os próximos 7 dias úteis com slots livres.
+    """
+    config = get_config_agenda()
+    minutos_preparo = config.minutos_preparo
+    hora_abertura = config.hora_abertura
+    hora_fechamento = config.hora_fechamento
+    max_por_slot = config.max_por_horario
+    dias_permitidos = [int(d) for d in config.dias_semana.split(',')]
+
+    agora = datetime.now()
+    mais_cedo = agora + timedelta(minutes=minutos_preparo)
+
+    # Coleta bloqueios dos próximos 14 dias
+    ate = date.today() + timedelta(days=14)
+    bloqueios = BloqueioHorario.query.filter(
+        BloqueioHorario.data >= date.today(),
+        BloqueioHorario.data <= ate
+    ).all()
+
+    def dia_bloqueado(d):
+        for b in bloqueios:
+            if b.data == d and b.hora_inicio is None:
+                return True
+        return False
+
+    def hora_bloqueada(d, h):
+        for b in bloqueios:
+            if b.data == d and b.hora_inicio is not None:
+                if b.hora_inicio <= h < b.hora_fim:
+                    return True
+        return False
+
+    slots_disponiveis = []
+    dia_atual = date.today()
+
+    for _ in range(14):  # varre até 14 dias à frente
+        if dia_atual.weekday() + 1 in dias_permitidos or (dia_atual.weekday() == 6 and 0 in dias_permitidos):
+            # weekday(): 0=seg,...,6=dom — nossa convenção: 0=dom,1=seg,...,6=sab
+            dia_semana_conv = (dia_atual.weekday() + 1) % 7  # converte: seg=1,...,dom=0
+            if dia_semana_conv in dias_permitidos and not dia_bloqueado(dia_atual):
+                for hora in range(hora_abertura, hora_fechamento):
+                    dt_slot = datetime.combine(dia_atual, datetime.min.time()).replace(hour=hora)
+                    if dt_slot <= mais_cedo:
+                        continue
+                    if hora_bloqueada(dia_atual, hora):
+                        continue
+                    # Conta agendamentos já existentes neste slot
+                    ocupados = Agendamento.query.filter_by(
+                        data_retirada=dia_atual,
+                        hora_retirada=hora
+                    ).filter(Agendamento.status != 'cancelado').count()
+                    if ocupados < max_por_slot:
+                        slots_disponiveis.append({
+                            'data': dia_atual.isoformat(),
+                            'hora': hora,
+                            'label': f"{dia_atual.strftime('%d/%m/%Y')} às {hora:02d}:00"
+                        })
+        dia_atual += timedelta(days=1)
+
+    return slots_disponiveis
+
 # ─── ROTAS PÚBLICAS ──────────────────────────────────────────────
 
 @app.route('/')
@@ -51,6 +126,79 @@ def checkout():
 def obrigado(numero):
     pedido = Pedido.query.filter_by(numero=numero).first_or_404()
     return render_template('obrigado.html', pedido=pedido)
+
+# ─── AGENDAMENTO PÚBLICO ─────────────────────────────────────────
+
+@app.route('/agendar/<numero>')
+def agendar(numero):
+    """Página pós-pagamento onde o cliente escolhe o horário de retirada."""
+    pedido = Pedido.query.filter_by(numero=numero).first_or_404()
+    if pedido.status != 'paid':
+        return render_template('agendar.html', pedido=pedido, slots=[], erro='Pagamento ainda não confirmado.')
+    slots = horarios_disponiveis(pedido_pago_em=pedido.criado_em)
+    return render_template('agendar.html', pedido=pedido, slots=slots, erro=None)
+
+@app.route('/api/agendar', methods=['POST'])
+def api_agendar():
+    """Cliente confirma ou remarca o horário de retirada."""
+    data = request.json
+    numero = data.get('numero')
+    data_retirada = data.get('data')  # 'YYYY-MM-DD'
+    hora_retirada = data.get('hora')  # int
+
+    pedido = Pedido.query.filter_by(numero=numero).first()
+    if not pedido:
+        return jsonify({'erro': 'Pedido não encontrado'}), 404
+    if pedido.status != 'paid':
+        return jsonify({'erro': 'Pagamento não confirmado'}), 400
+
+    data_obj = date.fromisoformat(data_retirada)
+
+    # Verifica disponibilidade
+    config = get_config_agenda()
+    ocupados = Agendamento.query.filter_by(
+        data_retirada=data_obj,
+        hora_retirada=hora_retirada
+    ).filter(Agendamento.status != 'cancelado').count()
+
+    agendamento_existente = Agendamento.query.filter_by(pedido_id=pedido.id).first()
+    if agendamento_existente:
+        # Desconta o próprio agendamento na contagem se estiver remarcando
+        if agendamento_existente.data_retirada == data_obj and agendamento_existente.hora_retirada == hora_retirada:
+            return jsonify({'erro': 'Você já está agendado neste horário'}), 400
+        ocupados_reais = ocupados - (1 if agendamento_existente.status != 'cancelado' and
+                                     agendamento_existente.data_retirada == data_obj and
+                                     agendamento_existente.hora_retirada == hora_retirada else 0)
+        if ocupados_reais >= config.max_por_horario:
+            return jsonify({'erro': 'Horário indisponível'}), 409
+        agendamento_existente.data_retirada = data_obj
+        agendamento_existente.hora_retirada = hora_retirada
+        agendamento_existente.status = 'remarcado'
+        agendamento_existente.atualizado_em = datetime.utcnow()
+        db.session.commit()
+        return jsonify({'ok': True, 'remarcado': True, 'label': f"{data_obj.strftime('%d/%m/%Y')} às {hora_retirada:02d}:00"})
+
+    if ocupados >= config.max_por_horario:
+        return jsonify({'erro': 'Horário indisponível'}), 409
+
+    agendamento = Agendamento(
+        pedido_id=pedido.id,
+        data_retirada=data_obj,
+        hora_retirada=hora_retirada
+    )
+    db.session.add(agendamento)
+    db.session.commit()
+    return jsonify({'ok': True, 'remarcado': False, 'label': f"{data_obj.strftime('%d/%m/%Y')} às {hora_retirada:02d}:00"})
+
+@app.route('/api/horarios-disponiveis')
+def api_horarios_disponiveis():
+    """Retorna slots disponíveis (usado pelo frontend da página de agendamento)."""
+    numero = request.args.get('numero')
+    pedido = Pedido.query.filter_by(numero=numero).first()
+    if not pedido or pedido.status != 'paid':
+        return jsonify([])
+    slots = horarios_disponiveis(pedido_pago_em=pedido.criado_em)
+    return jsonify(slots)
 
 # ─── SORTEIO PÚBLICO ─────────────────────────────────────────────
 
@@ -437,7 +585,106 @@ def admin_listar_numeros(sorteio_id):
     } for n in s.numeros]
     return jsonify(numeros)
 
+# ─── ADMIN: AGENDA ────────────────────────────────────────────────
+
+@app.route('/admin/agenda')
+def admin_agenda():
+    """Retorna todos os agendamentos dos próximos 14 dias para o admin."""
+    if not admin_logado(): abort(401)
+    ate = date.today() + timedelta(days=14)
+    agendamentos = Agendamento.query.filter(
+        Agendamento.data_retirada >= date.today(),
+        Agendamento.data_retirada <= ate
+    ).order_by(Agendamento.data_retirada, Agendamento.hora_retirada).all()
+
+    resultado = []
+    for a in agendamentos:
+        pedido = Pedido.query.get(a.pedido_id)
+        resultado.append({
+            'id': a.id,
+            'pedido_numero': pedido.numero if pedido else '',
+            'pedido_nome': pedido.nome if pedido else '',
+            'pedido_telefone': pedido.telefone if pedido else '',
+            'data': a.data_retirada.isoformat(),
+            'hora': a.hora_retirada,
+            'label': f"{a.data_retirada.strftime('%d/%m/%Y')} às {a.hora_retirada:02d}:00",
+            'status': a.status
+        })
+    return jsonify(resultado)
+
+@app.route('/admin/agenda/config', methods=['GET'])
+def admin_get_config_agenda():
+    if not admin_logado(): abort(401)
+    config = get_config_agenda()
+    return jsonify({
+        'hora_abertura': config.hora_abertura,
+        'hora_fechamento': config.hora_fechamento,
+        'minutos_preparo': config.minutos_preparo,
+        'max_por_horario': config.max_por_horario,
+        'dias_semana': config.dias_semana
+    })
+
+@app.route('/admin/agenda/config', methods=['POST'])
+def admin_salvar_config_agenda():
+    if not admin_logado(): abort(401)
+    d = request.json
+    config = get_config_agenda()
+    config.hora_abertura = int(d.get('hora_abertura', config.hora_abertura))
+    config.hora_fechamento = int(d.get('hora_fechamento', config.hora_fechamento))
+    config.minutos_preparo = int(d.get('minutos_preparo', config.minutos_preparo))
+    config.max_por_horario = int(d.get('max_por_horario', config.max_por_horario))
+    config.dias_semana = d.get('dias_semana', config.dias_semana)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/agenda/bloqueio', methods=['POST'])
+def admin_criar_bloqueio():
+    if not admin_logado(): abort(401)
+    d = request.json
+    b = BloqueioHorario(
+        data=date.fromisoformat(d['data']),
+        hora_inicio=d.get('hora_inicio'),  # None = dia inteiro
+        hora_fim=d.get('hora_fim'),
+        motivo=d.get('motivo', '')
+    )
+    db.session.add(b)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': b.id})
+
+@app.route('/admin/agenda/bloqueio/<int:bloqueio_id>', methods=['DELETE'])
+def admin_remover_bloqueio(bloqueio_id):
+    if not admin_logado(): abort(401)
+    b = BloqueioHorario.query.get_or_404(bloqueio_id)
+    db.session.delete(b)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/agenda/bloqueios')
+def admin_listar_bloqueios():
+    if not admin_logado(): abort(401)
+    ate = date.today() + timedelta(days=60)
+    bloqueios = BloqueioHorario.query.filter(
+        BloqueioHorario.data >= date.today(),
+        BloqueioHorario.data <= ate
+    ).order_by(BloqueioHorario.data).all()
+    return jsonify([{
+        'id': b.id,
+        'data': b.data.isoformat(),
+        'hora_inicio': b.hora_inicio,
+        'hora_fim': b.hora_fim,
+        'motivo': b.motivo or '',
+        'label': f"{b.data.strftime('%d/%m/%Y')}" + (f" {b.hora_inicio:02d}h–{b.hora_fim:02d}h" if b.hora_inicio is not None else ' (dia inteiro)')
+    } for b in bloqueios])
+
 def pedido_to_dict(p):
+    agendamento = None
+    if p.agendamento:
+        agendamento = {
+            'data': p.agendamento.data_retirada.isoformat(),
+            'hora': p.agendamento.hora_retirada,
+            'label': f"{p.agendamento.data_retirada.strftime('%d/%m/%Y')} às {p.agendamento.hora_retirada:02d}:00",
+            'status': p.agendamento.status
+        }
     return {
         'id': str(p.id),
         'numero': p.numero,
@@ -455,6 +702,7 @@ def pedido_to_dict(p):
         'codigo_rastreio': p.codigo_rastreio or '',
         'mp_payment_id': p.mp_payment_id or '',
         'criado_em': p.criado_em.isoformat() if p.criado_em else '',
+        'agendamento': agendamento,
         'itens': [
             {
                 'nome_produto': i.nome_produto,
@@ -473,12 +721,23 @@ def admin():
     sorteios = Sorteio.query.order_by(Sorteio.criado_em.desc()).all()
     sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
     pedidos_json = [pedido_to_dict(p) for p in pedidos]
+
+    # Agendamentos dos próximos 14 dias para a aba Agenda
+    ate = date.today() + timedelta(days=14)
+    agendamentos_proximos = Agendamento.query.filter(
+        Agendamento.data_retirada >= date.today(),
+        Agendamento.data_retirada <= ate
+    ).order_by(Agendamento.data_retirada, Agendamento.hora_retirada).all()
+    config_agenda = get_config_agenda()
+
     return render_template('admin.html',
         pedidos=pedidos,
         produtos=produtos,
         sorteios=sorteios,
         sorteio_ativo=sorteio_ativo,
-        pedidos_json=pedidos_json
+        pedidos_json=pedidos_json,
+        agendamentos_proximos=agendamentos_proximos,
+        config_agenda=config_agenda
     )
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────

@@ -1,0 +1,713 @@
+{% extends "base.html" %}
+{% block title %}Agendar Retirada — {{ pedido.numero }}{% endblock %}
+{% block description %}Escolha o dia e horário para retirar sua cesta de presentes.{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:        #c60909;
+    --red-dark:   #a00707;
+    --rose:       #ff9393;
+    --rose-light: #fff4f4;
+    --rose-mid:   #ffe0e0;
+    --off-white:  #fdf8f8;
+    --ink:        #1a1a1a;
+    --ink-muted:  #6b6560;
+    --border:     #f0e4e4;
+    --card-radius: 20px;
+    --btn-radius:  50px;
+    --sucesso:    #27ae60;
+  }
+
+  * { box-sizing: border-box; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0   rgba(198,9,9,.3); }
+    70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
+    100% { box-shadow: 0 0 0 0   rgba(198,9,9,0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes checkPop {
+    0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+    70%  { transform: scale(1.15) rotate(5deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  /* ── URGÊNCIA BAR ── */
+  .urgencia-bar {
+    background: var(--red);
+    color: #fff;
+    text-align: center;
+    padding: 12px 24px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: .05em;
+  }
+  .urgencia-bar strong { font-weight: 700; }
+
+  /* ── HERO MINI ── */
+  .hero-mini {
+    position: relative;
+    padding: 48px 24px 44px;
+    text-align: center;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+    animation: fadeUp .7s ease both;
+  }
+  .hero-mini-bg {
+    position: absolute; inset: 0;
+    background: #ffc0c0;
+    opacity: .85;
+    z-index: 0;
+  }
+  .hero-mini::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%; transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(255,147,147,.22) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .hero-mini > * { position: relative; z-index: 2; }
+
+  .hero-mini img.logo {
+    display: block;
+    margin: 0 auto 20px;
+    width: clamp(110px, 20vw, 170px);
+    height: auto;
+    filter: drop-shadow(0 4px 16px rgba(198,9,9,.22)) drop-shadow(0 2px 6px rgba(0,0,0,.12));
+  }
+  .hero-mini h1 {
+    font-family: 'Montserrat', sans-serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -.03em;
+    margin-bottom: 10px;
+  }
+  .hero-mini h1 em {
+    font-style: italic;
+    color: var(--red);
+    font-weight: 300;
+  }
+  .hero-mini p.sub {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--ink-muted);
+    font-style: italic;
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.75;
+  }
+
+  /* badge do pedido */
+  .pedido-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 24px;
+    background: rgba(255,255,255,.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.9);
+    border-radius: 50px;
+    padding: 10px 22px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: .04em;
+  }
+  .pedido-badge .dot {
+    width: 8px; height: 8px;
+    background: var(--sucesso);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(39,174,96,.25);
+    animation: pulse-ring 2s infinite;
+  }
+
+  /* ── MAIN ── */
+  .agendar-wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 48px 20px 72px;
+    animation: fadeUp .5s ease .15s both;
+  }
+
+  /* ── ALERTA ERRO ── */
+  .alerta-erro {
+    background: #fdecea;
+    border-left: 4px solid var(--red);
+    border-radius: 14px;
+    padding: 18px 22px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--red);
+    font-weight: 500;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: #fff;
+    border-radius: var(--card-radius);
+    border: 1.5px solid var(--border);
+    padding: 28px 28px 32px;
+    margin-bottom: 20px;
+    transition: box-shadow .25s;
+  }
+  .card:hover { box-shadow: 0 16px 40px rgba(198,9,9,.08); }
+
+  .card-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--red);
+    display: block;
+    margin-bottom: 14px;
+  }
+  .card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -.01em;
+  }
+  .card p.hint {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+    line-height: 1.6;
+  }
+
+  /* ── DIAS ── */
+  .label-field {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .grade-dias {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 28px;
+    scrollbar-width: none;
+  }
+  .grade-dias::-webkit-scrollbar { display: none; }
+
+  .dia-btn {
+    flex-shrink: 0;
+    width: 66px;
+    padding: 12px 0;
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    background: var(--off-white);
+    cursor: pointer;
+    text-align: center;
+    transition: all .18s;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .dia-btn .dia-semana {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .dia-btn .dia-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--ink);
+    line-height: 1.1;
+    margin: 2px 0;
+  }
+  .dia-btn .dia-mes {
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: .06em;
+  }
+  .dia-btn:hover {
+    border-color: var(--rose);
+    background: var(--rose-light);
+  }
+  .dia-btn.ativo {
+    background: var(--ink);
+    border-color: var(--ink);
+  }
+  .dia-btn.ativo .dia-semana,
+  .dia-btn.ativo .dia-num,
+  .dia-btn.ativo .dia-mes { color: #fff; }
+
+  /* ── HORAS ── */
+  .grade-horas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+    min-height: 52px;
+  }
+  .hora-btn {
+    border: 1.5px solid var(--border);
+    background: var(--off-white);
+    border-radius: 12px;
+    padding: 12px 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all .18s;
+    text-align: center;
+    letter-spacing: .02em;
+  }
+  .hora-btn:hover {
+    border-color: var(--rose);
+    background: var(--rose-light);
+    color: var(--red);
+  }
+  .hora-btn.ativo {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+  .vazio-horas {
+    grid-column: 1/-1;
+    text-align: center;
+    color: var(--ink-muted);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    padding: 18px 0;
+    font-style: italic;
+  }
+
+  /* ── BOTÃO CONFIRMAR ── */
+  .btn-confirmar {
+    width: 100%;
+    padding: 16px 28px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-confirmar:hover:not(:disabled) {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(198,9,9,.35);
+  }
+  .btn-confirmar:active:not(:disabled) { transform: translateY(0); }
+  .btn-confirmar:disabled {
+    opacity: .38;
+    cursor: not-allowed;
+  }
+
+  .spinner {
+    width: 15px; height: 15px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  /* ── MSG INLINE ── */
+  .msg {
+    margin-top: 14px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+  }
+  .msg.erro { background: #fdecea; color: var(--red); border-left: 3px solid var(--red); }
+  .msg.ok   { background: #eafaf1; color: #1e8449;   border-left: 3px solid #27ae60; }
+
+  /* ── SUCESSO ── */
+  #secao-sucesso {
+    display: none;
+    text-align: center;
+  }
+  #secao-sucesso .card {
+    padding: 44px 28px;
+  }
+  .check-anim {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 12px;
+    animation: checkPop .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  #secao-sucesso h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  #secao-sucesso h2 em {
+    font-style: italic;
+    color: var(--red);
+    font-weight: 400;
+  }
+  #secao-sucesso p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+  }
+  .horario-box {
+    background: var(--rose-light);
+    border: 1.5px solid var(--rose-mid);
+    border-radius: 14px;
+    padding: 18px 24px;
+    margin: 22px 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -.01em;
+  }
+  .horario-box span {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .btn-remarcar {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    background: transparent;
+    color: var(--ink-muted);
+    border: 1.5px solid var(--border);
+    padding: 13px 28px;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: border-color .2s, color .2s, background .2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .btn-remarcar:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: var(--rose-light);
+  }
+
+  /* ── COMO FUNCIONA MINI ── */
+  .info-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+  }
+  .info-step {
+    text-align: center;
+    padding: 18px 12px;
+    background: var(--off-white);
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+  }
+  .info-step .num {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-style: italic;
+    color: var(--red);
+    opacity: .3;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .info-step strong {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .info-step p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 480px) {
+    .card { padding: 22px 18px 26px; }
+    .grade-horas { grid-template-columns: repeat(3, 1fr); }
+    .info-steps { grid-template-columns: 1fr; }
+    .agendar-wrap { padding: 32px 16px 60px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="urgencia-bar">
+  <strong>Pedido {{ pedido.numero }}</strong> — Pagamento confirmado ✔ Agende sua retirada abaixo
+</div>
+
+<!-- HERO MINI -->
+<section class="hero-mini">
+  <div class="hero-mini-bg"></div>
+  <img
+    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580746/Cesta_de_Presentes_8_oivt9w.png"
+    alt="Cestas de Presentes"
+    class="logo"
+  >
+  <h1>Agende sua<br><em>retirada</em></h1>
+  <p class="sub">Escolha o melhor dia e horário para buscar sua cesta. Rápido e fácil.</p>
+
+  <div class="pedido-badge">
+    <span class="dot"></span>
+    {{ pedido.nome.split()[0] }} · Pedido {{ pedido.numero }}
+  </div>
+</section>
+
+<!-- CONTEÚDO PRINCIPAL -->
+<div class="agendar-wrap">
+
+  {% if erro %}
+  <div class="alerta-erro">⚠️ {{ erro }}</div>
+  {% endif %}
+
+  <!-- SUCESSO -->
+  <div id="secao-sucesso">
+    <div class="card">
+      <span class="check-anim">🎉</span>
+      <h2>Retirada <em>agendada!</em></h2>
+      <p>Tudo certo! Estaremos prontos para você no horário escolhido.<br>Você receberá a confirmação por e-mail.</p>
+      <div class="horario-box">
+        <span>📅 Sua retirada está marcada para</span>
+        <span id="horario-confirmado-texto"></span>
+      </div>
+      <p style="font-size:12px">Qualquer dúvida, fale pelo WhatsApp. Até lá! 🧡</p>
+      <br>
+      <button class="btn-remarcar" onclick="voltarParaAgendamento()">
+        🔄 Quero remarcar
+      </button>
+    </div>
+  </div>
+
+  <!-- AGENDAMENTO -->
+  {% if not erro %}
+  <div id="secao-agendamento">
+
+    <!-- CARD DIAS + HORÁRIOS -->
+    <div class="card">
+      <span class="card-label">Agendamento de retirada</span>
+      <h2>Escolha o dia e horário</h2>
+      <p class="hint">Atendemos de segunda a sábado, das 7h às 21h. Os horários disponíveis já consideram o tempo de preparo da sua cesta.</p>
+
+      <span class="label-field">Selecione o dia</span>
+      <div class="grade-dias" id="grade-dias"></div>
+
+      <span class="label-field">Selecione o horário</span>
+      <div class="grade-horas" id="grade-horas">
+        <p class="vazio-horas">← Escolha um dia primeiro</p>
+      </div>
+
+      <button class="btn-confirmar" id="btn-confirmar" disabled onclick="confirmarAgendamento()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg>
+        Confirmar horário
+      </button>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <!-- CARD INFO -->
+    <div class="card">
+      <span class="card-label">Como funciona</span>
+      <h2>O que acontece agora</h2>
+      <div class="info-steps">
+        <div class="info-step">
+          <div class="num">01</div>
+          <strong>Você agenda</strong>
+          <p>Escolha o dia e horário mais conveniente para você</p>
+        </div>
+        <div class="info-step">
+          <div class="num">02</div>
+          <strong>Montamos</strong>
+          <p>Sua cesta é preparada artesanalmente com todo carinho</p>
+        </div>
+        <div class="info-step">
+          <div class="num">03</div>
+          <strong>Você retira</strong>
+          <p>Chegue no horário marcado e leve sua cesta! 🎁</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  const NUMERO_PEDIDO = "{{ pedido.numero }}";
+  const SLOTS_BRUTOS  = {{ slots | tojson }};
+
+  let diaSelecionado  = null;
+  let horaSelecionada = null;
+
+  const slotsPorData = {};
+  SLOTS_BRUTOS.forEach(s => {
+    if (!slotsPorData[s.data]) slotsPorData[s.data] = [];
+    slotsPorData[s.data].push(s.hora);
+  });
+  const dias = Object.keys(slotsPorData).sort();
+
+  const DIAS_PT  = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const MESES_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+  function parseDateLocal(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function renderDias() {
+    const el = document.getElementById('grade-dias');
+    el.innerHTML = '';
+    if (dias.length === 0) {
+      el.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink-muted);font-style:italic;padding:8px 0">Nenhum horário disponível agora. Tente em breve.</p>';
+      return;
+    }
+    dias.forEach(data => {
+      const d   = parseDateLocal(data);
+      const btn = document.createElement('button');
+      btn.className   = 'dia-btn';
+      btn.dataset.data = data;
+      btn.innerHTML = `
+        <div class="dia-semana">${DIAS_PT[d.getDay()]}</div>
+        <div class="dia-num">${d.getDate()}</div>
+        <div class="dia-mes">${MESES_PT[d.getMonth()]}</div>
+      `;
+      btn.addEventListener('click', () => selecionarDia(data, btn));
+      el.appendChild(btn);
+    });
+  }
+
+  function selecionarDia(data, btnEl) {
+    diaSelecionado  = data;
+    horaSelecionada = null;
+    document.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('ativo'));
+    btnEl.classList.add('ativo');
+    renderHoras(slotsPorData[data] || []);
+    atualizarBotao();
+  }
+
+  function renderHoras(horas) {
+    const el = document.getElementById('grade-horas');
+    el.innerHTML = '';
+    if (horas.length === 0) {
+      el.innerHTML = '<p class="vazio-horas">Nenhum horário disponível neste dia.</p>';
+      return;
+    }
+    horas.sort((a, b) => a - b).forEach(h => {
+      const btn = document.createElement('button');
+      btn.className   = 'hora-btn';
+      btn.dataset.hora = h;
+      btn.textContent  = `${String(h).padStart(2,'0')}:00`;
+      btn.addEventListener('click', () => selecionarHora(h, btn));
+      el.appendChild(btn);
+    });
+  }
+
+  function selecionarHora(hora, btnEl) {
+    horaSelecionada = hora;
+    document.querySelectorAll('.hora-btn').forEach(b => b.classList.remove('ativo'));
+    btnEl.classList.add('ativo');
+    atualizarBotao();
+  }
+
+  function atualizarBotao() {
+    document.getElementById('btn-confirmar').disabled = !(diaSelecionado && horaSelecionada !== null);
+  }
+
+  async function confirmarAgendamento() {
+    const btn = document.getElementById('btn-confirmar');
+    const msg = document.getElementById('msg');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Confirmando...';
+    msg.style.display = 'none';
+
+    try {
+      const resp = await fetch('/api/agendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ numero: NUMERO_PEDIDO, data: diaSelecionado, hora: horaSelecionada })
+      });
+      const json = await resp.json();
+      if (!resp.ok || json.erro) throw new Error(json.erro || 'Erro ao agendar.');
+      mostrarSucesso(json.label);
+    } catch (err) {
+      msg.className = 'msg erro';
+      msg.textContent = '⚠️ ' + (err.message || 'Erro inesperado. Tente novamente.');
+      msg.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M20 6L9 17l-5-5"/></svg> Confirmar horário';
+    }
+  }
+
+  function mostrarSucesso(label) {
+    document.getElementById('secao-agendamento').style.display = 'none';
+    const sec = document.getElementById('secao-sucesso');
+    sec.style.display = 'block';
+    document.getElementById('horario-confirmado-texto').textContent = label;
+    sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function voltarParaAgendamento() {
+    document.getElementById('secao-sucesso').style.display = 'none';
+    document.getElementById('secao-agendamento').style.display = 'block';
+    diaSelecionado  = null;
+    horaSelecionada = null;
+    document.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('ativo'));
+    document.getElementById('grade-horas').innerHTML = '<p class="vazio-horas">← Escolha um dia primeiro</p>';
+    atualizarBotao();
+  }
+
+  // init
+  renderDias();
+  if (dias.length > 0) {
+    const primeiro = document.querySelector('.dia-btn');
+    if (primeiro) selecionarDia(primeiro.dataset.data, primeiro);
+  }
+</script>
+
+{% endblock %}

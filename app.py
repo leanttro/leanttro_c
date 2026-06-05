@@ -245,9 +245,14 @@ def calcular_frete():
     }
 
     try:
+        print(f"[FRETE] Chamando SuperFrete: {SF_URL}/calculator", flush=True)
+        print(f"[FRETE] Token presente: {'sim' if SF_TOKEN else 'NAO'}", flush=True)
+        print(f"[FRETE] Payload: {payload}", flush=True)
         resp = requests.post(f'{SF_URL}/calculator', json=payload, headers=headers, timeout=10)
+        print(f"[FRETE] Status: {resp.status_code}", flush=True)
+        print(f"[FRETE] Body: {resp.text[:500]}", flush=True)
         if resp.status_code != 200:
-            return jsonify({'erro': 'Erro ao calcular frete'}), 502
+            return jsonify({'erro': f'SuperFrete erro {resp.status_code}: {resp.text[:300]}'}), 502
 
         opcoes = []
         for s in resp.json():

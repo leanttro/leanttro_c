@@ -25,10 +25,6 @@
     from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-  @keyframes floatHeart {
-    0%, 100% { transform: translateY(0) rotate(-8deg); }
-    50%       { transform: translateY(-10px) rotate(8deg); }
-  }
   @keyframes pulse-ring {
     0%   { box-shadow: 0 0 0 0 rgba(198,9,9,0.3); }
     70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
@@ -39,7 +35,7 @@
     to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
-  /* ANNOUNCEMENT BAR */
+  /* ── ANNOUNCEMENT BAR ── */
   .urgencia-bar {
     background: var(--red);
     color: #fff;
@@ -52,7 +48,7 @@
   }
   .urgencia-bar strong { font-weight: 700; }
 
-  /* HERO */
+  /* ── HERO ── */
   .hero {
     position: relative;
     padding: 64px 24px 52px;
@@ -61,185 +57,225 @@
     border-bottom: 1px solid var(--border);
     animation: fadeUp 0.7s ease both;
   }
-
-  /* Background image layer */
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    background-image: url('https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png');
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0.7;
-    z-index: 0;
-  }
-
-  /* Color overlay */
   .hero-overlay {
-    position: absolute;
-    inset: 0;
-    background: #ffc0c0;
-    opacity: 0.92;
-    z-index: 1;
+    position: absolute; inset: 0;
+    background: #ffc0c0; opacity: 0.92; z-index: 1;
   }
-
-  /* Radial glow on top */
   .hero::before {
     content: '';
     position: absolute;
     top: -80px; left: 50%; transform: translateX(-50%);
     width: 700px; height: 700px;
     background: radial-gradient(circle, rgba(255,147,147,0.22) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 2;
+    pointer-events: none; z-index: 2;
   }
-
   .hero > * { position: relative; z-index: 3; }
-
-  /* LOGO */
   .hero-logo {
-    display: block;
-    margin: 0 auto 24px;
-    width: clamp(140px, 26vw, 220px);
-    height: auto;
-    animation: logoReveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both;
+    display: block; margin: 0 auto 24px;
+    width: clamp(140px, 26vw, 220px); height: auto;
+    animation: logoReveal 0.9s cubic-bezier(0.22,1,0.36,1) 0.15s both;
     filter: drop-shadow(0 4px 24px rgba(198,9,9,0.22)) drop-shadow(0 2px 8px rgba(0,0,0,0.12));
   }
-
   .hero h1 {
     font-family: 'Montserrat', sans-serif;
     font-size: clamp(42px, 6.5vw, 80px);
-    font-weight: 800;
-    color: var(--ink);
-    line-height: 1.08;
-    margin-bottom: 14px;
-    letter-spacing: -0.03em;
+    font-weight: 800; color: var(--ink);
+    line-height: 1.08; margin-bottom: 14px; letter-spacing: -0.03em;
   }
-  .hero h1 em {
-    font-style: italic;
-    color: var(--red);
-    font-weight: 300;
-  }
+  .hero h1 em { font-style: italic; color: var(--red); font-weight: 300; }
   .hero p {
     font-family: 'Playfair Display', serif;
-    font-size: 17px;
-    color: var(--ink-muted);
-    max-width: 480px;
-    margin: 0 auto 0;
-    line-height: 1.8;
-    font-weight: 400;
-    font-style: italic;
+    font-size: 17px; color: var(--ink-muted);
+    max-width: 480px; margin: 0 auto; line-height: 1.8;
+    font-weight: 400; font-style: italic;
   }
   .hero-trust {
     display: flex; gap: 0; justify-content: center; flex-wrap: wrap;
-    margin-top: 36px; padding-top: 0;
-    border-top: none;
+    margin-top: 36px;
   }
   .trust-item {
     font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    color: var(--ink-muted);
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    font-size: 11px; color: var(--ink-muted);
+    letter-spacing: 0.04em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
     padding: 20px 28px;
-    position: relative;
     background: rgba(255,255,255,0.62);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
     border: 1px solid rgba(255,255,255,0.8);
-    border-radius: 14px;
-    margin: 4px;
-    min-width: 130px;
+    border-radius: 14px; margin: 4px; min-width: 130px;
     transition: background 0.2s, transform 0.2s;
   }
-  .trust-item:hover {
-    background: rgba(255,255,255,0.85);
-    transform: translateY(-3px);
-  }
+  .trust-item:hover { background: rgba(255,255,255,0.85); transform: translateY(-3px); }
   .trust-item .trust-icon {
-    width: 36px; height: 36px;
-    background: var(--red);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+    width: 36px; height: 36px; background: var(--red);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   }
-  .trust-item .trust-icon svg {
-    width: 17px; height: 17px;
-    stroke: #fff; fill: none;
-    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-  }
-  .trust-item strong {
-    display: block;
-    color: var(--ink);
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: -0.01em;
-    text-transform: none;
-    text-align: center;
-  }
-  .trust-item span.sub {
-    display: block;
-    font-size: 10px;
-    color: var(--ink-muted);
-    letter-spacing: 0.05em;
-    text-align: center;
-  }
+  .trust-item .trust-icon svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .trust-item strong { display: block; color: var(--ink); font-weight: 700; font-size: 12px; letter-spacing: -0.01em; text-transform: none; text-align: center; }
+  .trust-item span.sub { display: block; font-size: 10px; color: var(--ink-muted); letter-spacing: 0.05em; text-align: center; }
 
-  @media (max-width: 600px) {
-    .hero-trust {
-      gap: 0;
-    }
-    .trust-item {
-      padding: 14px 16px;
-      min-width: calc(50% - 8px);
-      flex: 1 1 calc(50% - 8px);
-    }
-  }
-
-  /* CESTAS */
+  /* ── SEÇÃO CESTAS ── */
   #cestas {
-    padding: 48px 24px;
+    padding: 48px 0 64px;
     max-width: 1180px;
     margin: 0 auto;
   }
   .section-header {
     text-align: center;
-    margin-bottom: 64px;
+    margin-bottom: 32px;
+    padding: 0 24px;
   }
   .section-header .label {
     font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--red);
-    display: block;
-    margin-bottom: 14px;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--red); display: block; margin-bottom: 14px;
   }
   .section-header h2 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(28px, 3.5vw, 44px);
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 12px;
-    letter-spacing: -0.01em;
+    font-weight: 700; color: var(--ink);
+    margin-bottom: 12px; letter-spacing: -0.01em;
   }
   .section-header p {
     font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    color: var(--ink-muted);
-    font-weight: 400;
+    font-size: 15px; color: var(--ink-muted); font-weight: 400;
   }
 
-  .cestas-grid {
+  /* ── TOOLBAR: FILTROS + TOGGLE GRADE ── */
+  .cestas-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  /* Slicer de categorias */
+  .cat-slicer {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .cat-slicer-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; font-weight: 600;
+    padding: 7px 16px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--ink-muted);
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+    letter-spacing: .02em;
+  }
+  .cat-slicer-btn:hover { border-color: var(--red); color: var(--red); }
+  .cat-slicer-btn.ativo {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  /* Botão toggle grade */
+  .toggle-grade-btn {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink-muted);
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .toggle-grade-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .toggle-grade-btn svg { width: 15px; height: 15px; }
+
+  /* ── WRAPPER CARROSSEL ── */
+  .cestas-carousel-wrap {
+    position: relative;
+    padding: 0 24px;
+  }
+
+  /* Carrossel: scroll horizontal */
+  .cestas-carousel {
+    display: flex;
+    gap: 20px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 8px;
+  }
+  .cestas-carousel::-webkit-scrollbar { display: none; }
+
+  .cestas-carousel .cesta-card {
+    flex: 0 0 340px;
+    scroll-snap-align: start;
+  }
+
+  /* Botões de navegação do carrossel */
+  .carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 16px rgba(0,0,0,.1);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    transition: all .2s;
+    color: var(--ink);
+  }
+  .carousel-nav:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .carousel-nav svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .carousel-nav.prev { left: -4px; }
+  .carousel-nav.next { right: -4px; }
+  .carousel-nav.hidden { opacity: 0; pointer-events: none; }
+
+  /* Dots de paginação */
+  .carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .carousel-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: all .2s;
+    border: none; padding: 0;
+  }
+  .carousel-dot.ativo { background: var(--red); width: 20px; border-radius: 4px; }
+
+  /* ── MODO GRADE ── */
+  .cestas-carousel-wrap.modo-grade .cestas-carousel {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    overflow-x: visible;
+    scroll-snap-type: none;
     gap: 24px;
   }
+  .cestas-carousel-wrap.modo-grade .cesta-card {
+    flex: none;
+    width: auto;
+  }
+  .cestas-carousel-wrap.modo-grade .carousel-nav { display: none; }
+  .cestas-carousel-wrap.modo-grade .carousel-dots { display: none; }
+
+  /* ── CARDS ── */
   .cesta-card {
     background: #fff;
     border-radius: var(--card-radius);
@@ -248,27 +284,18 @@
     border: 1.5px solid var(--border);
     transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
-  .cesta-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 48px rgba(198,9,9,0.12);
-  }
-  .cesta-card.destaque {
-    background: var(--ink);
-    border-color: var(--ink);
-  }
-  .cesta-card.destaque:hover {
-    box-shadow: 0 20px 48px rgba(0,0,0,0.28);
-  }
+  .cesta-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(198,9,9,0.12); }
+  .cesta-card.destaque { background: var(--ink); border-color: var(--ink); }
+  .cesta-card.destaque:hover { box-shadow: 0 20px 48px rgba(0,0,0,0.28); }
+  .cesta-card.oculto { display: none !important; }
+
   .destaque-badge {
     position: absolute; top: 18px; left: 18px;
     font-family: 'Montserrat', sans-serif;
     font-size: 10px; font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--red);
-    background: #fff;
-    padding: 5px 12px;
-    border-radius: 50px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--red); background: #fff;
+    padding: 5px 12px; border-radius: 50px;
   }
   .cesta-img {
     width: 100%; height: 260px;
@@ -281,280 +308,117 @@
   .cesta-body { padding: 28px 28px 32px; }
   .cesta-body h3 {
     font-family: 'Playfair Display', serif;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 10px;
-    letter-spacing: -0.01em;
+    font-size: 24px; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; letter-spacing: -0.01em;
   }
   .cesta-card.destaque .cesta-body h3 { color: #fff; }
   .cesta-body .descricao {
     font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: var(--ink-muted);
-    line-height: 1.75;
-    margin-bottom: 20px;
-    font-weight: 400;
+    font-size: 13px; color: var(--ink-muted);
+    line-height: 1.75; margin-bottom: 20px; font-weight: 400;
   }
   .cesta-card.destaque .descricao { color: rgba(255,255,255,0.5); }
   .cesta-itens { list-style: none; margin-bottom: 28px; padding: 0; }
   .cesta-itens li {
     font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: var(--ink-muted);
-    padding: 7px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-size: 13px; color: var(--ink-muted);
+    padding: 7px 0; display: flex; align-items: center; gap: 10px;
     border-bottom: 1px solid var(--border);
   }
   .cesta-card.destaque .cesta-itens li { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.08); }
-  .cesta-itens li::before {
-    content: '♥';
-    font-size: 9px;
-    color: var(--red);
-    flex-shrink: 0;
-  }
+  .cesta-itens li::before { content: '♥'; font-size: 9px; color: var(--red); flex-shrink: 0; }
   .cesta-card.destaque .cesta-itens li::before { color: var(--rose); }
   .cesta-preco {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    padding-top: 24px;
-    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 16px;
+    padding-top: 24px; border-top: 1px solid var(--border);
   }
   .cesta-card.destaque .cesta-preco { border-color: rgba(255,255,255,0.12); }
   .preco-label {
     font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-weight: 600;
-    color: var(--ink-muted);
-    display: block;
-    margin-bottom: 4px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    font-weight: 600; color: var(--ink-muted); display: block; margin-bottom: 4px;
   }
   .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
   .preco-valor {
     font-family: 'Montserrat', sans-serif;
-    font-size: 38px;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-    letter-spacing: -0.02em;
+    font-size: 38px; font-weight: 900; color: var(--red);
+    line-height: 1; letter-spacing: -0.02em;
   }
   .cesta-card.destaque .preco-valor { color: var(--rose); }
 
-  /* COMO FUNCIONA */
-  #como-funciona {
-    background: var(--red);
-    padding: 48px 24px 96px;
+  /* Estado vazio filtro */
+  .cestas-empty {
+    display: none;
+    text-align: center;
+    padding: 48px 24px;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--ink-muted);
+    font-size: 14px;
+    grid-column: 1/-1;
   }
+  .cestas-empty .empty-emoji { font-size: 40px; display: block; margin-bottom: 12px; }
+
+  /* ── COMO FUNCIONA ── */
+  #como-funciona { background: var(--red); padding: 48px 24px 96px; }
   #como-funciona .inner { max-width: 960px; margin: 0 auto; }
   #como-funciona .section-header .label { color: rgba(255,255,255,0.7); }
   #como-funciona .section-header h2 { color: #fff; }
   #como-funciona .section-header p { color: rgba(255,255,255,0.65); }
-  .steps {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    margin-top: 48px;
-    border: 1px solid rgba(255,255,255,0.2);
-    border-radius: 16px;
-    overflow: hidden;
-  }
-  .step {
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-    cursor: pointer;
-    transition: background 0.2s;
-    background: rgba(0,0,0,0.15);
-  }
+  .steps { display: flex; flex-direction: column; gap: 0; margin-top: 48px; border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; overflow: hidden; }
+  .step { border-bottom: 1px solid rgba(255,255,255,0.15); cursor: pointer; transition: background 0.2s; background: rgba(0,0,0,0.15); }
   .step:last-child { border-bottom: none; }
   .step.active { background: rgba(0,0,0,0.25); }
-  .step-header {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    padding: 24px 32px;
-    user-select: none;
-  }
+  .step-header { display: flex; align-items: center; gap: 20px; padding: 24px 32px; user-select: none; }
   .step-header:hover { background: rgba(0,0,0,0.1); }
-  .step-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    font-weight: 700;
-    color: #fff;
-    line-height: 1;
-    min-width: 48px;
-  }
-  .step h4 {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    color: #fff;
-    flex: 1;
-    letter-spacing: -0.01em;
-    margin: 0;
-  }
-  .step-chevron {
-    color: rgba(255,255,255,0.5);
-    font-size: 20px;
-    transition: transform 0.3s, color 0.2s;
-    line-height: 1;
-  }
+  .step-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 700; color: #fff; line-height: 1; min-width: 48px; }
+  .step h4 { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700; color: #fff; flex: 1; letter-spacing: -0.01em; margin: 0; }
+  .step-chevron { color: rgba(255,255,255,0.5); font-size: 20px; transition: transform 0.3s, color 0.2s; line-height: 1; }
   .step.active .step-chevron { transform: rotate(180deg); color: #fff; }
-  .step-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.35s ease, padding 0.35s ease;
-    padding: 0 32px 0 100px;
-  }
+  .step-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.35s ease; padding: 0 32px 0 100px; }
   .step.active .step-body { max-height: 200px; padding: 0 32px 24px 100px; }
-  .step p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-    color: rgba(255,255,255,0.75);
-    line-height: 1.75;
-    margin: 0;
-  }
-  .step-detail {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    color: rgba(255,255,255,0.9);
-    margin-top: 8px;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-  }
-  @media (max-width: 600px) {
-    .step-body, .step.active .step-body { padding-left: 32px; }
-  }
+  .step p { font-family: 'Montserrat', sans-serif; font-size: 14px; color: rgba(255,255,255,0.75); line-height: 1.75; margin: 0; }
+  .step-detail { font-family: 'Montserrat', sans-serif; font-size: 12px; color: rgba(255,255,255,0.9); margin-top: 8px; font-weight: 700; letter-spacing: 0.05em; }
 
-  @media (max-width: 480px) {
-    .hero-logo {
-      width: clamp(120px, 52vw, 180px);
-    }
-    .hero-trust {
-      gap: 20px;
-    }
-  }
-  /* ── SEÇÃO SORTEIO (home) ── */
-  #sorteio-home {
-    background: linear-gradient(135deg, var(--ink) 0%, #2a0808 100%);
-    padding: 40px 24px 80px;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
+  /* ── SORTEIO ── */
+  #sorteio-home { background: linear-gradient(135deg, var(--ink) 0%, #2a0808 100%); padding: 40px 24px 80px; text-align: center; position: relative; overflow: hidden; }
+  #sorteio-home .inner-sorteio { position: relative; max-width: 640px; margin: 0 auto; }
+  #sorteio-home h2 { font-family: 'Playfair Display', serif; font-size: clamp(28px, 4vw, 44px); font-weight: 700; color: #fff; margin-bottom: 14px; line-height: 1.15; }
+  #sorteio-home h2 em { font-style: italic; color: var(--rose); }
+  #sorteio-home p { font-family: 'Montserrat', sans-serif; font-size: 15px; color: rgba(255,255,255,0.45); line-height: 1.8; margin-bottom: 36px; }
+  .sorteio-home-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-sorteio { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: var(--red); color: #fff; padding: 15px 32px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
+  .btn-sorteio:hover { background: var(--red-dark); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(198,9,9,0.4); }
+  .btn-sorteio-outline { font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; background: transparent; color: rgba(255,255,255,0.7); border: 2px solid rgba(255,255,255,0.15); padding: 14px 32px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; transition: border-color 0.2s, color 0.2s; }
+  .btn-sorteio-outline:hover { border-color: rgba(255,255,255,0.4); color: #fff; }
 
-  #sorteio-home .inner-sorteio {
-    position: relative;
-    max-width: 640px;
-    margin: 0 auto;
-  }
-  #sorteio-home .sorteio-tag { display: none; }
-  #sorteio-home h2 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 4vw, 44px);
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 14px;
-    line-height: 1.15;
-  }
-  #sorteio-home h2 em {
-    font-style: italic;
-    color: var(--rose);
-  }
-  #sorteio-home p {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    color: rgba(255,255,255,0.45);
-    line-height: 1.8;
-    margin-bottom: 36px;
-  }
-  .sorteio-home-btns {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .btn-sorteio {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: var(--red);
-    color: #fff;
-    padding: 15px 32px;
-    border-radius: 12px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-  }
-  .btn-sorteio:hover {
-    background: var(--red-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(198,9,9,0.4);
-  }
-  .btn-sorteio-outline {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: transparent;
-    color: rgba(255,255,255,0.7);
-    border: 2px solid rgba(255,255,255,0.15);
-    padding: 14px 32px;
-    border-radius: 12px;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .btn-sorteio-outline:hover {
-    border-color: rgba(255,255,255,0.4);
-    color: #fff;
-  }
-
-  @media (max-width: 480px) {
-    .hero-logo {
-      width: clamp(120px, 52vw, 180px);
-    }
-    .hero-trust {
-      gap: 20px;
-    }
-  }
+  /* ── BTN PRIMARY ── */
   .btn-primary {
     font-family: 'Montserrat', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-    background: var(--red) !important;
-    color: #fff !important;
-    padding: 14px 28px !important;
-    border-radius: var(--btn-radius) !important;
-    text-decoration: none;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
+    font-size: 12px !important; font-weight: 700 !important;
+    letter-spacing: 0.08em !important; text-transform: uppercase !important;
+    background: var(--red) !important; color: #fff !important;
+    padding: 14px 28px !important; border-radius: var(--btn-radius) !important;
+    text-decoration: none; display: inline-flex !important;
+    align-items: center !important; gap: 8px !important;
     transition: background 0.2s, transform 0.15s, box-shadow 0.2s !important;
   }
-  .btn-primary:hover {
-    background: var(--red-dark) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important;
-  }
+  .btn-primary:hover { background: var(--red-dark) !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important; }
   .btn-primary:active { transform: translateY(0) !important; }
   .btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .cesta-card.destaque .btn-primary {
-    animation: pulse-ring 2.5s ease-in-out infinite;
-  }
+  .cesta-card.destaque .btn-primary { animation: pulse-ring 2.5s ease-in-out infinite; }
 
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .step-body, .step.active .step-body { padding-left: 32px; }
+    .trust-item { padding: 14px 16px; min-width: calc(50% - 8px); flex: 1 1 calc(50% - 8px); }
+    .cestas-carousel .cesta-card { flex: 0 0 85vw; }
+    .carousel-nav { display: none; }
+    .toggle-grade-btn span { display: none; }
+  }
+  @media (max-width: 480px) {
+    .hero-logo { width: clamp(120px, 52vw, 180px); }
+  }
 </style>
 {% endblock %}
 
@@ -566,60 +430,31 @@
 
 <!-- HERO -->
 <section class="hero">
-  <!-- Background layers -->
-  <img
-    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png"
-    alt=""
-    aria-hidden="true"
-    style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.35;z-index:0;pointer-events:none;"
-  >
+  <img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780591568/Sem_nome_1350_x_550_px_k6fqlt.png" alt="" aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:0.35;z-index:0;pointer-events:none;">
   <div class="hero-overlay"></div>
-
-  <!-- Logo -->
-  <img
-    src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580746/Cesta_de_Presentes_8_oivt9w.png"
-    alt="Cestas de Presentes"
-    class="hero-logo"
-  >
-
+  <img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580746/Cesta_de_Presentes_8_oivt9w.png" alt="Cestas de Presentes" class="hero-logo">
   <h1>Cestas que<br><em>encantam</em></h1>
   <p>Cestas artesanais feitas com amor e montadas sob encomenda. Cada detalhe pensado para surpreender quem você ama.</p>
-
   <div class="hero-trust">
     <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      </div>
-      <strong>Pagamento seguro</strong>
-      <span class="sub">Mercado Pago</span>
+      <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <strong>Pagamento seguro</strong><span class="sub">Mercado Pago</span>
     </div>
     <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-      </div>
-      <strong>Entrega</strong>
-      <span class="sub">São Paulo</span>
+      <div class="trust-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+      <strong>Entrega</strong><span class="sub">São Paulo</span>
     </div>
     <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>
-      </div>
-      <strong>Embalagem premium</strong>
-      <span class="sub">Inclusa</span>
+      <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div>
+      <strong>Embalagem premium</strong><span class="sub">Inclusa</span>
     </div>
     <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><path d="M21 15l-3-3 3-3"/><path d="M16 12h5"/><circle cx="12" cy="7" r="4"/></svg>
-      </div>
-      <strong>Mensagem</strong>
-      <span class="sub">Personalizada grátis</span>
+      <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><path d="M21 15l-3-3 3-3"/><path d="M16 12h5"/><circle cx="12" cy="7" r="4"/></svg></div>
+      <strong>Mensagem</strong><span class="sub">Personalizada grátis</span>
     </div>
     <div class="trust-item">
-      <div class="trust-icon">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
-      </div>
-      <strong>Retirada agendada</strong>
-      <span class="sub">Seg–Sab · 7h às 21h</span>
+      <div class="trust-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg></div>
+      <strong>Retirada agendada</strong><span class="sub">Seg–Sab · 7h às 21h</span>
     </div>
   </div>
 </section>
@@ -632,42 +467,99 @@
     <p>Todas com embalagem premium, laço e cartão personalizado</p>
   </div>
 
-  <div class="cestas-grid">
+  <!-- TOOLBAR: filtro categorias + toggle grade -->
+  <div class="cestas-toolbar">
+
+    <!-- Slicer de categorias (só aparece se houver categorias) -->
+    {% set cats_com_produtos = [] %}
     {% for produto in produtos %}
-    <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}">
-      {% if loop.index == 2 %}<div class="destaque-badge">Mais vendida</div>{% endif %}
+      {% if produto.categoria and produto.categoria not in cats_com_produtos %}
+        {% set _ = cats_com_produtos.append(produto.categoria) %}
+      {% endif %}
+    {% endfor %}
 
-      <div class="cesta-img">
-        {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
-          <img src="{{ produto.imagem }}" alt="{{ produto.nome }}">
-        {% endif %}
-      </div>
+    {% if cats_com_produtos %}
+    <div class="cat-slicer" id="cat-slicer">
+      <button class="cat-slicer-btn ativo" data-cat="todas" onclick="filtrarCategoria(this)">Todas</button>
+      {% for cat in cats_com_produtos | sort(attribute='ordem') %}
+      <button class="cat-slicer-btn" data-cat="{{ cat.id }}" onclick="filtrarCategoria(this)">{{ cat.nome }}</button>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div></div>
+    {% endif %}
 
-      <div class="cesta-body">
-        <h3>{{ produto.nome }}</h3>
-        <p class="descricao">{{ produto.descricao }}</p>
+    <!-- Botão toggle grade -->
+    <button class="toggle-grade-btn" id="toggle-grade" onclick="toggleGrade()" title="Alternar grade">
+      <svg id="icon-grade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+        <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+      </svg>
+      <svg id="icon-carousel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+      </svg>
+      <span id="label-grade">Ver em grade</span>
+    </button>
+  </div>
 
-        {% if produto.itens %}
-        <ul class="cesta-itens">
-          {% for item in produto.itens | fromjson %}
-          <li>{{ item }}</li>
-          {% endfor %}
-        </ul>
-        {% endif %}
+  <!-- CARROSSEL -->
+  <div class="cestas-carousel-wrap" id="cestas-wrap">
+    <button class="carousel-nav prev" id="btn-prev" onclick="scrollCarousel(-1)" aria-label="Anterior">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
 
-        <div class="cesta-preco">
-          <div>
-            <span class="preco-label">A partir de</span>
-            <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+    <div class="cestas-carousel" id="cestas-carousel">
+      {% for produto in produtos %}
+      <div class="cesta-card {% if loop.index == 2 %}destaque{% endif %}"
+           data-cat="{{ produto.categoria_id or 'sem-categoria' }}"
+           id="card-{{ produto.id }}">
+
+        {% if loop.index == 2 %}<div class="destaque-badge">Mais vendida</div>{% endif %}
+
+        <div class="cesta-img">
+          {% if produto.imagem and produto.imagem != '/static/img/cesta1.jpg' %}
+            <img src="{{ produto.imagem }}" alt="{{ produto.nome }}" loading="lazy">
+          {% endif %}
+        </div>
+
+        <div class="cesta-body">
+          <h3>{{ produto.nome }}</h3>
+          <p class="descricao">{{ produto.descricao }}</p>
+          {% if produto.itens %}
+          <ul class="cesta-itens">
+            {% for item in produto.itens | fromjson %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+          <div class="cesta-preco">
+            <div>
+              <span class="preco-label">A partir de</span>
+              <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+            </div>
+            <a href="/produto/{{ produto.slug }}" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>
+              Pedir esta
+            </a>
           </div>
-          <a href="/produto/{{ produto.slug }}" class="btn-primary">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>
-            Pedir esta
-          </a>
         </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+
+    <button class="carousel-nav next" id="btn-next" onclick="scrollCarousel(1)" aria-label="Próximo">
+      <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <!-- Dots -->
+    <div class="carousel-dots" id="carousel-dots"></div>
+
+    <!-- Estado vazio -->
+    <div class="cestas-empty" id="cestas-empty">
+      <span class="empty-emoji">🎁</span>
+      Nenhuma cesta nesta categoria ainda.
+    </div>
   </div>
 </section>
 
@@ -680,7 +572,6 @@
       <p>Simples, rápido e seguro</p>
     </div>
     <div class="steps">
-
       <div class="step active" onclick="toggleStep(this)">
         <div class="step-header">
           <div class="step-num">01</div>
@@ -692,7 +583,6 @@
           <div class="step-detail">Ver cestas →</div>
         </div>
       </div>
-
       <div class="step" onclick="toggleStep(this)">
         <div class="step-header">
           <div class="step-num">02</div>
@@ -704,7 +594,6 @@
           <div class="step-detail">Pix tem desconto especial</div>
         </div>
       </div>
-
       <div class="step" onclick="toggleStep(this)">
         <div class="step-header">
           <div class="step-num">03</div>
@@ -716,7 +605,6 @@
           <div class="step-detail">Cartão personalizado incluso</div>
         </div>
       </div>
-
       <div class="step" onclick="toggleStep(this)">
         <div class="step-header">
           <div class="step-num">04</div>
@@ -728,24 +616,13 @@
           <div class="step-detail">Retirada agendada · Envio rastreado para todo o Brasil</div>
         </div>
       </div>
-
     </div>
-
-    <script>
-    function toggleStep(el) {
-      const isActive = el.classList.contains('active');
-      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
-      if (!isActive) el.classList.add('active');
-    }
-    </script>
   </div>
 </section>
 
-<!-- SORTEIO DO MÊS — só exibe se houver sorteio ativo -->
 {% if sorteio %}
 <section id="sorteio-home">
   <div class="inner-sorteio">
-    
     <h2>Compre e concorra a uma<br><em>cesta especial</em></h2>
     <p>Todo cliente que comprar qualquer cesta ganha automaticamente um número no sorteio. Você também pode adquirir números extras e aumentar suas chances!</p>
     <div class="sorteio-home-btns">
@@ -755,5 +632,120 @@
   </div>
 </section>
 {% endif %}
+
+<script>
+// ── COMO FUNCIONA ──
+function toggleStep(el) {
+  const isActive = el.classList.contains('active');
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  if (!isActive) el.classList.add('active');
+}
+
+// ── ESTADO ──
+let modoGrade = false;
+let catAtiva = 'todas';
+
+// ── CARROSSEL ──
+const carousel = document.getElementById('cestas-carousel');
+const wrap     = document.getElementById('cestas-wrap');
+const dotsWrap = document.getElementById('carousel-dots');
+const btnPrev  = document.getElementById('btn-prev');
+const btnNext  = document.getElementById('btn-next');
+
+function cardsVisiveis() {
+  return [...carousel.querySelectorAll('.cesta-card:not(.oculto)')];
+}
+
+function buildDots() {
+  dotsWrap.innerHTML = '';
+  if (modoGrade) return;
+  const cards = cardsVisiveis();
+  cards.forEach((_, i) => {
+    const d = document.createElement('button');
+    d.className = 'carousel-dot' + (i === 0 ? ' ativo' : '');
+    d.onclick = () => scrollToCard(i);
+    dotsWrap.appendChild(d);
+  });
+}
+
+function scrollToCard(index) {
+  const cards = cardsVisiveis();
+  if (!cards[index]) return;
+  carousel.scrollTo({ left: cards[index].offsetLeft - carousel.offsetLeft, behavior: 'smooth' });
+}
+
+function scrollCarousel(dir) {
+  const cards = cardsVisiveis();
+  const cardW = cards[0] ? cards[0].offsetWidth + 20 : 360;
+  carousel.scrollBy({ left: dir * cardW, behavior: 'smooth' });
+}
+
+function atualizarNavBtns() {
+  if (modoGrade) { btnPrev.classList.add('hidden'); btnNext.classList.add('hidden'); return; }
+  btnPrev.classList.toggle('hidden', carousel.scrollLeft <= 10);
+  btnNext.classList.toggle('hidden', carousel.scrollLeft + carousel.clientWidth >= carousel.scrollWidth - 10);
+}
+
+function atualizarDotAtivo() {
+  const cards = cardsVisiveis();
+  let idx = 0, minDist = Infinity;
+  cards.forEach((c, i) => {
+    const dist = Math.abs(c.getBoundingClientRect().left - carousel.getBoundingClientRect().left);
+    if (dist < minDist) { minDist = dist; idx = i; }
+  });
+  dotsWrap.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('ativo', i === idx));
+}
+
+carousel.addEventListener('scroll', () => { atualizarNavBtns(); atualizarDotAtivo(); });
+
+// ── FILTRO CATEGORIAS ──
+function filtrarCategoria(btn) {
+  catAtiva = btn.dataset.cat;
+  document.querySelectorAll('.cat-slicer-btn').forEach(b => b.classList.remove('ativo'));
+  btn.classList.add('ativo');
+
+  const todos = [...carousel.querySelectorAll('.cesta-card')];
+  let visiveis = 0;
+  todos.forEach(card => {
+    const pertence = catAtiva === 'todas' || card.dataset.cat === catAtiva;
+    card.classList.toggle('oculto', !pertence);
+    if (pertence) visiveis++;
+  });
+
+  document.getElementById('cestas-empty').style.display = visiveis === 0 ? 'block' : 'none';
+
+  // Volta ao início
+  carousel.scrollTo({ left: 0, behavior: 'smooth' });
+  setTimeout(() => { buildDots(); atualizarNavBtns(); }, 50);
+}
+
+// ── TOGGLE GRADE ──
+function toggleGrade() {
+  modoGrade = !modoGrade;
+  wrap.classList.toggle('modo-grade', modoGrade);
+
+  const iconGrade    = document.getElementById('icon-grade');
+  const iconCarousel = document.getElementById('icon-carousel');
+  const label        = document.getElementById('label-grade');
+
+  if (modoGrade) {
+    iconGrade.style.display = 'none';
+    iconCarousel.style.display = '';
+    label.textContent = 'Ver carrossel';
+  } else {
+    iconGrade.style.display = '';
+    iconCarousel.style.display = 'none';
+    label.textContent = 'Ver em grade';
+    carousel.scrollTo({ left: 0, behavior: 'instant' });
+  }
+
+  buildDots();
+  atualizarNavBtns();
+}
+
+// Init
+buildDots();
+atualizarNavBtns();
+</script>
 
 {% endblock %}

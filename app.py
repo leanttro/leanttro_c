@@ -856,7 +856,9 @@ def admin():
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 
-with app.app_context():
+@app.cli.command('init-db')
+def init_db():
+    """Cria tabelas e insere produtos de seed se o banco estiver vazio."""
     db.create_all()
     if Produto.query.count() == 0:
         produtos_seed = [
@@ -892,6 +894,8 @@ with app.app_context():
             db.session.add(p)
         db.session.commit()
         print("✅ Produtos criados!")
+    else:
+        print("✅ Banco já inicializado.")
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

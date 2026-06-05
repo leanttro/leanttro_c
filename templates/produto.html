@@ -31,9 +31,16 @@
     100% { box-shadow: 0 0 0 0   rgba(198,9,9,0); }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes floatIn {
-    from { opacity: 0; transform: translateY(16px); }
-    to   { opacity: 1; transform: translateY(0); }
+  @keyframes cartBounce {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    70%  { transform: scale(0.92); }
+    100% { transform: scale(1); }
+  }
+  @keyframes addedPop {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.9); }
+    60%  { opacity: 1; transform: translateY(-4px) scale(1.03); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   /* ── URGÊNCIA BAR ── */
@@ -151,6 +158,121 @@
     flex-shrink: 0;
   }
 
+  /* ── PRECO BOX ── */
+  .preco-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--off-white);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+  .preco-box .preco-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .preco-box .preco-valor {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--red);
+    line-height: 1;
+    letter-spacing: -.02em;
+  }
+
+  /* ── QTDE ── */
+  .qtde-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .qtde-btn {
+    width: 36px; height: 36px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    background: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, background .2s;
+    line-height: 1;
+  }
+  .qtde-btn:hover { border-color: var(--red); background: var(--rose-light); color: var(--red); }
+  .qtde-num {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    min-width: 24px;
+    text-align: center;
+  }
+
+  /* ── BTN CARRINHO ── */
+  #btn-carrinho {
+    width: 100%;
+    padding: 16px 28px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    animation: pulse-ring 2.5s ease-in-out infinite;
+    margin-bottom: 12px;
+  }
+  #btn-carrinho:hover {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(198,9,9,.35);
+  }
+  #btn-carrinho:active { transform: translateY(0); }
+  #btn-carrinho.added {
+    background: #1a7a3a;
+    animation: none;
+  }
+
+  .btn-ir-carrinho {
+    width: 100%;
+    padding: 14px 28px;
+    background: transparent;
+    color: var(--red);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--red);
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s, color .2s;
+    text-decoration: none;
+  }
+  .btn-ir-carrinho:hover { background: var(--rose-light); }
+  .btn-ir-carrinho.visible { display: flex; }
+
   /* ── AVISO AGENDAMENTO ── */
   .aviso-agendamento {
     display: flex;
@@ -160,16 +282,13 @@
     border: 1.5px solid var(--rose-mid);
     border-radius: 14px;
     padding: 16px 20px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
   .aviso-agendamento .aviso-icon {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     background: var(--red);
     border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
     font-size: 16px;
   }
@@ -188,184 +307,35 @@
     line-height: 1.6;
   }
 
-  /* ── FORM CHECKOUT ── */
-  .checkout-form {
-    background: #fff;
-    border-radius: var(--card-radius);
-    border: 1.5px solid var(--border);
-    padding: 28px 28px 32px;
-    transition: box-shadow .25s;
-  }
-  .checkout-form:hover { box-shadow: 0 16px 40px rgba(198,9,9,.07); }
-  .checkout-form h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--ink);
-    margin-bottom: 22px;
-    letter-spacing: -.01em;
-  }
-
-  .form-group { margin-bottom: 16px; }
-  .form-group label {
-    display: block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--ink-muted);
-    margin-bottom: 7px;
-  }
-  .form-group input,
-  .form-group textarea,
-  .form-group select {
-    width: 100%;
-    padding: 12px 16px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    font-size: 14px;
-    font-family: 'Montserrat', sans-serif;
-    color: var(--ink);
-    background: var(--off-white);
-    outline: none;
-    transition: border .2s, box-shadow .2s;
-  }
-  .form-group input:focus,
-  .form-group textarea:focus {
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(198,9,9,.08);
-  }
-
-  /* ── TABS ENTREGA ── */
-  .entrega-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: var(--ink-muted);
-    margin-bottom: 10px;
-    display: block;
-  }
-  .entrega-tabs {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-  .entrega-tab {
-    padding: 13px 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 12px;
-    text-align: center;
-    cursor: pointer;
-    transition: all .2s;
+  /* ── TOAST ── */
+  .toast-cart {
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--ink);
+    color: #fff;
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
-    font-weight: 500;
-    color: var(--ink-muted);
-    background: var(--off-white);
-  }
-  .entrega-tab:hover { border-color: var(--rose); background: var(--rose-light); }
-  .entrega-tab.ativo {
-    border-color: var(--red);
-    background: var(--rose-light);
-    color: var(--red);
-    font-weight: 700;
-  }
-
-  /* ── FRETE ── */
-  .frete-opcoes { margin: 12px 0; }
-  .frete-opcao {
+    font-weight: 600;
+    padding: 14px 24px;
+    border-radius: 50px;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 11px 14px;
-    border: 1.5px solid var(--border);
-    border-radius: 10px;
-    margin-bottom: 7px;
-    cursor: pointer;
-    transition: all .2s;
-    font-size: 13px;
-    font-family: 'Montserrat', sans-serif;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .25s, transform .25s;
+    z-index: 999;
+    white-space: nowrap;
   }
-  .frete-opcao:hover,
-  .frete-opcao.selecionado {
-    border-color: var(--red);
-    background: var(--rose-light);
+  .toast-cart.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
-
-  /* ── RESUMO ── */
-  .total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 11px 0;
-    border-top: 1px solid var(--border);
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: var(--ink-muted);
-  }
-  .total-row.final {
-    font-size: 20px;
-    font-weight: 800;
-    color: var(--red);
-    border-top: 2px solid var(--border);
-    padding-top: 14px;
-    margin-top: 4px;
-  }
-  .total-row.final span:first-child {
-    font-family: 'Playfair Display', serif;
+  .toast-cart a {
+    color: var(--rose);
     font-weight: 700;
-    color: var(--ink);
-    font-size: 18px;
-  }
-
-  /* ── BOTÃO PAGAR ── */
-  #btn-pagar {
-    width: 100%;
-    margin-top: 20px;
-    padding: 16px 28px;
-    background: var(--red);
-    color: #fff;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    border: none;
-    border-radius: var(--btn-radius);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: background .2s, transform .15s, box-shadow .2s;
-    animation: pulse-ring 2.5s ease-in-out infinite;
-  }
-  #btn-pagar:hover:not(:disabled) {
-    background: var(--red-dark);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(198,9,9,.35);
-  }
-  #btn-pagar:active:not(:disabled) { transform: translateY(0); }
-  #btn-pagar:disabled { opacity: .45; cursor: not-allowed; animation: none; }
-
-  .spinner {
-    width: 15px; height: 15px;
-    border: 2px solid rgba(255,255,255,.4);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin .7s linear infinite;
-  }
-  .sub-pagar {
-    text-align: center;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    color: var(--ink-muted);
-    margin-top: 10px;
-    letter-spacing: .03em;
+    text-decoration: none;
   }
 
   /* ── OUTROS PRODUTOS ── */
@@ -403,9 +373,7 @@
   .outro-card-img {
     height: 150px;
     background: var(--rose-light);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     font-size: 60px;
     overflow: hidden;
   }
@@ -428,7 +396,6 @@
 
   @media (max-width: 480px) {
     .itens-lista ul { grid-template-columns: 1fr; }
-    .checkout-form { padding: 20px 16px 24px; }
   }
 </style>
 {% endblock %}
@@ -450,7 +417,7 @@
     {% endif %}
   </div>
 
-  <!-- INFO + CHECKOUT -->
+  <!-- INFO -->
   <div class="produto-info">
     <span class="produto-label">🎁 Presente especial</span>
     <h1>{{ produto.nome }}</h1>
@@ -467,7 +434,7 @@
     </div>
     {% endif %}
 
-    <!-- AVISO AGENDAMENTO -->
+    <!-- AVISO -->
     <div class="aviso-agendamento">
       <div class="aviso-icon">🕐</div>
       <div class="aviso-texto">
@@ -476,86 +443,28 @@
       </div>
     </div>
 
-    <!-- FORM CHECKOUT -->
-    <div class="checkout-form">
-      <h3>Finalizar pedido</h3>
-
-      <div class="form-group">
-        <label>Seu nome completo</label>
-        <input type="text" id="nome" placeholder="Maria da Silva" required>
+    <!-- PREÇO + QTDE -->
+    <div class="preco-box">
+      <div>
+        <span class="preco-label">Valor</span>
+        <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
       </div>
-      <div class="form-group">
-        <label>E-mail (para confirmação)</label>
-        <input type="email" id="email" placeholder="maria@email.com" required>
+      <div class="qtde-wrap">
+        <button class="qtde-btn" onclick="alterarQtde(-1)">−</button>
+        <span class="qtde-num" id="qtde">1</span>
+        <button class="qtde-btn" onclick="alterarQtde(1)">+</button>
       </div>
-      <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="tel" id="telefone" placeholder="(11) 99999-9999">
-      </div>
-      <div class="form-group">
-        <label>Mensagem no cartão (opcional)</label>
-        <textarea id="mensagem" rows="2" placeholder="Ex: Para o amor da minha vida 💕"></textarea>
-      </div>
-
-      <span class="entrega-label">Forma de entrega</span>
-      <div class="entrega-tabs">
-        <div class="entrega-tab ativo" onclick="setEntrega('retirada', this)">🏪 Retirada grátis</div>
-        <div class="entrega-tab" onclick="setEntrega('envio', this)">🚚 Envio</div>
-      </div>
-
-      <div id="secao-envio" style="display:none">
-        <div class="form-group">
-          <label>CEP de entrega</label>
-          <div style="display:flex;gap:8px">
-            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1" oninput="mascara_cep(this)">
-            <button onclick="calcularFrete()" style="
-              padding: 0 18px;
-              background: transparent;
-              border: 1.5px solid var(--border);
-              border-radius: 10px;
-              font-family: 'Montserrat', sans-serif;
-              font-size: 12px;
-              font-weight: 700;
-              letter-spacing: .06em;
-              text-transform: uppercase;
-              color: var(--ink-muted);
-              cursor: pointer;
-              white-space: nowrap;
-              transition: border-color .2s, color .2s;
-            " onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-muted)'">
-              Calcular
-            </button>
-          </div>
-        </div>
-        <div id="frete-opcoes" class="frete-opcoes"></div>
-        <div id="endereco-wrap" style="display:none" class="form-group">
-          <label>Endereço completo</label>
-          <input type="text" id="endereco" placeholder="Rua, número, complemento, bairro">
-        </div>
-      </div>
-
-      <!-- RESUMO -->
-      <div style="margin-top:20px">
-        <div class="total-row">
-          <span>{{ produto.nome }}</span>
-          <span>R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
-        </div>
-        <div class="total-row" id="frete-row" style="display:none">
-          <span>Frete</span>
-          <span id="frete-valor">R$ 0,00</span>
-        </div>
-        <div class="total-row final">
-          <span>Total</span>
-          <span id="total-valor">R$ {{ "%.2f"|format(produto.preco)|replace('.', ',') }}</span>
-        </div>
-      </div>
-
-      <button id="btn-pagar" onclick="pagar()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-        Pagar com segurança
-      </button>
-      <p class="sub-pagar">Pix, cartão ou boleto via Mercado Pago</p>
     </div>
+
+    <!-- BOTÕES -->
+    <button id="btn-carrinho" onclick="adicionarCarrinho()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>
+      Adicionar ao carrinho
+    </button>
+    <a href="/carrinho" class="btn-ir-carrinho" id="btn-ir-carrinho">
+      Ver carrinho →
+    </a>
+
   </div>
 </div>
 
@@ -583,113 +492,83 @@
 </div>
 {% endif %}
 
+<!-- TOAST -->
+<div class="toast-cart" id="toast">
+  ✓ Adicionado! <a href="/carrinho">Ver carrinho</a>
+</div>
+
 <script>
-const PRODUTO_ID = '{{ produto.id }}';
-const PRECO_BASE = {{ produto.preco }};
-let tipoEntrega  = 'retirada';
-let freteValor   = 0;
-let servicoFrete = '';
-let cepFinal     = '';
-let enderecoFinal = '';
+const PRODUTO = {
+  id:    '{{ produto.id }}',
+  nome:  '{{ produto.nome }}',
+  preco: {{ produto.preco }},
+  imagem: '{{ produto.imagem or "" }}'
+};
+let qtde = 1;
 
-function setEntrega(tipo, el) {
-  tipoEntrega = tipo;
-  document.querySelectorAll('.entrega-tab').forEach(t => t.classList.remove('ativo'));
-  el.classList.add('ativo');
-  document.getElementById('secao-envio').style.display = tipo === 'envio' ? 'block' : 'none';
-  if (tipo === 'retirada') {
-    freteValor = 0; servicoFrete = '';
-    document.getElementById('frete-row').style.display = 'none';
-    atualizarTotal();
+function alterarQtde(delta) {
+  qtde = Math.max(1, qtde + delta);
+  document.getElementById('qtde').textContent = qtde;
+}
+
+function getCarrinho() {
+  try { return JSON.parse(localStorage.getItem('carrinho') || '[]'); } catch { return []; }
+}
+function salvarCarrinho(c) {
+  localStorage.setItem('carrinho', JSON.stringify(c));
+  atualizarHeaderCarrinho();
+}
+function atualizarHeaderCarrinho() {
+  const total = getCarrinho().reduce((s, i) => s + i.quantidade, 0);
+  const badge = document.getElementById('cart-badge');
+  if (badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'flex' : 'none';
   }
 }
 
-function mascara_cep(input) {
-  let v = input.value.replace(/\D/g,'');
-  if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
-  input.value = v;
-}
-
-async function calcularFrete() {
-  const cep = document.getElementById('cep').value.replace(/\D/g,'');
-  if (cep.length !== 8) return alert('Digite um CEP válido');
-  cepFinal = cep;
-  const div = document.getElementById('frete-opcoes');
-  div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink-muted);font-style:italic">Calculando...</p>';
-  const resp = await fetch('/api/frete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cep, produto_id: PRODUTO_ID })
-  });
-  const opcoes = await resp.json();
-  if (!opcoes.length) {
-    div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--red)">Não foi possível calcular o frete para este CEP.</p>';
-    return;
-  }
-  div.innerHTML = opcoes.slice(0, 4).map(op => `
-    <div class="frete-opcao" onclick="selecionarFrete(this, ${op.preco}, '${op.nome}')" data-preco="${op.preco}" data-nome="${op.nome}">
-      <input type="radio" name="frete" style="accent-color:var(--red)">
-      <div style="flex:1">
-        <strong style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink)">${op.empresa} ${op.nome}</strong>
-        <span style="font-family:Montserrat,sans-serif;color:var(--ink-muted);font-size:11px;margin-left:8px">${op.prazo} dias úteis</span>
-      </div>
-      <strong style="font-family:Montserrat,sans-serif;color:var(--red);font-size:13px">R$ ${op.preco.toFixed(2).replace('.',',')}</strong>
-    </div>
-  `).join('');
-  document.getElementById('endereco-wrap').style.display = 'block';
-}
-
-function selecionarFrete(el, preco, nome) {
-  document.querySelectorAll('.frete-opcao').forEach(e => e.classList.remove('selecionado'));
-  el.classList.add('selecionado');
-  el.querySelector('input').checked = true;
-  freteValor = preco; servicoFrete = nome;
-  document.getElementById('frete-row').style.display = 'flex';
-  document.getElementById('frete-valor').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
-  atualizarTotal();
-}
-
-function atualizarTotal() {
-  const total = PRECO_BASE + freteValor;
-  document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
-}
-
-async function pagar() {
-  const nome  = document.getElementById('nome').value.trim();
-  const email = document.getElementById('email').value.trim();
-  if (!nome || !email) return alert('Preencha nome e e-mail');
-  if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
-
-  const btn = document.getElementById('btn-pagar');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Processando...';
-
-  enderecoFinal = document.getElementById('endereco')?.value || '';
-
-  const resp = await fetch('/api/criar-preferencia', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      produto_id:    PRODUTO_ID,
-      nome, email,
-      telefone:      document.getElementById('telefone').value,
-      mensagem:      document.getElementById('mensagem').value,
-      tipo_entrega:  tipoEntrega,
-      cep:           cepFinal,
-      endereco:      enderecoFinal,
-      servico_frete: servicoFrete,
-      valor_frete:   freteValor
-    })
-  });
-
-  const data = await resp.json();
-  if (data.init_point) {
-    window.location.href = data.init_point;
+function adicionarCarrinho() {
+  const carrinho = getCarrinho();
+  const idx = carrinho.findIndex(i => i.id === PRODUTO.id);
+  if (idx >= 0) {
+    carrinho[idx].quantidade += qtde;
   } else {
-    alert('Erro ao processar pedido. Tente novamente.');
-    btn.disabled = false;
-    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg> Pagar com segurança';
+    carrinho.push({ ...PRODUTO, quantidade: qtde });
   }
+  salvarCarrinho(carrinho);
+
+  // feedback visual
+  const btn = document.getElementById('btn-carrinho');
+  btn.classList.add('added');
+  btn.innerHTML = '✓ Adicionado ao carrinho!';
+  document.getElementById('btn-ir-carrinho').classList.add('visible');
+
+  // bounce no ícone do header
+  const badge = document.getElementById('cart-badge');
+  if (badge) {
+    badge.style.animation = 'none';
+    badge.offsetHeight;
+    badge.style.animation = 'cartBounce .4s ease';
+  }
+
+  // toast
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+
+  // reset botão depois de 2s
+  setTimeout(() => {
+    btn.classList.remove('added');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg> Adicionar ao carrinho`;
+  }, 2000);
+}
+
+// inicializa badge
+atualizarHeaderCarrinho();
+
+// se já tem este item no carrinho, mostra botão de ir
+if (getCarrinho().find(i => i.id === PRODUTO.id)) {
+  document.getElementById('btn-ir-carrinho').classList.add('visible');
 }
 </script>
 {% endblock %}

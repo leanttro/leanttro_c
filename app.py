@@ -15,6 +15,12 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
 db.init_app(app)
 register_filters(app)
 
+@app.context_processor
+def inject_categorias():
+    from models import Categoria
+    cats = Categoria.query.filter_by(ativo=True).order_by(Categoria.ordem, Categoria.nome).all()
+    return dict(categorias_globais=cats)
+
 MP_TOKEN   = os.getenv('MP_ACCESS_TOKEN')
 ME_TOKEN   = os.getenv('MELHORENVIO_TOKEN')
 ME_URL     = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')

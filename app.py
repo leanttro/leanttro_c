@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, abort, session, redirect, url_for
-from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agendamento, BloqueioHorario, ConfigAgenda
+from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agendamento, BloqueioHorario, ConfigAgenda, Categoria
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
@@ -111,6 +111,17 @@ def index():
     produtos = Produto.query.filter_by(ativo=True).order_by(Produto.preco).all()
     sorteio = Sorteio.query.filter_by(ativo=True).first()
     return render_template('index.html', produtos=produtos, sorteio=sorteio)
+
+@app.route('/categoria/<slug>')
+def categoria_page(slug):
+    cat = Categoria.query.filter_by(slug=slug, ativo=True).first_or_404()
+    produtos = Produto.query.filter_by(categoria_id=cat.id, ativo=True).order_by(Produto.preco).all()
+    outras = Categoria.query.filter_by(ativo=True).order_by(Categoria.ordem).all()
+    return render_template('categoria.html',
+        categoria=cat,
+        produtos=produtos,
+        outras_categorias=outras
+    )
 
 @app.route('/produto/<slug>')
 def produto(slug):
@@ -503,6 +514,7 @@ def criar_produto():
         altura=float(d.get('altura', 20)),
         largura=float(d.get('largura', 20)),
         comprimento=float(d.get('comprimento', 20)),
+        categoria_id=d.get('categoria_id') or None,
         ativo=True
     )
     db.session.add(p)
@@ -524,6 +536,7 @@ def editar_produto(produto_id):
     p.altura = float(d.get('altura', 20))
     p.largura = float(d.get('largura', 20))
     p.comprimento = float(d.get('comprimento', 20))
+    p.categoria_id = d.get('categoria_id') or None
     db.session.commit()
     return jsonify({'ok': True})
 
@@ -540,6 +553,64 @@ def toggle_produto(produto_id):
     if not admin_logado(): abort(401)
     p = Produto.query.get_or_404(produto_id)
     p.ativo = request.json.get('ativo', not p.ativo)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ─── ADMIN: CATEGORIAS ───────────────────────────────────────────
+
+@app.route('/admin/categoria', methods=['POST'])
+def admin_criar_categoria():
+    if not admin_logado(): abort(401)
+    d = request.json
+    if Categoria.query.filter_by(slug=d.get('slug', '')).first():
+        return jsonify({'erro': 'Slug já existe'}), 400
+    cat = Categoria(
+        nome=d['nome'],
+        slug=d['slug'],
+        descricao=d.get('descricao', ''),
+        imagem=d.get('imagem', ''),
+        ordem=int(d.get('ordem', 0)),
+        ativo=True
+    )
+    db.session.add(cat)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': cat.id})
+
+@app.route('/admin/categoria/<categoria_id>', methods=['POST'])
+def admin_editar_categoria(categoria_id):
+    if not admin_logado(): abort(401)
+    cat = Categoria.query.get_or_404(categoria_id)
+    d = request.json
+    # Verifica slug único (exceto o próprio)
+    slug_existente = Categoria.query.filter(
+        Categoria.slug == d.get('slug', cat.slug),
+        Categoria.id != categoria_id
+    ).first()
+    if slug_existente:
+        return jsonify({'erro': 'Slug já existe em outra categoria'}), 400
+    cat.nome = d.get('nome', cat.nome)
+    cat.slug = d.get('slug', cat.slug)
+    cat.descricao = d.get('descricao', cat.descricao)
+    cat.imagem = d.get('imagem', cat.imagem)
+    cat.ordem = int(d.get('ordem', cat.ordem))
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/categoria/<categoria_id>/toggle', methods=['POST'])
+def admin_toggle_categoria(categoria_id):
+    if not admin_logado(): abort(401)
+    cat = Categoria.query.get_or_404(categoria_id)
+    cat.ativo = request.json.get('ativo', not cat.ativo)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/categoria/<categoria_id>', methods=['DELETE'])
+def admin_excluir_categoria(categoria_id):
+    if not admin_logado(): abort(401)
+    cat = Categoria.query.get_or_404(categoria_id)
+    # Desvincula produtos antes de excluir
+    Produto.query.filter_by(categoria_id=categoria_id).update({'categoria_id': None})
+    db.session.delete(cat)
     db.session.commit()
     return jsonify({'ok': True})
 
@@ -756,6 +827,7 @@ def admin():
     sorteios = Sorteio.query.order_by(Sorteio.criado_em.desc()).all()
     sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
     pedidos_json = [pedido_to_dict(p) for p in pedidos]
+    categorias = Categoria.query.order_by(Categoria.ordem, Categoria.nome).all()
 
     # Agendamentos dos próximos 14 dias para a aba Agenda
     ate = date.today() + timedelta(days=14)
@@ -771,6 +843,7 @@ def admin():
         sorteios=sorteios,
         sorteio_ativo=sorteio_ativo,
         pedidos_json=pedidos_json,
+        categorias=categorias,
         agendamentos_proximos=agendamentos_proximos,
         config_agenda=config_agenda
     )

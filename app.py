@@ -3,7 +3,7 @@ from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agen
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
-import os, requests, json, bcrypt
+import os, requests, json, bcrypt, random
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 
@@ -15,11 +15,11 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev')
 db.init_app(app)
 register_filters(app)
 
-MP_TOKEN  = os.getenv('MP_ACCESS_TOKEN')
-ME_TOKEN  = os.getenv('MELHORENVIO_TOKEN')
-ME_URL    = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
+MP_TOKEN   = os.getenv('MP_ACCESS_TOKEN')
+ME_TOKEN   = os.getenv('MELHORENVIO_TOKEN')
+ME_URL     = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
 CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
-BASE_URL  = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
+BASE_URL   = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
 
 def gerar_numero_pedido():
     hoje = datetime.utcnow().strftime('%Y%m%d')
@@ -117,6 +117,10 @@ def produto(slug):
     p = Produto.query.filter_by(slug=slug, ativo=True).first_or_404()
     outros = Produto.query.filter(Produto.ativo==True, Produto.id!=p.id).limit(2).all()
     return render_template('produto.html', produto=p, outros=outros)
+
+@app.route('/carrinho')
+def carrinho():
+    return render_template('carrinho.html')
 
 @app.route('/checkout')
 def checkout():
@@ -247,8 +251,6 @@ def calcular_frete():
 
     try:
         resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
-        print(f"[FRETE] Status: {resp.status_code}", flush=True)
-        print(f"[FRETE] Body: {resp.text[:500]}", flush=True)
         if resp.status_code != 200:
             return jsonify({'erro': f'ME erro {resp.status_code}: {resp.text[:300]}'}), 502
 
@@ -275,12 +277,38 @@ def calcular_frete():
 @app.route('/api/criar-preferencia', methods=['POST'])
 def criar_preferencia():
     data = request.json
-    produto = Produto.query.get(data.get('produto_id'))
-    if not produto:
-        return jsonify({'erro': 'Produto não encontrado'}), 404
+
+    # Suporte a múltiplos itens (carrinho) e fallback para 1 produto (compatibilidade)
+    itens_cart = data.get('itens', [])
+    if not itens_cart and data.get('produto_id'):
+        itens_cart = [{'produto_id': data['produto_id'], 'quantidade': 1}]
+
+    if not itens_cart:
+        return jsonify({'erro': 'Carrinho vazio'}), 400
 
     valor_frete = Decimal(str(data.get('valor_frete', 0)))
-    total = produto.preco + valor_frete
+    subtotal = Decimal('0')
+    itens_mp = []   # itens para o Mercado Pago
+    itens_db = []   # itens para salvar no banco
+
+    for item in itens_cart:
+        produto = Produto.query.get(item.get('produto_id'))
+        if not produto:
+            continue
+        qtd = int(item.get('quantidade', 1))
+        subtotal += produto.preco * qtd
+        itens_mp.append({
+            'title': produto.nome,
+            'quantity': qtd,
+            'unit_price': float(produto.preco),
+            'currency_id': 'BRL'
+        })
+        itens_db.append((produto, qtd))
+
+    if not itens_db:
+        return jsonify({'erro': 'Nenhum produto válido no carrinho'}), 400
+
+    total = subtotal + valor_frete
 
     pedido = Pedido(
         numero=gerar_numero_pedido(),
@@ -299,14 +327,16 @@ def criar_preferencia():
     db.session.add(pedido)
     db.session.flush()
 
-    item = ItemPedido(
-        pedido_id=pedido.id,
-        produto_id=produto.id,
-        nome_produto=produto.nome,
-        preco_unitario=produto.preco,
-        quantidade=1
-    )
-    db.session.add(item)
+    # Salva cada item do carrinho no banco
+    for produto, qtd in itens_db:
+        item_db = ItemPedido(
+            pedido_id=pedido.id,
+            produto_id=produto.id,
+            nome_produto=produto.nome,
+            preco_unitario=produto.preco,
+            quantidade=qtd
+        )
+        db.session.add(item_db)
 
     # ── Sorteio: atribuir número automático ao comprador ──
     sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
@@ -315,7 +345,6 @@ def criar_preferencia():
         todos = list(range(1, sorteio_ativo.total_numeros + 1))
         disponiveis = [n for n in todos if n not in numeros_usados]
         if disponiveis:
-            import random
             numero_sorteado = random.choice(disponiveis)
             novo_numero = NumeroSorteio(
                 sorteio_id=sorteio_ativo.id,
@@ -328,17 +357,21 @@ def criar_preferencia():
 
     db.session.commit()
 
-    preference = {
-        'items': [{
-            'title': produto.nome,
+    # Adiciona frete como item extra no MP se houver
+    if valor_frete > 0:
+        itens_mp.append({
+            'title': f'Frete — {data.get("servico_frete", "Envio")}',
             'quantity': 1,
-            'unit_price': float(total),
+            'unit_price': float(valor_frete),
             'currency_id': 'BRL'
-        }],
+        })
+
+    preference = {
+        'items': itens_mp,
         'payer': {'name': data['nome'], 'email': data['email']},
         'back_urls': {
             'success': f'{BASE_URL}/obrigado/{pedido.numero}',
-            'failure': f'{BASE_URL}/checkout?erro=pagamento',
+            'failure': f'{BASE_URL}/carrinho?erro=pagamento',
             'pending': f'{BASE_URL}/obrigado/{pedido.numero}'
         },
         'auto_return': 'approved',

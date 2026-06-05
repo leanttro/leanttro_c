@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, abort, session, redirect, url_for
-from models import db, Produto, Pedido, ItemPedido
+from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
@@ -34,7 +34,8 @@ def admin_logado():
 @app.route('/')
 def index():
     produtos = Produto.query.filter_by(ativo=True).order_by(Produto.preco).all()
-    return render_template('index.html', produtos=produtos)
+    sorteio = Sorteio.query.filter_by(ativo=True).first()
+    return render_template('index.html', produtos=produtos, sorteio=sorteio)
 
 @app.route('/produto/<slug>')
 def produto(slug):
@@ -50,6 +51,16 @@ def checkout():
 def obrigado(numero):
     pedido = Pedido.query.filter_by(numero=numero).first_or_404()
     return render_template('obrigado.html', pedido=pedido)
+
+# ─── SORTEIO PÚBLICO ─────────────────────────────────────────────
+
+@app.route('/sorteio')
+def sorteio_page():
+    s = Sorteio.query.filter_by(ativo=True).first()
+    numeros_reservados = []
+    if s:
+        numeros_reservados = [n.numero for n in s.numeros]
+    return render_template('sorteio.html', sorteio=s, numeros_reservados=numeros_reservados)
 
 # ─── API: FRETE ──────────────────────────────────────────────────
 
@@ -146,6 +157,25 @@ def criar_preferencia():
         quantidade=1
     )
     db.session.add(item)
+
+    # ── Sorteio: atribuir número automático ao comprador ──
+    sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
+    if sorteio_ativo:
+        numeros_usados = [n.numero for n in sorteio_ativo.numeros]
+        todos = list(range(1, sorteio_ativo.total_numeros + 1))
+        disponiveis = [n for n in todos if n not in numeros_usados]
+        if disponiveis:
+            import random
+            numero_sorteado = random.choice(disponiveis)
+            novo_numero = NumeroSorteio(
+                sorteio_id=sorteio_ativo.id,
+                numero=numero_sorteado,
+                nome_participante=data['nome'],
+                telefone=data.get('telefone', ''),
+                pedido_id=pedido.id
+            )
+            db.session.add(novo_numero)
+
     db.session.commit()
 
     preference = {
@@ -330,6 +360,83 @@ def toggle_produto(produto_id):
     db.session.commit()
     return jsonify({'ok': True})
 
+# ─── ADMIN: SORTEIO ──────────────────────────────────────────────
+
+@app.route('/admin/sorteio', methods=['POST'])
+def admin_criar_sorteio():
+    if not admin_logado(): abort(401)
+    d = request.json
+    # Desativa sorteios anteriores
+    Sorteio.query.update({'ativo': False})
+    s = Sorteio(
+        titulo=d['titulo'],
+        descricao=d.get('descricao', ''),
+        imagem=d.get('imagem', ''),
+        valor_numero=Decimal(str(d.get('valor_numero', 10))),
+        total_numeros=int(d.get('total_numeros', 50)),
+        data_sorteio=datetime.fromisoformat(d['data_sorteio']) if d.get('data_sorteio') else None,
+        ativo=True
+    )
+    db.session.add(s)
+    db.session.commit()
+    return jsonify({'ok': True, 'id': s.id})
+
+@app.route('/admin/sorteio/<sorteio_id>', methods=['POST'])
+def admin_editar_sorteio(sorteio_id):
+    if not admin_logado(): abort(401)
+    s = Sorteio.query.get_or_404(sorteio_id)
+    d = request.json
+    s.titulo = d.get('titulo', s.titulo)
+    s.descricao = d.get('descricao', s.descricao)
+    s.imagem = d.get('imagem', s.imagem)
+    s.valor_numero = Decimal(str(d.get('valor_numero', s.valor_numero)))
+    s.total_numeros = int(d.get('total_numeros', s.total_numeros))
+    if d.get('data_sorteio'):
+        s.data_sorteio = datetime.fromisoformat(d['data_sorteio'])
+    s.ativo = d.get('ativo', s.ativo)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/sorteio/<sorteio_id>/numero', methods=['POST'])
+def admin_reservar_numero(sorteio_id):
+    if not admin_logado(): abort(401)
+    d = request.json
+    # Verifica se número já está reservado
+    existe = NumeroSorteio.query.filter_by(sorteio_id=sorteio_id, numero=d['numero']).first()
+    if existe:
+        return jsonify({'erro': 'Número já reservado'}), 400
+    n = NumeroSorteio(
+        sorteio_id=sorteio_id,
+        numero=d['numero'],
+        nome_participante=d.get('nome'),
+        telefone=d.get('telefone'),
+        pedido_id=d.get('pedido_id')
+    )
+    db.session.add(n)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/sorteio/<sorteio_id>/numero/<int:numero>', methods=['DELETE'])
+def admin_remover_numero(sorteio_id, numero):
+    if not admin_logado(): abort(401)
+    n = NumeroSorteio.query.filter_by(sorteio_id=sorteio_id, numero=numero).first_or_404()
+    db.session.delete(n)
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/sorteio/<sorteio_id>/numeros')
+def admin_listar_numeros(sorteio_id):
+    if not admin_logado(): abort(401)
+    s = Sorteio.query.get_or_404(sorteio_id)
+    numeros = [{
+        'numero': n.numero,
+        'nome': n.nome_participante,
+        'telefone': n.telefone,
+        'pedido_id': n.pedido_id,
+        'reservado_em': n.reservado_em.isoformat() if n.reservado_em else ''
+    } for n in s.numeros]
+    return jsonify(numeros)
+
 def pedido_to_dict(p):
     return {
         'id': str(p.id),
@@ -363,8 +470,16 @@ def admin():
     if not admin_logado(): return redirect(url_for('admin_login'))
     pedidos = Pedido.query.order_by(Pedido.criado_em.desc()).limit(100).all()
     produtos = Produto.query.order_by(Produto.id).all()
+    sorteios = Sorteio.query.order_by(Sorteio.criado_em.desc()).all()
+    sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
     pedidos_json = [pedido_to_dict(p) for p in pedidos]
-    return render_template('admin.html', pedidos=pedidos, produtos=produtos, pedidos_json=pedidos_json)
+    return render_template('admin.html',
+        pedidos=pedidos,
+        produtos=produtos,
+        sorteios=sorteios,
+        sorteio_ativo=sorteio_ativo,
+        pedidos_json=pedidos_json
+    )
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 

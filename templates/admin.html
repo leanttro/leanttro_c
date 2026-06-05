@@ -242,6 +242,7 @@
   <div class="nav-section">Principal</div>
   <button class="nav-item active" onclick="setTab('pedidos')"><span class="icon">📦</span> Pedidos</button>
   <button class="nav-item" onclick="setTab('produtos')"><span class="icon">🛒</span> Produtos</button>
+  <button class="nav-item" onclick="setTab('categorias')"><span class="icon">🏷️</span> Categorias</button>
   <button class="nav-item" onclick="setTab('analytics')"><span class="icon">📊</span> Analytics</button>
   <button class="nav-item" onclick="setTab('sorteio')"><span class="icon">🎟️</span> Sorteio</button>
   <button class="nav-item" onclick="setTab('agenda')"><span class="icon">📅</span> Agenda</button>
@@ -734,6 +735,69 @@
     </div>
   </div>
 
+  <!-- ═══ CATEGORIAS ═══ -->
+  <div id="tab-categorias" class="tab-content">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title">Categorias</div>
+        <div class="page-sub">Organize suas cestas por ocasião (Dia dos Pais, Namorados, etc.)</div>
+      </div>
+      <button class="btn btn-accent" onclick="abrirModalCategoria()">＋ Nova categoria</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Slug / URL</th>
+            <th>Cestas</th>
+            <th>Ordem</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for cat in categorias %}
+          <tr id="catrow-{{ cat.id }}">
+            <td>
+              <strong>{{ cat.nome }}</strong>
+              {% if cat.descricao %}
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">{{ cat.descricao[:60] }}{% if cat.descricao|length > 60 %}…{% endif %}</div>
+              {% endif %}
+            </td>
+            <td>
+              <a href="/categoria/{{ cat.slug }}" target="_blank" style="font-size:12px;color:var(--blue);text-decoration:none">/categoria/{{ cat.slug }}</a>
+            </td>
+            <td>
+              <span style="font-size:14px;font-weight:600;color:var(--accent)">{{ cat.produtos | length }}</span>
+              <span style="font-size:11px;color:var(--muted)"> cesta(s)</span>
+            </td>
+            <td style="font-size:13px;color:var(--muted)">{{ cat.ordem }}</td>
+            <td>
+              <span class="badge {% if cat.ativo %}badge-active{% else %}badge-inactive{% endif %}">
+                {% if cat.ativo %}Ativa{% else %}Inativa{% endif %}
+              </span>
+            </td>
+            <td>
+              <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+                <button class="btn btn-ghost btn-sm" onclick="editarCategoria('{{ cat.id }}')">✏️ Editar</button>
+                <button class="btn btn-sm {% if cat.ativo %}btn-yellow-sm{% else %}btn-green-sm{% endif %}"
+                  onclick="toggleCategoria('{{ cat.id }}', {{ 'false' if cat.ativo else 'true' }})">
+                  {% if cat.ativo %}⏸ Pausar{% else %}▶ Ativar{% endif %}
+                </button>
+                <button class="btn btn-sm btn-red-sm" onclick="excluirCategoria('{{ cat.id }}')">🗑</button>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="6" class="no-data">Nenhuma categoria cadastrada. Crie a primeira!</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 </main>
 
 <!-- ═══ MODAL: DETALHE DO PEDIDO ═══ -->
@@ -784,6 +848,15 @@
           <label>URL da imagem</label>
           <input type="text" class="form-control" id="produto-imagem" placeholder="/static/img/cesta1.jpg">
         </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Categoria</label>
+          <select class="form-control" id="produto-categoria">
+            <option value="">— Sem categoria —</option>
+            {% for cat in categorias %}
+            <option value="{{ cat.id }}">{{ cat.nome }}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
       <div class="form-grid-3">
         <div class="form-row">
@@ -807,6 +880,46 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modal-produto')">Cancelar</button>
       <button class="btn btn-accent" onclick="salvarProduto()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: CATEGORIA ═══ -->
+<div class="modal-backdrop" id="modal-categoria">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title" id="categoria-modal-titulo">Nova Categoria</div>
+      <button class="modal-close" onclick="fecharModal('modal-categoria')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="categoria-id">
+      <div class="form-grid">
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Nome da categoria</label>
+          <input type="text" class="form-control" id="categoria-nome" placeholder="Ex: Dia dos Pais">
+        </div>
+        <div class="form-row">
+          <label>Slug (URL)</label>
+          <input type="text" class="form-control" id="categoria-slug" placeholder="dia-dos-pais">
+          <div style="font-size:11px;color:var(--muted);margin-top:4px">Gerado automaticamente. Não use espaços ou acentos.</div>
+        </div>
+        <div class="form-row">
+          <label>Ordem no menu (menor = primeiro)</label>
+          <input type="number" class="form-control" id="categoria-ordem" placeholder="0" min="0">
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Descrição (usada no SEO da página)</label>
+          <textarea class="form-control" id="categoria-descricao" placeholder="Ex: Cestas especiais para homenagear papai neste dia tão especial..."></textarea>
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>URL da imagem de banner (opcional)</label>
+          <input type="text" class="form-control" id="categoria-imagem" placeholder="https://...">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-categoria')">Cancelar</button>
+      <button class="btn btn-accent" onclick="salvarCategoria()">💾 Salvar</button>
     </div>
   </div>
 </div>
@@ -1144,6 +1257,7 @@ function abrirModalProduto() {
   ['nome','slug','preco','descricao','itens','imagem','peso','altura','largura','comprimento'].forEach(f => {
     document.getElementById('produto-' + f).value = '';
   });
+  document.getElementById('produto-categoria').value = '';
   document.getElementById('modal-produto').classList.add('open');
 }
 
@@ -1159,6 +1273,7 @@ async function salvarProduto() {
     descricao: document.getElementById('produto-descricao').value.trim(),
     itens: document.getElementById('produto-itens').value,
     imagem: document.getElementById('produto-imagem').value.trim(),
+    categoria_id: document.getElementById('produto-categoria').value || null,
     peso: parseFloat(document.getElementById('produto-peso').value) || 2.0,
     altura: parseInt(document.getElementById('produto-altura').value) || 20,
     largura: parseInt(document.getElementById('produto-largura').value) || 30,
@@ -1225,7 +1340,7 @@ filtrarPedidos();
 <script>
 const PRODUTOS_MAP = {
   {% for p in produtos %}
-  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo} | tojson }}{{ "," if not loop.last }}
+  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo, 'categoria_id': p.categoria_id or ''} | tojson }}{{ "," if not loop.last }}
   {% endfor %}
 };
 
@@ -1243,6 +1358,7 @@ function editarProduto(id) {
   document.getElementById('produto-altura').value = dados.altura || '';
   document.getElementById('produto-largura').value = dados.largura || '';
   document.getElementById('produto-comprimento').value = dados.comprimento || '';
+  document.getElementById('produto-categoria').value = dados.categoria_id || '';
 
   let itens = dados.itens || '[]';
   if (typeof itens === 'string') {
@@ -1398,6 +1514,90 @@ async function carregarBloqueios() {
 function abrirModalConfig() {
   document.getElementById('modal-config-agenda').classList.add('open');
 }
+
+// ── CATEGORIAS ──
+const CATEGORIAS_MAP = {
+  {% for cat in categorias %}
+  "{{ cat.id }}": {{ {'id': cat.id, 'nome': cat.nome, 'slug': cat.slug, 'descricao': cat.descricao or '', 'imagem': cat.imagem or '', 'ordem': cat.ordem, 'ativo': cat.ativo} | tojson }}{{ "," if not loop.last }}
+  {% endfor %}
+};
+
+function abrirModalCategoria() {
+  document.getElementById('categoria-modal-titulo').textContent = 'Nova Categoria';
+  document.getElementById('categoria-id').value = '';
+  ['nome','slug','descricao','imagem'].forEach(f => document.getElementById('categoria-' + f).value = '');
+  document.getElementById('categoria-ordem').value = '0';
+  document.getElementById('modal-categoria').classList.add('open');
+}
+
+function editarCategoria(id) {
+  const dados = CATEGORIAS_MAP[id];
+  if (!dados) return;
+  document.getElementById('categoria-modal-titulo').textContent = 'Editar Categoria';
+  document.getElementById('categoria-id').value = id;
+  document.getElementById('categoria-nome').value = dados.nome || '';
+  document.getElementById('categoria-slug').value = dados.slug || '';
+  document.getElementById('categoria-descricao').value = dados.descricao || '';
+  document.getElementById('categoria-imagem').value = dados.imagem || '';
+  document.getElementById('categoria-ordem').value = dados.ordem ?? 0;
+  document.getElementById('modal-categoria').classList.add('open');
+}
+
+async function salvarCategoria() {
+  const id = document.getElementById('categoria-id').value;
+  const payload = {
+    nome:      document.getElementById('categoria-nome').value.trim(),
+    slug:      document.getElementById('categoria-slug').value.trim(),
+    descricao: document.getElementById('categoria-descricao').value.trim(),
+    imagem:    document.getElementById('categoria-imagem').value.trim(),
+    ordem:     parseInt(document.getElementById('categoria-ordem').value) || 0,
+  };
+  if (!payload.nome || !payload.slug) return toast('Preencha nome e slug', 'error');
+  const url = id ? `/admin/categoria/${id}` : '/admin/categoria';
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (r.ok) {
+    toast(id ? 'Categoria atualizada!' : 'Categoria criada!');
+    fecharModal('modal-categoria');
+    setTimeout(() => location.reload(), 800);
+  } else {
+    const err = await r.json().catch(() => ({}));
+    toast(err.erro || 'Erro ao salvar categoria', 'error');
+  }
+}
+
+async function toggleCategoria(id, ativar) {
+  const r = await fetch(`/admin/categoria/${id}/toggle`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ ativo: ativar === 'true' || ativar === true })
+  });
+  if (r.ok) { toast(ativar ? 'Categoria ativada!' : 'Categoria pausada!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro', 'error');
+}
+
+async function excluirCategoria(id) {
+  const nome = (CATEGORIAS_MAP[id] && CATEGORIAS_MAP[id].nome) || 'esta categoria';
+  if (!confirm(`Excluir "${nome}"? Os produtos não serão apagados, apenas desvinculados.`)) return;
+  const r = await fetch(`/admin/categoria/${id}`, { method: 'DELETE' });
+  if (r.ok) { toast('Categoria excluída!'); setTimeout(() => location.reload(), 800); }
+  else {
+    const err = await r.json().catch(() => ({}));
+    toast(err.erro || 'Erro ao excluir', 'error');
+  }
+}
+
+// Auto-slug categoria
+document.getElementById('categoria-nome').addEventListener('input', function() {
+  if (!document.getElementById('categoria-id').value) {
+    document.getElementById('categoria-slug').value = this.value
+      .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+});
 
 async function salvarConfigAgenda() {
   const payload = {

@@ -350,7 +350,7 @@
   /* COMO FUNCIONA */
   #como-funciona {
     background: var(--ink);
-    padding: 96px 24px;
+    padding: 48px 24px 96px;
   }
   #como-funciona .inner { max-width: 960px; margin: 0 auto; }
   #como-funciona .section-header .label { color: var(--rose); }
@@ -363,19 +363,19 @@
     margin-top: 64px;
   }
   .step {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.14);
     border-radius: 16px;
     padding: 36px 28px;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
-  .step:hover { background: rgba(198,9,9,0.12); }
+  .step:hover { background: rgba(198,9,9,0.18); border-color: rgba(198,9,9,0.4); transform: translateY(-4px); }
   .step-num {
     font-family: 'Playfair Display', serif;
     font-size: 44px;
     font-weight: 700;
     color: var(--red);
-    opacity: 0.6;
+    opacity: 1;
     line-height: 1;
     margin-bottom: 18px;
   }
@@ -390,7 +390,7 @@
   .step p {
     font-family: 'Montserrat', sans-serif;
     font-size: 13px;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.65);
     line-height: 1.7;
     font-weight: 400;
   }
@@ -455,39 +455,18 @@
   /* ── SEÇÃO SORTEIO (home) ── */
   #sorteio-home {
     background: linear-gradient(135deg, var(--ink) 0%, #2a0808 100%);
-    padding: 80px 24px;
+    padding: 40px 24px 80px;
     text-align: center;
     position: relative;
     overflow: hidden;
   }
-  #sorteio-home::before {
-    content: '🎉';
-    position: absolute;
-    font-size: 300px;
-    opacity: 0.04;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
+
   #sorteio-home .inner-sorteio {
     position: relative;
     max-width: 640px;
     margin: 0 auto;
   }
-  #sorteio-home .sorteio-tag {
-    display: inline-block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--red);
-    background: rgba(198,9,9,0.15);
-    border: 1px solid rgba(198,9,9,0.3);
-    border-radius: 50px;
-    padding: 6px 18px;
-    margin-bottom: 20px;
-  }
+  #sorteio-home .sorteio-tag { display: none; }
   #sorteio-home h2 {
     font-family: 'Playfair Display', serif;
     font-size: clamp(28px, 4vw, 44px);
@@ -522,11 +501,10 @@
     background: var(--red);
     color: #fff;
     padding: 15px 32px;
-    border-radius: var(--btn-radius);
+    border-radius: 12px;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
     transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
   }
   .btn-sorteio:hover {
@@ -544,11 +522,10 @@
     color: rgba(255,255,255,0.7);
     border: 2px solid rgba(255,255,255,0.15);
     padding: 14px 32px;
-    border-radius: var(--btn-radius);
+    border-radius: 12px;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
     transition: border-color 0.2s, color 0.2s;
   }
   .btn-sorteio-outline:hover {
@@ -710,11 +687,11 @@
 {% if sorteio %}
 <section id="sorteio-home">
   <div class="inner-sorteio">
-    <span class="sorteio-tag">🎉 Sorteio do mês</span>
+    
     <h2>Compre e concorra a uma<br><em>cesta especial</em></h2>
     <p>Todo cliente que comprar qualquer cesta ganha automaticamente um número no sorteio. Você também pode adquirir números extras e aumentar suas chances!</p>
     <div class="sorteio-home-btns">
-      <a href="/sorteio" class="btn-sorteio">🎟️ Ver o sorteio</a>
+      <a href="/sorteio" class="btn-sorteio">Ver o sorteio</a>
       <a href="#cestas" class="btn-sorteio-outline">Ver cestas</a>
     </div>
   </div>

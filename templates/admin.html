@@ -230,6 +230,7 @@
   <button class="nav-item active" onclick="setTab('pedidos')"><span class="icon">📦</span> Pedidos</button>
   <button class="nav-item" onclick="setTab('produtos')"><span class="icon">🛒</span> Produtos</button>
   <button class="nav-item" onclick="setTab('analytics')"><span class="icon">📊</span> Analytics</button>
+  <button class="nav-item" onclick="setTab('sorteio')"><span class="icon">🎟️</span> Sorteio</button>
   <div class="sidebar-footer">
     <a href="/admin/logout">🚪 Sair</a>
   </div>
@@ -506,6 +507,130 @@
         </div>
       </div>
     </div>
+  </div>
+
+
+  <!-- ═══ SORTEIO ═══ -->
+  <div id="tab-sorteio" class="tab-content">
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title">Sorteio do Mês</div>
+        <div class="page-sub">Gerencie o sorteio ativo e os participantes</div>
+      </div>
+      <button class="btn btn-accent" onclick="abrirModalSorteio()">＋ Novo sorteio</button>
+    </div>
+
+    {% if sorteio_ativo %}
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px">
+        <div>
+          <div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Sorteio Ativo</div>
+          <div style="font-size:20px;font-weight:700">{{ sorteio_ativo.titulo }}</div>
+          {% if sorteio_ativo.data_sorteio %}
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">📅 {{ sorteio_ativo.data_sorteio.strftime('%d/%m/%Y') }}</div>
+          {% endif %}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:rgba(46,204,113,.15);color:#2ecc71;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600">● Ativo</span>
+          <button class="btn btn-ghost btn-sm" onclick="editarSorteio()">✏️ Editar</button>
+          <button class="btn btn-sm btn-red-sm" onclick="encerrarSorteio('{{ sorteio_ativo.id }}')">⏹ Encerrar</button>
+        </div>
+      </div>
+
+      <div class="stats" style="margin-bottom:20px">
+        <div class="stat">
+          <div class="stat-label">Total de números</div>
+          <div class="stat-value">{{ sorteio_ativo.total_numeros }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Reservados</div>
+          <div class="stat-value accent">{{ sorteio_ativo.numeros | length }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Disponíveis</div>
+          <div class="stat-value green">{{ sorteio_ativo.total_numeros - (sorteio_ativo.numeros | length) }}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-label">Valor por número</div>
+          <div class="stat-value">R$ {{ "%.0f"|format(sorteio_ativo.valor_numero) }}</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div style="font-size:13px;font-weight:600">Participantes</div>
+        <button class="btn btn-accent btn-sm" onclick="abrirModalAddNumero()">＋ Adicionar número manualmente</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Número</th>
+              <th>Participante</th>
+              <th>Telefone</th>
+              <th>Origem</th>
+              <th>Data</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in sorteio_ativo.numeros | sort(attribute='numero') %}
+            <tr>
+              <td><strong style="font-size:16px;color:var(--accent)">#{{ n.numero }}</strong></td>
+              <td>{{ n.nome_participante or '—' }}</td>
+              <td style="font-size:12px;color:var(--muted)">{{ n.telefone or '—' }}</td>
+              <td>
+                {% if n.pedido_id %}
+                  <span class="badge badge-paid">Compra</span>
+                {% else %}
+                  <span class="badge badge-pending">Manual / WhatsApp</span>
+                {% endif %}
+              </td>
+              <td style="font-size:12px;color:var(--muted)">{{ n.reservado_em.strftime('%d/%m/%y %H:%M') if n.reservado_em else '—' }}</td>
+              <td>
+                <button class="btn btn-sm btn-red-sm" onclick="removerNumero('{{ sorteio_ativo.id }}', {{ n.numero }})">🗑</button>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="no-data">Nenhum número reservado ainda.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">🎟️</div>
+      <p>Nenhum sorteio ativo. Crie um para começar!</p>
+    </div>
+    {% endif %}
+
+    {% if sorteios %}
+    <div style="margin-top:24px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--muted)">Histórico de sorteios</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Título</th><th>Data sorteio</th><th>Números</th><th>Status</th><th>Criado em</th></tr>
+          </thead>
+          <tbody>
+            {% for s in sorteios %}
+            <tr>
+              <td><strong>{{ s.titulo }}</strong></td>
+              <td style="font-size:12px">{{ s.data_sorteio.strftime('%d/%m/%Y') if s.data_sorteio else '—' }}</td>
+              <td>{{ s.numeros | length }} / {{ s.total_numeros }}</td>
+              <td>
+                {% if s.ativo %}<span class="badge badge-paid">Ativo</span>
+                {% else %}<span class="badge badge-cancelled">Encerrado</span>{% endif %}
+              </td>
+              <td style="font-size:12px;color:var(--muted)">{{ s.criado_em.strftime('%d/%m/%y') if s.criado_em else '—' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
   </div>
 
 </main>
@@ -847,5 +972,150 @@ function editarProduto(id) {
   document.getElementById('modal-produto').classList.add('open');
 }
 </script>
+
+<!-- ═══ MODAL: NOVO SORTEIO ═══ -->
+<div class="modal-backdrop" id="modal-sorteio">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="sorteio-modal-titulo">Novo Sorteio</div>
+      <button class="modal-close" onclick="fecharModal('modal-sorteio')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sorteio-id">
+      <div class="form-row">
+        <label>Título do prêmio</label>
+        <input type="text" class="form-control" id="sorteio-titulo" placeholder="Ex: Cesta Gourmet Premium">
+      </div>
+      <div class="form-row">
+        <label>Descrição</label>
+        <textarea class="form-control" id="sorteio-descricao" placeholder="Descreva o prêmio..."></textarea>
+      </div>
+      <div class="form-row">
+        <label>URL da imagem do prêmio</label>
+        <input type="text" class="form-control" id="sorteio-imagem" placeholder="/static/img/premio.jpg">
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Valor por número (R$)</label>
+          <input type="number" class="form-control" id="sorteio-valor" placeholder="10" step="1">
+        </div>
+        <div class="form-row">
+          <label>Total de números</label>
+          <input type="number" class="form-control" id="sorteio-total" placeholder="50">
+        </div>
+        <div class="form-row" style="grid-column:1/-1">
+          <label>Data do sorteio</label>
+          <input type="date" class="form-control" id="sorteio-data">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-sorteio')">Cancelar</button>
+      <button class="btn btn-accent" onclick="salvarSorteio()">💾 Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MODAL: ADICIONAR NÚMERO ═══ -->
+<div class="modal-backdrop" id="modal-add-numero">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Adicionar Número</div>
+      <button class="modal-close" onclick="fecharModal('modal-add-numero')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <label>Número</label>
+        <input type="number" class="form-control" id="add-numero" placeholder="Ex: 7">
+      </div>
+      <div class="form-row">
+        <label>Nome do participante</label>
+        <input type="text" class="form-control" id="add-nome" placeholder="Nome completo">
+      </div>
+      <div class="form-row">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" class="form-control" id="add-telefone" placeholder="(11) 99999-9999">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModal('modal-add-numero')">Cancelar</button>
+      <button class="btn btn-accent" onclick="salvarNumero()">＋ Adicionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── SORTEIO ──
+let sorteioAtivoId = "{{ sorteio_ativo.id if sorteio_ativo else '' }}";
+
+function abrirModalSorteio() {
+  document.getElementById('sorteio-modal-titulo').textContent = 'Novo Sorteio';
+  document.getElementById('sorteio-id').value = '';
+  ['titulo','descricao','imagem','valor','total','data'].forEach(f => {
+    document.getElementById('sorteio-' + f).value = '';
+  });
+  document.getElementById('modal-sorteio').classList.add('open');
+}
+
+function editarSorteio() {
+  document.getElementById('sorteio-modal-titulo').textContent = 'Editar Sorteio';
+  document.getElementById('modal-sorteio').classList.add('open');
+}
+
+async function salvarSorteio() {
+  const id = document.getElementById('sorteio-id').value;
+  const payload = {
+    titulo: document.getElementById('sorteio-titulo').value.trim(),
+    descricao: document.getElementById('sorteio-descricao').value.trim(),
+    imagem: document.getElementById('sorteio-imagem').value.trim(),
+    valor_numero: parseFloat(document.getElementById('sorteio-valor').value) || 10,
+    total_numeros: parseInt(document.getElementById('sorteio-total').value) || 50,
+    data_sorteio: document.getElementById('sorteio-data').value || null,
+  };
+  if (!payload.titulo) return toast('Informe o título do prêmio', 'error');
+  const url = id ? `/admin/sorteio/${id}` : '/admin/sorteio';
+  const r = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload)
+  });
+  if (r.ok) { toast('Sorteio salvo!'); fecharModal('modal-sorteio'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao salvar sorteio', 'error');
+}
+
+async function encerrarSorteio(id) {
+  if (!confirm('Encerrar este sorteio? Ele ficará no histórico.')) return;
+  const r = await fetch(`/admin/sorteio/${id}/encerrar`, { method: 'POST' });
+  if (r.ok) { toast('Sorteio encerrado!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao encerrar', 'error');
+}
+
+function abrirModalAddNumero() {
+  ['add-numero','add-nome','add-telefone'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal-add-numero').classList.add('open');
+}
+
+async function salvarNumero() {
+  const numero = parseInt(document.getElementById('add-numero').value);
+  const nome = document.getElementById('add-nome').value.trim();
+  const telefone = document.getElementById('add-telefone').value.trim();
+  if (!numero || !nome) return toast('Informe o número e o nome', 'error');
+  const r = await fetch(`/admin/sorteio/${sorteioAtivoId}/numero`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ numero, nome, telefone })
+  });
+  if (r.ok) { toast('Número adicionado!'); fecharModal('modal-add-numero'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao adicionar número', 'error');
+}
+
+async function removerNumero(sorteioId, numero) {
+  if (!confirm('Remover o número ' + numero + '?')) return;
+  const r = await fetch(`/admin/sorteio/${sorteioId}/numero/${numero}`, { method: 'DELETE' });
+  if (r.ok) { toast('Número removido!'); setTimeout(() => location.reload(), 800); }
+  else toast('Erro ao remover número', 'error');
+}
+</script>
+
 </body>
 </html>

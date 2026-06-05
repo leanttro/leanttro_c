@@ -24,22 +24,104 @@
     h1,h2,h3 { font-family: 'Playfair Display', serif; }
     a { text-decoration: none; color: inherit; }
 
-    /* NAV */
+    /* ── NAV ── */
     nav {
       background: #fff;
       border-bottom: 1px solid var(--warm);
       padding: 0 24px;
       display: flex; align-items: center; justify-content: space-between;
       height: 80px;
-      position: sticky; top: 0; z-index: 100;
+      position: sticky; top: 0; z-index: 200;
       box-shadow: 0 2px 12px rgba(90,62,43,.06);
     }
     .nav-logo { display: flex; align-items: center; flex-shrink: 0; }
-    .nav-links { display: flex; gap: 24px; }
-    .nav-links a { font-size: 14px; color: var(--brown-light); font-weight: 500; transition: color .2s; white-space: nowrap; }
-    .nav-links a:hover { color: var(--red); }
+    .nav-links { display: flex; gap: 4px; align-items: center; }
+    .nav-links > a {
+      font-size: 14px; color: var(--brown-light); font-weight: 500;
+      transition: color .2s; white-space: nowrap;
+      padding: 6px 10px; border-radius: 6px;
+    }
+    .nav-links > a:hover { color: var(--red); }
 
-    /* Botão carrinho desktop */
+    /* ── DROPDOWN CESTAS ── */
+    .nav-dropdown {
+      position: relative;
+    }
+    .nav-dropdown-trigger {
+      font-size: 14px; color: var(--brown-light); font-weight: 500;
+      white-space: nowrap; cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 10px; border-radius: 6px;
+      transition: color .2s, background .2s;
+      user-select: none;
+      border: none; background: none; font-family: inherit;
+    }
+    .nav-dropdown-trigger:hover,
+    .nav-dropdown:hover .nav-dropdown-trigger {
+      color: var(--red);
+      background: #fdf0f0;
+    }
+    .nav-dropdown-trigger .chevron {
+      width: 12px; height: 12px;
+      transition: transform .25s;
+      stroke: currentColor; fill: none;
+      stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+    .nav-dropdown:hover .chevron { transform: rotate(180deg); }
+
+    .nav-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      background: #fff;
+      border: 1px solid var(--warm);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(90,62,43,.13);
+      min-width: 210px;
+      padding: 8px;
+      z-index: 300;
+      animation: dropFade .18s ease;
+    }
+    @keyframes dropFade {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .nav-dropdown:hover .nav-dropdown-menu { display: block; }
+
+    .nav-dropdown-menu a {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 14px; font-weight: 500;
+      color: var(--brown);
+      transition: background .15s, color .15s;
+      white-space: nowrap;
+    }
+    .nav-dropdown-menu a:hover { background: #fdf0f0; color: var(--red); }
+    .nav-dropdown-menu a .cat-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--red);
+      opacity: .5;
+      flex-shrink: 0;
+      transition: opacity .15s;
+    }
+    .nav-dropdown-menu a:hover .cat-dot { opacity: 1; }
+
+    .dropdown-divider {
+      height: 1px; background: var(--warm); margin: 6px 8px;
+    }
+    .nav-dropdown-menu .ver-todas {
+      font-size: 12px; font-weight: 600;
+      color: var(--red) !important;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+    .nav-dropdown-menu .ver-todas:hover { background: #fde8e8 !important; }
+
+    /* ── BOTÃO CARRINHO DESKTOP ── */
     .nav-cart {
       background: var(--red); color: #fff; border: none; cursor: pointer;
       padding: 8px 18px; border-radius: 8px; font-size: 14px; font-weight: 500;
@@ -48,73 +130,89 @@
     }
     .nav-cart:hover { background: var(--red-dark); }
 
-    /* Ícone carrinho com badge (usado no mobile e visível em desktop também) */
+    /* ── ÍCONE CARRINHO COM BADGE ── */
     .nav-cart-icon {
-      position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background: var(--red);
-      color: #fff;
-      cursor: pointer;
-      flex-shrink: 0;
-      transition: background .2s;
-      text-decoration: none;
+      position: relative; display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--red); color: #fff; cursor: pointer; flex-shrink: 0;
+      transition: background .2s; text-decoration: none;
     }
     .nav-cart-icon:hover { background: var(--red-dark); }
     .nav-cart-icon svg { width: 18px; height: 18px; }
-
     #cart-badge {
-      position: absolute;
-      top: -4px; right: -4px;
-      background: #fff;
-      color: var(--red);
-      font-size: 10px;
-      font-weight: 700;
-      font-family: 'DM Sans', sans-serif;
-      width: 18px; height: 18px;
-      border-radius: 50%;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      border: 1.5px solid var(--red);
-      line-height: 1;
+      position: absolute; top: -4px; right: -4px;
+      background: #fff; color: var(--red);
+      font-size: 10px; font-weight: 700; font-family: 'DM Sans', sans-serif;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: none; align-items: center; justify-content: center;
+      border: 1.5px solid var(--red); line-height: 1;
     }
 
-    /* Hamburger */
+    /* ── HAMBURGER ── */
     .nav-hamburger {
       display: none; flex-direction: column; gap: 5px;
       cursor: pointer; background: none; border: none; padding: 4px;
     }
     .nav-hamburger span { display: block; width: 24px; height: 2px; background: var(--brown); border-radius: 2px; transition: all .3s; }
 
-    /* Grupo direita no mobile */
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    /* ── GRUPO DIREITA ── */
+    .nav-right { display: flex; align-items: center; gap: 10px; }
 
-    @media (max-width: 600px) {
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
       nav { padding: 0 12px; height: 72px; }
+
+      /* Menu mobile: posição absoluta abaixo do nav */
       .nav-links {
         display: none; flex-direction: column; gap: 0;
         position: absolute; top: 72px; left: 0; right: 0;
         background: #fff; border-bottom: 1px solid var(--warm);
-        box-shadow: 0 4px 12px rgba(0,0,0,.08); z-index: 99;
+        box-shadow: 0 4px 12px rgba(0,0,0,.08); z-index: 199;
+        max-height: calc(100vh - 72px); overflow-y: auto;
       }
       .nav-links.open { display: flex; }
-      .nav-links a { padding: 14px 20px; border-top: 1px solid var(--warm); font-size: 15px; }
+
+      /* Links normais no mobile */
+      .nav-links > a {
+        padding: 14px 20px; border-top: 1px solid var(--warm);
+        font-size: 15px; border-radius: 0; width: 100%;
+      }
+
+      /* Dropdown vira acordeão */
+      .nav-dropdown { position: static; }
+      .nav-dropdown-trigger {
+        padding: 14px 20px; border-top: 1px solid var(--warm);
+        font-size: 15px; border-radius: 0; width: 100%;
+        justify-content: space-between;
+      }
+      .nav-dropdown-trigger:hover,
+      .nav-dropdown:hover .nav-dropdown-trigger {
+        background: none; color: var(--text);
+      }
+      /* No mobile o hover não abre; JS abre via click */
+      .nav-dropdown:hover .nav-dropdown-menu { display: none; }
+      .nav-dropdown-menu {
+        display: none; position: static;
+        box-shadow: none; border: none; border-radius: 0;
+        padding: 0; animation: none;
+        background: #fdf8f6;
+      }
+      .nav-dropdown.open .nav-dropdown-menu { display: block; }
+      .nav-dropdown.open .chevron { transform: rotate(180deg); }
+      .nav-dropdown-menu a {
+        padding: 12px 20px 12px 36px;
+        border-top: 1px solid var(--warm);
+        border-radius: 0;
+        font-size: 14px;
+      }
+      .dropdown-divider { display: none; }
+
       .nav-logo img { height: 52px !important; }
       .nav-hamburger { display: flex; }
-      /* Esconde botão "Comprar" texto no mobile, mantém só o ícone */
-      .nav-cart-text { display: none; }
       .nav-cart { display: none; }
     }
 
-    /* FOOTER */
+    /* ── FOOTER ── */
     footer {
       background: #c60909; color: var(--warm);
       padding: 40px 24px; margin-top: 80px; text-align: center;
@@ -123,7 +221,7 @@
     footer p { font-size: 13px; opacity: .7; }
     footer a { color: var(--gold); }
 
-    /* UTILS */
+    /* ── UTILS ── */
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 28px; border-radius: 10px; font-weight: 500; font-size: 15px; cursor: pointer; transition: all .2s; border: none; }
     .btn-primary { background: var(--red); color: #fff; }
     .btn-primary:hover { background: var(--red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(192,57,43,.3); }
@@ -142,8 +240,31 @@
     <img src="https://res.cloudinary.com/dturwhclq/image/upload/v1780580758/Cesta_de_Presentes_7_syzkuc.png" alt="Cesta de Presentes" style="height:64px;width:auto;display:block;">
   </a>
 
-  <div class="nav-links">
+  <div class="nav-links" id="nav-links">
+
+    <!-- DROPDOWN CESTAS -->
+    {% set categorias_nav = categorias_globais if categorias_globais is defined else [] %}
+    {% if categorias_nav %}
+    <div class="nav-dropdown" id="nav-dropdown-cestas">
+      <button class="nav-dropdown-trigger" onclick="toggleDropdownMobile()" aria-expanded="false">
+        Cestas
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="nav-dropdown-menu">
+        {% for cat in categorias_nav %}
+        <a href="/categoria/{{ cat.slug }}">
+          <span class="cat-dot"></span>
+          {{ cat.nome }}
+        </a>
+        {% endfor %}
+        <div class="dropdown-divider"></div>
+        <a href="/#cestas" class="ver-todas">Ver todas as cestas →</a>
+      </div>
+    </div>
+    {% else %}
     <a href="/#cestas">Cestas</a>
+    {% endif %}
+
     <a href="/#como-funciona">Como funciona</a>
     <a href="https://wa.me/5511999999999" target="_blank">WhatsApp</a>
   </div>
@@ -160,7 +281,7 @@
       <span id="cart-badge">0</span>
     </a>
 
-    <button class="nav-hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Menu">
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMenu()" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -184,7 +305,7 @@
 </a>
 
 <script>
-  // Atualiza badge do carrinho em todas as páginas
+  // ── Badge carrinho ──
   function atualizarHeaderCarrinho() {
     try {
       const carrinho = JSON.parse(localStorage.getItem('carrinho') || '[]');
@@ -197,6 +318,28 @@
     } catch(e) {}
   }
   atualizarHeaderCarrinho();
+
+  // ── Menu hamburger ──
+  function toggleMenu() {
+    const links = document.getElementById('nav-links');
+    links.classList.toggle('open');
+  }
+
+  // ── Dropdown cestas no mobile (acordeão via click) ──
+  function toggleDropdownMobile() {
+    // Só age como acordeão em mobile (largura ≤ 768px)
+    if (window.innerWidth > 768) return;
+    const dropdown = document.getElementById('nav-dropdown-cestas');
+    if (dropdown) dropdown.classList.toggle('open');
+  }
+
+  // Fecha menu ao clicar fora
+  document.addEventListener('click', function(e) {
+    const nav = document.querySelector('nav');
+    if (!nav.contains(e.target)) {
+      document.getElementById('nav-links').classList.remove('open');
+    }
+  });
 </script>
 
 </body>

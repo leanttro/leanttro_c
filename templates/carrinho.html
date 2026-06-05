@@ -1,0 +1,669 @@
+{% extends "base.html" %}
+{% block title %}Carrinho — Cesta de Presentes{% endblock %}
+
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:        #c60909;
+    --red-dark:   #a00707;
+    --rose:       #ff9393;
+    --rose-light: #fff4f4;
+    --rose-mid:   #ffe0e0;
+    --off-white:  #fdf8f8;
+    --ink:        #1a1a1a;
+    --ink-muted:  #6b6560;
+    --border:     #f0e4e4;
+    --card-radius: 20px;
+    --btn-radius:  50px;
+  }
+  * { box-sizing: border-box; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0   rgba(198,9,9,.3); }
+    70%  { box-shadow: 0 0 0 12px rgba(198,9,9,0); }
+    100% { box-shadow: 0 0 0 0   rgba(198,9,9,0); }
+  }
+
+  /* ── PAGE ── */
+  .cart-page {
+    max-width: 1060px;
+    margin: 48px auto 80px;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 40px;
+    align-items: start;
+    animation: fadeUp .6s ease both;
+  }
+  @media (max-width: 860px) {
+    .cart-page { grid-template-columns: 1fr; }
+  }
+
+  /* ── TÍTULO ── */
+  .cart-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 3.5vw, 40px);
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -.02em;
+    margin-bottom: 6px;
+  }
+  .cart-sub {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 28px;
+  }
+
+  /* ── ITEM ── */
+  .cart-item {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 12px;
+    transition: box-shadow .2s;
+  }
+  .cart-item:hover { box-shadow: 0 8px 24px rgba(198,9,9,.07); }
+  .cart-item-img {
+    width: 80px; height: 80px;
+    border-radius: 12px;
+    background: var(--rose-light);
+    overflow: hidden;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px;
+  }
+  .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
+  .cart-item-info { flex: 1; }
+  .cart-item-nome {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+  }
+  .cart-item-preco-unit {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .cart-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  .cart-item-subtotal {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--red);
+  }
+  .qtde-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qtde-btn {
+    width: 30px; height: 30px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    background: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .2s, background .2s;
+    line-height: 1;
+  }
+  .qtde-btn:hover { border-color: var(--red); background: var(--rose-light); color: var(--red); }
+  .qtde-num {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    min-width: 20px;
+    text-align: center;
+  }
+  .btn-remover {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-muted);
+    font-size: 18px;
+    padding: 4px;
+    transition: color .2s;
+    line-height: 1;
+  }
+  .btn-remover:hover { color: var(--red); }
+
+  /* ── VAZIO ── */
+  .cart-vazio {
+    text-align: center;
+    padding: 60px 24px;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--card-radius);
+  }
+  .cart-vazio .icon { font-size: 56px; margin-bottom: 16px; }
+  .cart-vazio h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .cart-vazio p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 24px;
+  }
+  .btn-ver-cestas {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border-radius: var(--btn-radius);
+    text-decoration: none;
+    transition: background .2s, transform .15s;
+  }
+  .btn-ver-cestas:hover { background: var(--red-dark); transform: translateY(-2px); }
+
+  /* ── CHECKOUT ── */
+  .checkout-box {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 28px;
+    position: sticky;
+    top: 80px;
+    transition: box-shadow .25s;
+  }
+  .checkout-box:hover { box-shadow: 0 16px 40px rgba(198,9,9,.07); }
+  .checkout-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 22px;
+    letter-spacing: -.01em;
+  }
+
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-muted);
+    margin-bottom: 6px;
+  }
+  .form-group input,
+  .form-group textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Montserrat', sans-serif;
+    color: var(--ink);
+    background: var(--off-white);
+    outline: none;
+    transition: border .2s, box-shadow .2s;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(198,9,9,.08);
+  }
+
+  /* ── TABS ENTREGA ── */
+  .entrega-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .entrega-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .entrega-tab {
+    padding: 11px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    background: var(--off-white);
+    transition: all .2s;
+  }
+  .entrega-tab:hover { border-color: var(--rose); background: var(--rose-light); }
+  .entrega-tab.ativo {
+    border-color: var(--red);
+    background: var(--rose-light);
+    color: var(--red);
+    font-weight: 700;
+  }
+
+  /* ── FRETE ── */
+  .frete-opcao {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all .2s;
+    font-size: 13px;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .frete-opcao:hover,
+  .frete-opcao.selecionado { border-color: var(--red); background: var(--rose-light); }
+
+  /* ── RESUMO ── */
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-top: 1px solid var(--border);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+  .total-row.final {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--red);
+    border-top: 2px solid var(--border);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .total-row.final span:first-child {
+    font-family: 'Playfair Display', serif;
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 17px;
+  }
+
+  /* ── BTN PAGAR ── */
+  #btn-pagar {
+    width: 100%;
+    margin-top: 16px;
+    padding: 15px 24px;
+    background: var(--red);
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    border: none;
+    border-radius: var(--btn-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background .2s, transform .15s, box-shadow .2s;
+    animation: pulse-ring 2.5s ease-in-out infinite;
+  }
+  #btn-pagar:hover:not(:disabled) {
+    background: var(--red-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(198,9,9,.35);
+  }
+  #btn-pagar:disabled { opacity: .45; cursor: not-allowed; animation: none; }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .sub-pagar {
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-top: 10px;
+    letter-spacing: .03em;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="cart-page" id="cart-page">
+
+  <!-- COLUNA ESQUERDA: ITENS -->
+  <div>
+    <h1 class="cart-title">Meu carrinho</h1>
+    <p class="cart-sub" id="cart-sub">Carregando...</p>
+    <div id="cart-itens"></div>
+  </div>
+
+  <!-- COLUNA DIREITA: CHECKOUT -->
+  <div id="checkout-col">
+    <div class="checkout-box">
+      <h3>Finalizar pedido</h3>
+
+      <div class="form-group">
+        <label>Seu nome completo</label>
+        <input type="text" id="nome" placeholder="Maria da Silva">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="email" placeholder="maria@email.com">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="tel" id="telefone" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>Mensagem no cartão (opcional)</label>
+        <textarea id="mensagem" rows="2" placeholder="Ex: Para o amor da minha vida 💕"></textarea>
+      </div>
+
+      <span class="entrega-label">Forma de entrega</span>
+      <div class="entrega-tabs">
+        <div class="entrega-tab ativo" onclick="setEntrega('retirada', this)">🏪 Retirada grátis</div>
+        <div class="entrega-tab" onclick="setEntrega('envio', this)">🚚 Envio</div>
+      </div>
+
+      <div id="secao-envio" style="display:none">
+        <div class="form-group">
+          <label>CEP de entrega</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="cep" placeholder="00000-000" maxlength="9" style="flex:1" oninput="mascara_cep(this)">
+            <button onclick="calcularFrete()" style="
+              padding: 0 16px;
+              background: transparent;
+              border: 1.5px solid var(--border);
+              border-radius: 10px;
+              font-family: 'Montserrat', sans-serif;
+              font-size: 11px;
+              font-weight: 700;
+              letter-spacing: .06em;
+              text-transform: uppercase;
+              color: var(--ink-muted);
+              cursor: pointer;
+              white-space: nowrap;
+              transition: border-color .2s, color .2s;
+            " onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--ink-muted)'">
+              Calcular
+            </button>
+          </div>
+        </div>
+        <div id="frete-opcoes" style="margin-bottom:10px"></div>
+        <div id="endereco-wrap" style="display:none" class="form-group">
+          <label>Endereço completo</label>
+          <input type="text" id="endereco" placeholder="Rua, número, complemento, bairro">
+        </div>
+      </div>
+
+      <!-- RESUMO -->
+      <div style="margin-top:16px" id="resumo-wrap">
+        <div id="resumo-itens"></div>
+        <div class="total-row" id="frete-row" style="display:none">
+          <span>Frete</span>
+          <span id="frete-valor">R$ 0,00</span>
+        </div>
+        <div class="total-row final">
+          <span>Total</span>
+          <span id="total-valor">R$ 0,00</span>
+        </div>
+      </div>
+
+      <button id="btn-pagar" onclick="pagar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
+        Pagar com segurança
+      </button>
+      <p class="sub-pagar">Pix, cartão ou boleto via Mercado Pago</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let carrinho = [];
+let tipoEntrega = 'retirada';
+let freteValor = 0;
+let servicoFrete = '';
+let cepFinal = '';
+
+function getCarrinho() {
+  try { return JSON.parse(localStorage.getItem('carrinho') || '[]'); } catch { return []; }
+}
+function salvarCarrinho(c) {
+  localStorage.setItem('carrinho', JSON.stringify(c));
+  atualizarHeaderCarrinho();
+}
+function atualizarHeaderCarrinho() {
+  const total = getCarrinho().reduce((s, i) => s + i.quantidade, 0);
+  const badge = document.getElementById('cart-badge');
+  if (badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'flex' : 'none';
+  }
+}
+
+function renderCarrinho() {
+  carrinho = getCarrinho();
+  const container = document.getElementById('cart-itens');
+  const sub = document.getElementById('cart-sub');
+
+  if (carrinho.length === 0) {
+    sub.textContent = '';
+    container.innerHTML = `
+      <div class="cart-vazio">
+        <div class="icon">🧺</div>
+        <h3>Seu carrinho está vazio</h3>
+        <p>Adicione cestas incríveis para presentear quem você ama.</p>
+        <a href="/" class="btn-ver-cestas">Ver cestas</a>
+      </div>`;
+    document.getElementById('checkout-col').style.display = 'none';
+    return;
+  }
+
+  sub.textContent = `${carrinho.length} ${carrinho.length === 1 ? 'item' : 'itens'} no carrinho`;
+  document.getElementById('checkout-col').style.display = 'block';
+
+  container.innerHTML = carrinho.map((item, idx) => `
+    <div class="cart-item">
+      <div class="cart-item-img">
+        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '🧺'}
+      </div>
+      <div class="cart-item-info">
+        <div class="cart-item-nome">${item.nome}</div>
+        <div class="cart-item-preco-unit">R$ ${parseFloat(item.preco).toFixed(2).replace('.',',')} por unidade</div>
+      </div>
+      <div class="cart-item-right">
+        <span class="cart-item-subtotal">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.',',')}</span>
+        <div class="qtde-wrap">
+          <button class="qtde-btn" onclick="alterarQtde(${idx}, -1)">−</button>
+          <span class="qtde-num">${item.quantidade}</span>
+          <button class="qtde-btn" onclick="alterarQtde(${idx}, 1)">+</button>
+        </div>
+        <button class="btn-remover" onclick="removerItem(${idx})" title="Remover">✕</button>
+      </div>
+    </div>
+  `).join('');
+
+  atualizarResumo();
+}
+
+function alterarQtde(idx, delta) {
+  carrinho = getCarrinho();
+  carrinho[idx].quantidade = Math.max(1, carrinho[idx].quantidade + delta);
+  salvarCarrinho(carrinho);
+  renderCarrinho();
+}
+
+function removerItem(idx) {
+  carrinho = getCarrinho();
+  carrinho.splice(idx, 1);
+  salvarCarrinho(carrinho);
+  renderCarrinho();
+}
+
+function atualizarResumo() {
+  carrinho = getCarrinho();
+  const subtotal = carrinho.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const total = subtotal + freteValor;
+
+  const resumoItens = document.getElementById('resumo-itens');
+  resumoItens.innerHTML = carrinho.map(i => `
+    <div class="total-row">
+      <span>${i.nome} × ${i.quantidade}</span>
+      <span>R$ ${(i.preco * i.quantidade).toFixed(2).replace('.',',')}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+}
+
+function setEntrega(tipo, el) {
+  tipoEntrega = tipo;
+  document.querySelectorAll('.entrega-tab').forEach(t => t.classList.remove('ativo'));
+  el.classList.add('ativo');
+  document.getElementById('secao-envio').style.display = tipo === 'envio' ? 'block' : 'none';
+  if (tipo === 'retirada') {
+    freteValor = 0; servicoFrete = '';
+    document.getElementById('frete-row').style.display = 'none';
+    atualizarResumo();
+  }
+}
+
+function mascara_cep(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
+  input.value = v;
+}
+
+async function calcularFrete() {
+  const cep = document.getElementById('cep').value.replace(/\D/g,'');
+  if (cep.length !== 8) return alert('Digite um CEP válido');
+  cepFinal = cep;
+
+  // usa o produto mais pesado do carrinho pra calcular
+  carrinho = getCarrinho();
+  const produtoId = carrinho[0]?.id;
+  if (!produtoId) return;
+
+  const div = document.getElementById('frete-opcoes');
+  div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink-muted);font-style:italic">Calculando...</p>';
+
+  const resp = await fetch('/api/frete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ cep, produto_id: produtoId })
+  });
+  const opcoes = await resp.json();
+
+  if (!opcoes.length) {
+    div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--red)">Não foi possível calcular o frete para este CEP.</p>';
+    return;
+  }
+  div.innerHTML = opcoes.slice(0, 4).map(op => `
+    <div class="frete-opcao" onclick="selecionarFrete(this, ${op.preco}, '${op.nome}')">
+      <input type="radio" name="frete" style="accent-color:var(--red)">
+      <div style="flex:1">
+        <strong style="font-size:13px;color:var(--ink)">${op.empresa} ${op.nome}</strong>
+        <span style="color:var(--ink-muted);font-size:11px;margin-left:8px">${op.prazo} dias úteis</span>
+      </div>
+      <strong style="color:var(--red);font-size:13px">R$ ${op.preco.toFixed(2).replace('.',',')}</strong>
+    </div>
+  `).join('');
+  document.getElementById('endereco-wrap').style.display = 'block';
+}
+
+function selecionarFrete(el, preco, nome) {
+  document.querySelectorAll('.frete-opcao').forEach(e => e.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  el.querySelector('input').checked = true;
+  freteValor = preco; servicoFrete = nome;
+  document.getElementById('frete-row').style.display = 'flex';
+  document.getElementById('frete-valor').textContent = 'R$ ' + preco.toFixed(2).replace('.',',');
+  atualizarResumo();
+}
+
+async function pagar() {
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  if (!nome || !email) return alert('Preencha nome e e-mail');
+  if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
+
+  carrinho = getCarrinho();
+  if (!carrinho.length) return alert('Carrinho vazio');
+
+  const btn = document.getElementById('btn-pagar');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Processando...';
+
+  const resp = await fetch('/api/criar-preferencia', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      itens: carrinho.map(i => ({ produto_id: i.id, quantidade: i.quantidade })),
+      // fallback pra compatibilidade com rota atual (1 produto)
+      produto_id:    carrinho[0].id,
+      nome, email,
+      telefone:      document.getElementById('telefone').value,
+      mensagem:      document.getElementById('mensagem').value,
+      tipo_entrega:  tipoEntrega,
+      cep:           cepFinal,
+      endereco:      document.getElementById('endereco')?.value || '',
+      servico_frete: servicoFrete,
+      valor_frete:   freteValor
+    })
+  });
+
+  const data = await resp.json();
+  if (data.init_point) {
+    localStorage.removeItem('carrinho');
+    window.location.href = data.init_point;
+  } else {
+    alert('Erro ao processar pedido. Tente novamente.');
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg> Pagar com segurança';
+  }
+}
+
+// inicializa
+renderCarrinho();
+atualizarHeaderCarrinho();
+</script>
+{% endblock %}

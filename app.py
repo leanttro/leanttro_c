@@ -16,8 +16,8 @@ db.init_app(app)
 register_filters(app)
 
 MP_TOKEN  = os.getenv('MP_ACCESS_TOKEN')
-SF_TOKEN  = os.getenv('SUPERFRETE_TOKEN')
-SF_URL    = os.getenv('SUPERFRETE_URL', 'https://superfrete.com/api/v0')
+ME_TOKEN  = os.getenv('MELHORENVIO_TOKEN')
+ME_URL    = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
 CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
 BASE_URL  = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
 
@@ -226,7 +226,7 @@ def calcular_frete():
         return jsonify({'erro': 'Produto não encontrado'}), 404
 
     headers = {
-        'Authorization': f'Bearer {SF_TOKEN}',
+        'Authorization': f'Bearer {ME_TOKEN}',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': 'cestadepresentes.com.br (contato@cestadepresentes.com.br)'
@@ -241,18 +241,14 @@ def calcular_frete():
             'length': produto.comprimento,
             'weight': produto.peso
         },
-        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False}
+        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False},
+        'services': '1,2,17'
     }
 
     try:
-        print(f"[FRETE] Chamando SuperFrete: {SF_URL}/calculator", flush=True)
-        print(f"[FRETE] Token presente: {'sim' if SF_TOKEN else 'NAO'}", flush=True)
-        print(f"[FRETE] Payload: {payload}", flush=True)
-        resp = requests.post(f'{SF_URL}/calculator', json=payload, headers=headers, timeout=10)
-        print(f"[FRETE] Status: {resp.status_code}", flush=True)
-        print(f"[FRETE] Body: {resp.text[:500]}", flush=True)
+        resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
         if resp.status_code != 200:
-            return jsonify({'erro': f'SuperFrete erro {resp.status_code}: {resp.text[:300]}'}), 502
+            return jsonify({'erro': 'Erro ao calcular frete'}), 502
 
         opcoes = []
         for s in resp.json():

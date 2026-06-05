@@ -16,8 +16,8 @@ db.init_app(app)
 register_filters(app)
 
 MP_TOKEN  = os.getenv('MP_ACCESS_TOKEN')
-ME_TOKEN  = os.getenv('MELHORENVIO_TOKEN')
-ME_URL    = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
+SF_TOKEN  = os.getenv('SUPERFRETE_TOKEN')
+SF_URL    = os.getenv('SUPERFRETE_URL', 'https://superfrete.com/api/v0')
 CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
 BASE_URL  = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
 
@@ -226,7 +226,7 @@ def calcular_frete():
         return jsonify({'erro': 'Produto não encontrado'}), 404
 
     headers = {
-        'Authorization': f'Bearer {ME_TOKEN}',
+        'Authorization': f'Bearer {SF_TOKEN}',
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': 'cestadepresentes.com.br (contato@cestadepresentes.com.br)'
@@ -246,7 +246,7 @@ def calcular_frete():
     }
 
     try:
-        resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
+        resp = requests.post(f'{SF_URL}/calculator', json=payload, headers=headers, timeout=10)
         if resp.status_code != 200:
             return jsonify({'erro': 'Erro ao calcular frete'}), 502
 

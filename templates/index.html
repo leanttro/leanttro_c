@@ -349,99 +349,86 @@
 
   /* COMO FUNCIONA */
   #como-funciona {
-    background: var(--ink);
+    background: var(--red);
     padding: 48px 24px 96px;
   }
   #como-funciona .inner { max-width: 960px; margin: 0 auto; }
-  #como-funciona .section-header .label { color: var(--rose); }
+  #como-funciona .section-header .label { color: rgba(255,255,255,0.7); }
   #como-funciona .section-header h2 { color: #fff; }
-  #como-funciona .section-header p { color: rgba(255,255,255,0.4); }
+  #como-funciona .section-header p { color: rgba(255,255,255,0.65); }
   .steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 48px;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 16px;
+    overflow: hidden;
   }
   .step {
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 16px;
-    padding: 36px 28px;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+    cursor: pointer;
+    transition: background 0.2s;
+    background: rgba(0,0,0,0.15);
   }
-  .step:hover { background: rgba(198,9,9,0.18); border-color: rgba(198,9,9,0.4); transform: translateY(-4px); }
+  .step:last-child { border-bottom: none; }
+  .step.active { background: rgba(0,0,0,0.25); }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 32px;
+    user-select: none;
+  }
+  .step-header:hover { background: rgba(0,0,0,0.1); }
   .step-num {
     font-family: 'Playfair Display', serif;
-    font-size: 44px;
+    font-size: 32px;
     font-weight: 700;
-    color: var(--red);
-    opacity: 1;
+    color: #fff;
     line-height: 1;
-    margin-bottom: 18px;
+    min-width: 48px;
   }
   .step h4 {
     font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 700;
     color: #fff;
-    margin-bottom: 10px;
+    flex: 1;
     letter-spacing: -0.01em;
+    margin: 0;
   }
+  .step-chevron {
+    color: rgba(255,255,255,0.5);
+    font-size: 20px;
+    transition: transform 0.3s, color 0.2s;
+    line-height: 1;
+  }
+  .step.active .step-chevron { transform: rotate(180deg); color: #fff; }
+  .step-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.35s ease;
+    padding: 0 32px 0 100px;
+  }
+  .step.active .step-body { max-height: 200px; padding: 0 32px 24px 100px; }
   .step p {
     font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    color: rgba(255,255,255,0.65);
-    line-height: 1.7;
-    font-weight: 400;
+    font-size: 14px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.75;
+    margin: 0;
   }
-
-  /* BUTTONS */
-  .btn-primary {
-    font-family: 'Montserrat', sans-serif !important;
-    font-size: 12px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.08em !important;
-    text-transform: uppercase !important;
-    background: var(--red) !important;
-    color: #fff !important;
-    padding: 14px 28px !important;
-    border-radius: var(--btn-radius) !important;
-    text-decoration: none;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s !important;
-  }
-  .btn-primary:hover {
-    background: var(--red-dark) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 24px rgba(198,9,9,0.35) !important;
-  }
-  .btn-primary:active { transform: translateY(0) !important; }
-  .btn-primary svg { width: 16px; height: 16px; flex-shrink: 0; }
-
-  .btn-outline {
+  .step-detail {
     font-family: 'Montserrat', sans-serif;
     font-size: 12px;
+    color: rgba(255,255,255,0.9);
+    margin-top: 8px;
     font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    background: transparent;
-    color: var(--ink);
-    border: 2px solid var(--border);
-    padding: 13px 28px;
-    border-radius: var(--btn-radius);
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    letter-spacing: 0.05em;
   }
-  .btn-outline:hover { border-color: var(--ink); background: var(--ink); color: #fff; }
-
-  /* cesta btn comprar - pulse on destaque */
-  .cesta-card.destaque .btn-primary {
-    animation: pulse-ring 2.5s ease-in-out infinite;
+  @media (max-width: 600px) {
+    .step-body, .step.active .step-body { padding-left: 32px; }
   }
 
   @media (max-width: 480px) {
@@ -659,27 +646,64 @@
       <p>Simples, rápido e seguro</p>
     </div>
     <div class="steps">
-      <div class="step">
-        <div class="step-num">01</div>
-        <h4>Escolha a cesta</h4>
-        <p>Selecione o modelo ideal para a ocasião e o presenteado</p>
+
+      <div class="step active" onclick="toggleStep(this)">
+        <div class="step-header">
+          <div class="step-num">01</div>
+          <h4>Escolha a cesta</h4>
+          <span class="step-chevron">&#8964;</span>
+        </div>
+        <div class="step-body">
+          <p>Navegue pelo catálogo e escolha a cesta ideal para a ocasião e para quem vai receber. Temos opções para café da manhã, aniversário, Dia dos Namorados e muito mais.</p>
+          <div class="step-detail">Ver cestas →</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <h4>Pague com segurança</h4>
-        <p>Pix, cartão ou boleto via Mercado Pago — 100% seguro</p>
+
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-header">
+          <div class="step-num">02</div>
+          <h4>Pague com segurança</h4>
+          <span class="step-chevron">&#8964;</span>
+        </div>
+        <div class="step-body">
+          <p>Pagamento 100% seguro via Mercado Pago. Aceitamos Pix, cartão de crédito em até 12x e boleto bancário. Você recebe a confirmação na hora.</p>
+          <div class="step-detail">Pix tem desconto especial</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <h4>Montamos com cuidado</h4>
-        <p>Sua cesta é montada e embalada com muito capricho</p>
+
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-header">
+          <div class="step-num">03</div>
+          <h4>Montamos com cuidado</h4>
+          <span class="step-chevron">&#8964;</span>
+        </div>
+        <div class="step-body">
+          <p>Após a confirmação do pagamento, sua cesta é montada artesanalmente com muito carinho, embalada em celofane e laço, e inclui cartão personalizado com a sua mensagem.</p>
+          <div class="step-detail">Cartão personalizado incluso</div>
+        </div>
       </div>
-      <div class="step">
-        <div class="step-num">04</div>
-        <h4>Entregamos ou retirada</h4>
-        <p>Enviamos pelo Melhor Envio ou retire no local sem custo</p>
+
+      <div class="step" onclick="toggleStep(this)">
+        <div class="step-header">
+          <div class="step-num">04</div>
+          <h4>Entregamos ou retirada</h4>
+          <span class="step-chevron">&#8964;</span>
+        </div>
+        <div class="step-body">
+          <p>Enviamos para todo o Brasil pelo Melhor Envio com rastreamento. Prefere retirar? É gratuito! Combinamos dia e horário pelo WhatsApp.</p>
+          <div class="step-detail">Retirada gratuita · Envio rastreado</div>
+        </div>
       </div>
+
     </div>
+
+    <script>
+    function toggleStep(el) {
+      const isActive = el.classList.contains('active');
+      document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+      if (!isActive) el.classList.add('active');
+    }
+    </script>
   </div>
 </section>
 

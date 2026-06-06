@@ -876,6 +876,18 @@
           <input type="number" class="form-control" id="produto-comprimento" placeholder="30">
         </div>
       </div>
+      <div class="form-row" style="margin-top:12px">
+        <label>⏱️ Prazo de preparo</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" class="form-control" id="produto-prazo-qtd" placeholder="1" min="1" style="width:80px;flex-shrink:0">
+          <select class="form-control" id="produto-prazo-unidade">
+            <option value="horas">horas</option>
+            <option value="dias úteis" selected>dias úteis</option>
+            <option value="dias">dias corridos</option>
+          </select>
+        </div>
+        <small style="color:var(--muted);font-size:11px;margin-top:4px;display:block">Ex: "4 horas", "1 dia útil", "5 dias úteis"</small>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModal('modal-produto')">Cancelar</button>
@@ -1278,6 +1290,8 @@ async function salvarProduto() {
     altura: parseInt(document.getElementById('produto-altura').value) || 20,
     largura: parseInt(document.getElementById('produto-largura').value) || 30,
     comprimento: parseInt(document.getElementById('produto-comprimento').value) || 30,
+    prazo_quantidade: parseInt(document.getElementById('produto-prazo-qtd').value) || 1,
+    prazo_unidade: document.getElementById('produto-prazo-unidade').value,
   };
 
   if (!payload.nome || !payload.slug || !payload.preco) {
@@ -1340,7 +1354,7 @@ filtrarPedidos();
 <script>
 const PRODUTOS_MAP = {
   {% for p in produtos %}
-  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'ativo': p.ativo, 'categoria_id': p.categoria_id or ''} | tojson }}{{ "," if not loop.last }}
+  "{{ p.id }}": {{ {'id': p.id, 'nome': p.nome, 'slug': p.slug, 'descricao': p.descricao, 'itens': p.itens, 'preco': p.preco|string, 'imagem': p.imagem or '', 'peso': p.peso, 'altura': p.altura, 'largura': p.largura, 'comprimento': p.comprimento, 'prazo_quantidade': p.prazo_quantidade or 1, 'prazo_unidade': p.prazo_unidade or 'dias úteis', 'ativo': p.ativo, 'categoria_id': p.categoria_id or ''} | tojson }}{{ "," if not loop.last }}
   {% endfor %}
 };
 
@@ -1359,6 +1373,8 @@ function editarProduto(id) {
   document.getElementById('produto-largura').value = dados.largura || '';
   document.getElementById('produto-comprimento').value = dados.comprimento || '';
   document.getElementById('produto-categoria').value = dados.categoria_id || '';
+  document.getElementById('produto-prazo-qtd').value = dados.prazo_quantidade || 1;
+  document.getElementById('produto-prazo-unidade').value = dados.prazo_unidade || 'dias úteis';
 
   let itens = dados.itens || '[]';
   if (typeof itens === 'string') {

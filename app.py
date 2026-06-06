@@ -679,6 +679,8 @@ def criar_produto():
         largura=float(d.get('largura', 20)),
         comprimento=float(d.get('comprimento', 20)),
         categoria_id=d.get('categoria_id') or None,
+        prazo_quantidade=int(d.get('prazo_quantidade', 1)),
+        prazo_unidade=d.get('prazo_unidade', 'dias úteis'),
         ativo=True
     )
     db.session.add(p)
@@ -701,6 +703,8 @@ def editar_produto(produto_id):
     p.largura = float(d.get('largura', 20))
     p.comprimento = float(d.get('comprimento', 20))
     p.categoria_id = d.get('categoria_id') or None
+    p.prazo_quantidade = int(d.get('prazo_quantidade', 1))
+    p.prazo_unidade = d.get('prazo_unidade', 'dias úteis')
     db.session.commit()
     return jsonify({'ok': True})
 
@@ -1011,6 +1015,21 @@ def admin():
         agendamentos_proximos=agendamentos_proximos,
         config_agenda=config_agenda
     )
+
+@app.cli.command('migrate-prazo-produto')
+def migrate_prazo_produto():
+    """Adiciona colunas prazo_quantidade e prazo_unidade na tabela produtos se não existirem."""
+    with db.engine.connect() as conn:
+        for col, definition in [
+            ('prazo_quantidade', "INTEGER DEFAULT 1"),
+            ('prazo_unidade',    "VARCHAR(20) DEFAULT 'dias úteis'"),
+        ]:
+            try:
+                conn.execute(db.text(f"ALTER TABLE produtos ADD COLUMN {col} {definition}"))
+                conn.commit()
+                print(f"✅ Coluna {col} adicionada em produtos")
+            except Exception as e:
+                print(f"ℹ️  {col}: {e} (pode já existir)")
 
 @app.cli.command('migrate-sorteio-status')
 def migrate_sorteio_status():

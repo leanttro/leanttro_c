@@ -363,8 +363,86 @@
     margin-top: 10px;
     letter-spacing: .03em;
   }
+  /* ── MODAL SORTEIO ── */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: var(--card-radius);
+    padding: 32px 28px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: fadeUp .3s ease both;
+  }
+  .modal-box h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .modal-box p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+  .sorteio-numeros-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .snum-btn {
+    aspect-ratio: 1;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .15s;
+  }
+  .snum-btn:hover { border-color: var(--red); color: var(--red); background: var(--rose-light); }
+  .snum-btn.selecionado { background: var(--red); border-color: var(--red); color: #fff; }
+  .snum-btn.reservado { background: var(--border); border-color: var(--border); color: #aaa; cursor: not-allowed; }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-modal-ok {
+    flex: 1; padding: 13px;
+    background: var(--red); color: #fff;
+    border: none; border-radius: var(--btn-radius);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; cursor: pointer;
+    transition: background .2s;
+  }
+  .btn-modal-ok:hover { background: var(--red-dark); }
+  .btn-modal-skip {
+    padding: 13px 20px;
+    background: transparent; color: var(--ink-muted);
+    border: 1.5px solid var(--border); border-radius: var(--btn-radius);
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .btn-modal-skip:hover { border-color: var(--ink-muted); }
 </style>
-{% endblock %}
 
 {% block content %}
 
@@ -393,6 +471,10 @@
       <div class="form-group">
         <label>WhatsApp</label>
         <input type="tel" id="telefone" placeholder="(11) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label>CPF</label>
+        <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="mascara_cpf(this)">
       </div>
       <div class="form-group">
         <label>Mensagem no cartão (opcional)</label>
@@ -453,7 +535,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
         Pagar com segurança
       </button>
-      <p class="sub-pagar">Pix, cartão ou boleto via Mercado Pago</p>
+      <p class="sub-pagar">Pix ou cartão via Asaas</p>
     </div>
   </div>
 
@@ -590,6 +672,14 @@ function setEntrega(tipo, el) {
   }
 }
 
+function mascara_cpf(input) {
+  let v = input.value.replace(/\D/g,'');
+  if (v.length > 9) v = v.slice(0,3) + '.' + v.slice(3,6) + '.' + v.slice(6,9) + '-' + v.slice(9,11);
+  else if (v.length > 6) v = v.slice(0,3) + '.' + v.slice(3,6) + '.' + v.slice(6);
+  else if (v.length > 3) v = v.slice(0,3) + '.' + v.slice(3);
+  input.value = v;
+}
+
 function mascara_cep(input) {
   let v = input.value.replace(/\D/g,'');
   if (v.length > 5) v = v.slice(0,5) + '-' + v.slice(5,8);
@@ -644,14 +734,67 @@ function selecionarFrete(el, preco, nome) {
   atualizarResumo();
 }
 
+let numerosReservados = [];
+let numeroEscolhido = null;
+
 async function pagar() {
   const nome  = document.getElementById('nome').value.trim();
   const email = document.getElementById('email').value.trim();
+  const cpf   = document.getElementById('cpf').value.replace(/\D/g,'');
   if (!nome || !email) return alert('Preencha nome e e-mail');
+  if (!cpf || cpf.length !== 11) return alert('Preencha o CPF corretamente');
   if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
 
   carrinho = getCarrinho();
   if (!carrinho.length) return alert('Carrinho vazio');
+
+  // Busca números disponíveis do sorteio
+  try {
+    const r = await fetch('/api/sorteio-numeros');
+    if (r.ok) {
+      const dados = await r.json();
+      if (dados.ativo && dados.total > 0) {
+        numerosReservados = dados.reservados;
+        renderSorteioGrid(dados.total, dados.reservados);
+        document.getElementById('modal-sorteio').classList.add('open');
+        return; // aguarda escolha no modal
+      }
+    }
+  } catch(e) {}
+
+  // Se não há sorteio ativo, vai direto
+  finalizarPedido(null);
+}
+
+function renderSorteioGrid(total, reservados) {
+  numeroEscolhido = null;
+  document.getElementById('btn-confirmar-num').disabled = true;
+  const grid = document.getElementById('sorteio-grid');
+  grid.innerHTML = Array.from({length: total}, (_, i) => i + 1).map(n => {
+    const res = reservados.includes(n);
+    return `<button class="snum-btn ${res ? 'reservado' : 'disponivel'}" 
+      ${res ? 'disabled title="Reservado"' : `onclick="selecionarNumero(this, ${n})"`}>${n}</button>`;
+  }).join('');
+}
+
+function selecionarNumero(el, n) {
+  document.querySelectorAll('.snum-btn').forEach(b => b.classList.remove('selecionado'));
+  el.classList.add('selecionado');
+  numeroEscolhido = n;
+  document.getElementById('btn-confirmar-num').disabled = false;
+}
+
+function confirmarNumero() {
+  document.getElementById('modal-sorteio').classList.remove('open');
+  finalizarPedido(numeroEscolhido);
+}
+
+async function finalizarPedido(numeroSorteio) {
+  document.getElementById('modal-sorteio').classList.remove('open');
+
+  const nome  = document.getElementById('nome').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const cpf   = document.getElementById('cpf').value.replace(/\D/g,'');
 
   const btn = document.getElementById('btn-pagar');
   btn.disabled = true;
@@ -662,16 +805,17 @@ async function pagar() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       itens: carrinho.map(i => ({ produto_id: i.id, quantidade: i.quantidade })),
-      // fallback pra compatibilidade com rota atual (1 produto)
-      produto_id:    carrinho[0].id,
+      produto_id:      carrinho[0].id,
       nome, email,
-      telefone:      document.getElementById('telefone').value,
-      mensagem:      document.getElementById('mensagem').value,
-      tipo_entrega:  tipoEntrega,
-      cep:           cepFinal,
-      endereco:      document.getElementById('endereco')?.value || '',
-      servico_frete: servicoFrete,
-      valor_frete:   freteValor
+      cpf_cnpj:        cpf,
+      telefone:        document.getElementById('telefone').value,
+      mensagem:        document.getElementById('mensagem').value,
+      tipo_entrega:    tipoEntrega,
+      cep:             cepFinal,
+      endereco:        document.getElementById('endereco')?.value || '',
+      servico_frete:   servicoFrete,
+      valor_frete:     freteValor,
+      numero_sorteio:  numeroSorteio
     })
   });
 
@@ -689,5 +833,35 @@ async function pagar() {
 // inicializa
 renderCarrinho();
 atualizarHeaderCarrinho();
+
+// preenche CEP salvo do produto
+(function() {
+  const cepSalvo = localStorage.getItem('cep_entrega');
+  if (cepSalvo) {
+    const input = document.getElementById('cep');
+    if (input) {
+      let v = cepSalvo;
+      if (v.length === 8) v = v.slice(0,5) + '-' + v.slice(5);
+      input.value = v;
+      cepFinal = cepSalvo;
+    }
+  }
+})();
 </script>
+
+<!-- MODAL SORTEIO -->
+<div class="modal-overlay" id="modal-sorteio">
+  <div class="modal-box">
+    <h3>🎟️ Escolha seu número da sorte!</h3>
+    <p>Sua compra garante um número no sorteio do mês. Escolha um disponível abaixo ou clique em <strong>Número aleatório</strong>.</p>
+    <div class="sorteio-numeros-grid" id="sorteio-grid">
+      <p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink-muted)">Carregando...</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-skip" onclick="finalizarPedido(null)">Número aleatório</button>
+      <button class="btn-modal-ok" id="btn-confirmar-num" onclick="confirmarNumero()" disabled>Confirmar número</button>
+    </div>
+  </div>
+</div>
+
 {% endblock %}

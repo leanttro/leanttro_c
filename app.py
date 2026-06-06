@@ -21,8 +21,9 @@ def inject_categorias():
     cats = Categoria.query.filter_by(ativo=True).order_by(Categoria.ordem, Categoria.nome).all()
     return dict(categorias_globais=cats)
 
-MP_TOKEN   = os.getenv('MP_ACCESS_TOKEN')
-ME_TOKEN   = os.getenv('MELHORENVIO_TOKEN')
+ASAAS_API_KEY = os.getenv('ASAAS_API_KEY')
+ASAAS_URL     = 'https://www.asaas.com/api/v3'
+ME_TOKEN      = os.getenv('MELHORENVIO_TOKEN')
 ME_URL     = os.getenv('MELHORENVIO_URL', 'https://melhorenvio.com.br/api/v2')
 CEP_ORIGEM = os.getenv('CEP_ORIGEM', '01026000')
 BASE_URL   = os.getenv('BASE_URL', 'https://cestadepresentes.com.br')
@@ -34,6 +35,47 @@ def gerar_numero_pedido():
 
 def admin_logado():
     return session.get('admin_id') is not None
+
+def asaas_headers():
+    return {
+        'access_token': ASAAS_API_KEY,
+        'Content-Type': 'application/json',
+        'User-Agent': 'cestadepresentes.com.br'
+    }
+
+def asaas_obter_ou_criar_cliente(nome, email, telefone, cpf_cnpj=None):
+    """
+    Busca cliente no Asaas pelo email. Se não existir, cria.
+    Retorna o customer_id do Asaas.
+    """
+    # Tenta buscar por email
+    resp = requests.get(
+        f'{ASAAS_URL}/customers',
+        params={'email': email},
+        headers=asaas_headers(),
+        timeout=10
+    )
+    if resp.status_code == 200:
+        data = resp.json()
+        if data.get('data'):
+            return data['data'][0]['id']
+
+    # Cria novo cliente
+    payload = {'name': nome, 'email': email}
+    if telefone:
+        payload['mobilePhone'] = ''.join(filter(str.isdigit, telefone))
+    if cpf_cnpj:
+        payload['cpfCnpj'] = ''.join(filter(str.isdigit, cpf_cnpj))
+
+    resp = requests.post(
+        f'{ASAAS_URL}/customers',
+        json=payload,
+        headers=asaas_headers(),
+        timeout=10
+    )
+    if resp.status_code not in (200, 201):
+        raise Exception(f'Asaas erro ao criar cliente: {resp.text[:300]}')
+    return resp.json()['id']
 
 # ─── HELPERS DE AGENDA ────────────────────────────────────────────
 
@@ -333,9 +375,9 @@ def calcular_frete():
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
 
-# ─── API: CRIAR PREFERÊNCIA MERCADO PAGO ─────────────────────────
+# ─── API: CRIAR COBRANÇA ASAAS ───────────────────────────────────
 
-@app.route('/api/criar-preferencia', methods=['POST'])
+@app.route('/api/criar-preferencia', methods=['POST'])  # mantém URL para não quebrar o frontend
 def criar_preferencia():
     data = request.json
 
@@ -348,9 +390,8 @@ def criar_preferencia():
         return jsonify({'erro': 'Carrinho vazio'}), 400
 
     valor_frete = Decimal(str(data.get('valor_frete', 0)))
-    subtotal = Decimal('0')
-    itens_mp = []   # itens para o Mercado Pago
-    itens_db = []   # itens para salvar no banco
+    subtotal    = Decimal('0')
+    itens_db    = []
 
     for item in itens_cart:
         produto = Produto.query.get(item.get('produto_id'))
@@ -358,12 +399,6 @@ def criar_preferencia():
             continue
         qtd = int(item.get('quantidade', 1))
         subtotal += produto.preco * qtd
-        itens_mp.append({
-            'title': produto.nome,
-            'quantity': qtd,
-            'unit_price': float(produto.preco),
-            'currency_id': 'BRL'
-        })
         itens_db.append((produto, qtd))
 
     if not itens_db:
@@ -388,109 +423,128 @@ def criar_preferencia():
     db.session.add(pedido)
     db.session.flush()
 
-    # Salva cada item do carrinho no banco
     for produto, qtd in itens_db:
-        item_db = ItemPedido(
+        db.session.add(ItemPedido(
             pedido_id=pedido.id,
             produto_id=produto.id,
             nome_produto=produto.nome,
             preco_unitario=produto.preco,
             quantidade=qtd
-        )
-        db.session.add(item_db)
+        ))
 
-    # ── Sorteio: atribuir número automático ao comprador ──
+    # ── Sorteio ──
     sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
     if sorteio_ativo:
         numeros_usados = [n.numero for n in sorteio_ativo.numeros]
-        todos = list(range(1, sorteio_ativo.total_numeros + 1))
-        disponiveis = [n for n in todos if n not in numeros_usados]
+        disponiveis = [n for n in range(1, sorteio_ativo.total_numeros + 1) if n not in numeros_usados]
         if disponiveis:
-            numero_sorteado = random.choice(disponiveis)
-            novo_numero = NumeroSorteio(
+            db.session.add(NumeroSorteio(
                 sorteio_id=sorteio_ativo.id,
-                numero=numero_sorteado,
+                numero=random.choice(disponiveis),
                 nome_participante=data['nome'],
                 telefone=data.get('telefone', ''),
                 pedido_id=pedido.id
-            )
-            db.session.add(novo_numero)
+            ))
 
     db.session.commit()
 
-    # Adiciona frete como item extra no MP se houver
-    if valor_frete > 0:
-        itens_mp.append({
-            'title': f'Frete — {data.get("servico_frete", "Envio")}',
-            'quantity': 1,
-            'unit_price': float(valor_frete),
-            'currency_id': 'BRL'
-        })
+    # ── Asaas: criar/buscar cliente ──
+    try:
+        customer_id = asaas_obter_ou_criar_cliente(
+            nome=data['nome'],
+            email=data['email'],
+            telefone=data.get('telefone', ''),
+            cpf_cnpj=data.get('cpf_cnpj', '')
+        )
+    except Exception as e:
+        return jsonify({'erro': f'Erro ao registrar cliente: {str(e)}'}), 502
 
-    preference = {
-        'items': itens_mp,
-        'payer': {'name': data['nome'], 'email': data['email']},
-        'back_urls': {
-            'success': f'{BASE_URL}/obrigado/{pedido.numero}',
-            'failure': f'{BASE_URL}/carrinho?erro=pagamento',
-            'pending': f'{BASE_URL}/obrigado/{pedido.numero}'
-        },
-        'auto_return': 'approved',
-        'external_reference': pedido.id,
-        'notification_url': f'{BASE_URL}/api/webhook/mp',
-        'statement_descriptor': 'CESTADEPRESENTES',
-        'expires': False
+    # Descrição resumida do pedido
+    descricao = ', '.join(
+        f"{p.nome} x{q}" for p, q in itens_db
+    )
+    if valor_frete > 0:
+        descricao += f' + Frete ({data.get("servico_frete", "Envio")})'
+
+    # ── Asaas: criar cobrança ──
+    cobranca_payload = {
+        'customer':          customer_id,
+        'billingType':       'UNDEFINED',   # cliente escolhe Pix ou cartão na tela do Asaas
+        'value':             float(total),
+        'dueDate':           (date.today() + timedelta(days=1)).isoformat(),
+        'description':       f'Pedido {pedido.numero} — {descricao}'[:255],
+        'externalReference': str(pedido.id),
+        'callback': {
+            'successUrl': f'{BASE_URL}/obrigado/{pedido.numero}',
+            'autoRedirect': True
+        }
     }
 
-    resp = requests.post(
-        'https://api.mercadopago.com/checkout/preferences',
-        json=preference,
-        headers={'Authorization': f'Bearer {MP_TOKEN}', 'Content-Type': 'application/json'}
-    )
-
-    if resp.status_code != 201:
-        return jsonify({'erro': 'Erro ao criar preferência MP'}), 502
-
-    pref_data = resp.json()
-    pedido.mp_preference_id = pref_data['id']
-    db.session.commit()
-
-    return jsonify({
-        'preference_id': pref_data['id'],
-        'init_point': pref_data['init_point'],
-        'numero': pedido.numero
-    })
-
-# ─── WEBHOOK MERCADO PAGO ─────────────────────────────────────────
-
-@app.route('/api/webhook/mp', methods=['POST'])
-def webhook_mp():
-    data = request.json or {}
-    topic = data.get('type') or request.args.get('topic')
-    resource_id = data.get('data', {}).get('id') or request.args.get('id')
-
-    if topic == 'payment' and resource_id:
-        resp = requests.get(
-            f'https://api.mercadopago.com/v1/payments/{resource_id}',
-            headers={'Authorization': f'Bearer {MP_TOKEN}'}
+    try:
+        resp = requests.post(
+            f'{ASAAS_URL}/payments',
+            json=cobranca_payload,
+            headers=asaas_headers(),
+            timeout=15
         )
-        if resp.status_code == 200:
-            payment = resp.json()
-            pedido_id = payment.get('external_reference')
-            status_mp = payment.get('status')
+        if resp.status_code not in (200, 201):
+            return jsonify({'erro': f'Asaas erro {resp.status_code}: {resp.text[:300]}'}), 502
 
-            if pedido_id:
-                pedido = Pedido.query.get(pedido_id)
-                if pedido:
-                    pedido.mp_payment_id = str(resource_id)
-                    if status_mp == 'approved' and pedido.status != 'paid':
-                        pedido.status = 'paid'
-                        db.session.commit()
-                        email_pedido_confirmado(pedido, pedido.itens)
-                        email_novo_pedido_admin(pedido, pedido.itens)
-                    elif status_mp in ('rejected', 'cancelled'):
-                        pedido.status = 'cancelled'
-                    db.session.commit()
+        cobranca = resp.json()
+        pedido.mp_preference_id = cobranca['id']   # reutiliza campo para guardar ID Asaas
+        db.session.commit()
+
+        return jsonify({
+            'preference_id': cobranca['id'],
+            'init_point':    cobranca['invoiceUrl'],   # URL de pagamento do Asaas
+            'numero':        pedido.numero
+        })
+
+    except Exception as e:
+        return jsonify({'erro': str(e)}), 500
+
+# ─── WEBHOOK ASAAS ───────────────────────────────────────────────
+
+@app.route('/api/webhook/asaas', methods=['POST'])
+def webhook_asaas():
+    """
+    Asaas envia POST para este endpoint a cada mudança de status.
+    Eventos relevantes:
+      PAYMENT_CONFIRMED  → pagamento confirmado (Pix ou cartão)
+      PAYMENT_RECEIVED   → boleto compensado (não usado aqui, mas seguro tratar)
+      PAYMENT_OVERDUE    → venceu sem pagamento
+      PAYMENT_DELETED / PAYMENT_REFUNDED → cancelamentos
+    """
+    data = request.json or {}
+    evento   = data.get('event', '')
+    cobranca = data.get('payment', {})
+
+    pedido_id        = cobranca.get('externalReference')
+    asaas_payment_id = cobranca.get('id')
+    status_asaas     = cobranca.get('status')   # CONFIRMED, RECEIVED, OVERDUE, DELETED, REFUNDED…
+
+    if not pedido_id:
+        return jsonify({'status': 'ignored'}), 200
+
+    pedido = Pedido.query.get(pedido_id)
+    if not pedido:
+        return jsonify({'status': 'not_found'}), 200
+
+    if asaas_payment_id:
+        pedido.mp_payment_id = asaas_payment_id  # reutiliza campo para guardar ID Asaas
+
+    if evento in ('PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED') and pedido.status != 'paid':
+        pedido.status = 'paid'
+        db.session.commit()
+        email_pedido_confirmado(pedido, pedido.itens)
+        email_novo_pedido_admin(pedido, pedido.itens)
+
+    elif evento in ('PAYMENT_DELETED', 'PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED'):
+        pedido.status = 'cancelled'
+        db.session.commit()
+
+    else:
+        db.session.commit()  # salva o payment_id mesmo sem mudar status
 
     return jsonify({'status': 'ok'}), 200
 

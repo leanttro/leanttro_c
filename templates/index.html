@@ -438,11 +438,11 @@
   <div class="hero-trust">
     <div class="trust-item">
       <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-      <strong>Pagamento seguro</strong><span class="sub">Mercado Pago</span>
+      <strong>Pagamento seguro</strong><span class="sub">Pix · Cartão · Boleto</span>
     </div>
     <div class="trust-item">
       <div class="trust-icon"><svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v4h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
-      <strong>Entrega</strong><span class="sub">São Paulo</span>
+      <strong>Entrega</strong><span class="sub">Todo o Brasil</span>
     </div>
     <div class="trust-item">
       <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg></div>
@@ -491,20 +491,22 @@
 
     <!-- Botão toggle grade -->
     <button class="toggle-grade-btn" id="toggle-grade" onclick="toggleGrade()" title="Alternar grade">
-      <svg id="icon-grade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- ícone grade: oculto no início (já estamos em grade) -->
+      <svg id="icon-grade" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
         <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
         <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
       </svg>
-      <svg id="icon-carousel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <!-- ícone carrossel: visível no início -->
+      <svg id="icon-carousel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
         <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
       </svg>
-      <span id="label-grade">Ver em grade</span>
+      <span id="label-grade">Ver carrossel</span>
     </button>
   </div>
 
   <!-- CARROSSEL -->
-  <div class="cestas-carousel-wrap" id="cestas-wrap">
+  <div class="cestas-carousel-wrap modo-grade" id="cestas-wrap">
     <button class="carousel-nav prev" id="btn-prev" onclick="scrollCarousel(-1)" aria-label="Anterior">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
@@ -590,7 +592,7 @@
           <span class="step-chevron">&#8964;</span>
         </div>
         <div class="step-body">
-          <p>Pagamento 100% seguro via Mercado Pago. Aceitamos Pix, cartão de crédito em até 12x e boleto bancário. Você recebe a confirmação na hora.</p>
+          <p>Pagamento 100% seguro via Asaas. Aceitamos Pix com 10% de desconto, cartão de crédito e boleto bancário. Você recebe a confirmação na hora.</p>
           <div class="step-detail">Pix tem desconto especial</div>
         </div>
       </div>
@@ -642,7 +644,7 @@ function toggleStep(el) {
 }
 
 // ── ESTADO ──
-let modoGrade = false;
+let modoGrade = true;   // começa em grade
 let catAtiva = 'todas';
 
 // ── CARROSSEL ──
@@ -729,11 +731,13 @@ function toggleGrade() {
   const label        = document.getElementById('label-grade');
 
   if (modoGrade) {
-    iconGrade.style.display = 'none';
+    // Voltou pra grade: botão oferece "Ver carrossel"
+    iconGrade.style.display    = 'none';
     iconCarousel.style.display = '';
     label.textContent = 'Ver carrossel';
   } else {
-    iconGrade.style.display = '';
+    // Entrou no carrossel: botão oferece "Ver em grade"
+    iconGrade.style.display    = '';
     iconCarousel.style.display = 'none';
     label.textContent = 'Ver em grade';
     carousel.scrollTo({ left: 0, behavior: 'instant' });
@@ -743,7 +747,7 @@ function toggleGrade() {
   atualizarNavBtns();
 }
 
-// Init
+// Init — começa em grade, então esconde botões de nav do carrossel
 buildDots();
 atualizarNavBtns();
 </script>

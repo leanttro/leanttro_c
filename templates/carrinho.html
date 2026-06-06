@@ -156,7 +156,9 @@
     border: 1.5px solid var(--border);
     border-radius: var(--card-radius);
   }
-  .cart-vazio .icon { font-size: 56px; margin-bottom: 16px; }
+  .cart-vazio .icon { margin-bottom: 20px; display: flex; justify-content: center; }
+  .cart-vazio .icon svg { filter: drop-shadow(0 6px 18px rgba(198,9,9,.13)); }
+  .cart-item-img svg { width: 44px; height: 44px; opacity: .55; }
   .cart-vazio h3 {
     font-family: 'Playfair Display', serif;
     font-size: 22px;
@@ -489,7 +491,28 @@ function renderCarrinho() {
     sub.textContent = '';
     container.innerHTML = `
       <div class="cart-vazio">
-        <div class="icon">🧺</div>
+        <div class="icon">
+          <svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- cesta corpo -->
+            <rect x="14" y="44" width="68" height="36" rx="10" fill="#fff4f4" stroke="#c60909" stroke-width="2.5"/>
+            <!-- grade horizontal -->
+            <line x1="14" y1="56" x2="82" y2="56" stroke="#c60909" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <line x1="14" y1="67" x2="82" y2="67" stroke="#c60909" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <!-- grade vertical -->
+            <line x1="33" y1="44" x2="33" y2="80" stroke="#c60909" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <line x1="48" y1="44" x2="48" y2="80" stroke="#c60909" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <line x1="63" y1="44" x2="63" y2="80" stroke="#c60909" stroke-width="1.5" stroke-dasharray="5 4"/>
+            <!-- borda superior da cesta -->
+            <rect x="10" y="40" width="76" height="10" rx="5" fill="#ffe0e0" stroke="#c60909" stroke-width="2"/>
+            <!-- alça esquerda -->
+            <path d="M30 40 Q24 22 36 16" stroke="#c60909" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <!-- alça direita -->
+            <path d="M66 40 Q72 22 60 16" stroke="#c60909" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+            <!-- laço no topo -->
+            <path d="M42 16 Q48 10 54 16" stroke="#c60909" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <circle cx="48" cy="16" r="3" fill="#c60909"/>
+          </svg>
+        </div>
         <h3>Seu carrinho está vazio</h3>
         <p>Adicione cestas incríveis para presentear quem você ama.</p>
         <a href="/" class="btn-ver-cestas">Ver cestas</a>
@@ -504,7 +527,7 @@ function renderCarrinho() {
   container.innerHTML = carrinho.map((item, idx) => `
     <div class="cart-item">
       <div class="cart-item-img">
-        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : '🧺'}
+        ${item.imagem ? `<img src="${item.imagem}" alt="${item.nome}">` : `<svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="20" width="32" height="17" rx="5" fill="#fff4f4" stroke="#c60909" stroke-width="1.8"/><line x1="6" y1="26" x2="38" y2="26" stroke="#c60909" stroke-width="1" stroke-dasharray="3 3"/><line x1="6" y1="31" x2="38" y2="31" stroke="#c60909" stroke-width="1" stroke-dasharray="3 3"/><line x1="15" y1="20" x2="15" y2="37" stroke="#c60909" stroke-width="1" stroke-dasharray="3 3"/><line x1="22" y1="20" x2="22" y2="37" stroke="#c60909" stroke-width="1" stroke-dasharray="3 3"/><line x1="29" y1="20" x2="29" y2="37" stroke="#c60909" stroke-width="1" stroke-dasharray="3 3"/><rect x="4" y="17" width="36" height="5" rx="2.5" fill="#ffe0e0" stroke="#c60909" stroke-width="1.5"/><path d="M14 17 Q11 9 17 7" stroke="#c60909" stroke-width="1.8" stroke-linecap="round" fill="none"/><path d="M30 17 Q33 9 27 7" stroke="#c60909" stroke-width="1.8" stroke-linecap="round" fill="none"/><circle cx="22" cy="7" r="1.8" fill="#c60909"/></svg>`}
       </div>
       <div class="cart-item-info">
         <div class="cart-item-nome">${item.nome}</div>
@@ -578,23 +601,24 @@ async function calcularFrete() {
   if (cep.length !== 8) return alert('Digite um CEP válido');
   cepFinal = cep;
 
-  // usa o produto mais pesado do carrinho pra calcular
   carrinho = getCarrinho();
-  const produtoId = carrinho[0]?.id;
-  if (!produtoId) return;
+  if (!carrinho.length) return;
 
   const div = document.getElementById('frete-opcoes');
   div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--ink-muted);font-style:italic">Calculando...</p>';
 
+  // Passa todos os itens do carrinho para o backend agregar peso/dimensões corretamente
+  const itens = carrinho.map(i => ({ produto_id: i.id, quantidade: i.quantidade }));
+
   const resp = await fetch('/api/frete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ cep, produto_id: produtoId })
+    body: JSON.stringify({ cep, itens })
   });
   const opcoes = await resp.json();
 
-  if (!opcoes.length) {
-    div.innerHTML = '<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--red)">Não foi possível calcular o frete para este CEP.</p>';
+  if (!Array.isArray(opcoes) || !opcoes.length) {
+    div.innerHTML = `<p style="font-family:Montserrat,sans-serif;font-size:13px;color:var(--red)">${opcoes?.erro || 'Não foi possível calcular o frete para este CEP.'}</p>`;
     return;
   }
   div.innerHTML = opcoes.slice(0, 4).map(op => `

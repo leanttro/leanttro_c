@@ -280,6 +280,19 @@ def sorteio_page():
         numeros_reservados = [n.numero for n in s.numeros]
     return render_template('sorteio.html', sorteio=s, numeros_reservados=numeros_reservados)
 
+@app.route('/api/sorteio-numeros')
+def api_sorteio_numeros():
+    """Retorna info do sorteio ativo para o modal de escolha de número."""
+    s = Sorteio.query.filter_by(ativo=True).first()
+    if not s:
+        return jsonify({'ativo': False})
+    reservados = [n.numero for n in s.numeros]
+    return jsonify({
+        'ativo': True,
+        'total': s.total_numeros,
+        'reservados': reservados
+    })
+
 # ─── API: FRETE ──────────────────────────────────────────────────
 
 @app.route('/api/frete', methods=['POST'])
@@ -438,9 +451,14 @@ def criar_preferencia():
         numeros_usados = [n.numero for n in sorteio_ativo.numeros]
         disponiveis = [n for n in range(1, sorteio_ativo.total_numeros + 1) if n not in numeros_usados]
         if disponiveis:
+            numero_escolhido = data.get('numero_sorteio')
+            if numero_escolhido and int(numero_escolhido) in disponiveis:
+                numero_final = int(numero_escolhido)
+            else:
+                numero_final = random.choice(disponiveis)
             db.session.add(NumeroSorteio(
                 sorteio_id=sorteio_ativo.id,
-                numero=random.choice(disponiveis),
+                numero=numero_final,
                 nome_participante=data['nome'],
                 telefone=data.get('telefone', ''),
                 pedido_id=pedido.id

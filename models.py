@@ -113,6 +113,7 @@ class NumeroSorteio(db.Model):
     telefone          = db.Column(db.String(20))
     pedido_id         = db.Column(db.String, db.ForeignKey('pedidos.id'), nullable=True)
     reservado_em      = db.Column(db.DateTime, default=datetime.utcnow)
+    status            = db.Column(db.String(20), default='confirmado')  # pendente | confirmado
 
 # ─── AGENDAMENTO ─────────────────────────────────────────────────
 

@@ -324,10 +324,7 @@
     color: var(--ink-muted);
     margin-bottom: 14px;
   }
-  .frete-cep-row {
-    display: flex;
-    gap: 8px;
-  }
+  .frete-cep-row { display: flex; gap: 8px; }
   .frete-cep-row input {
     flex: 1;
     padding: 11px 14px;
@@ -371,41 +368,11 @@
     gap: 12px;
   }
   .frete-opcao:last-child { margin-bottom: 0; }
-  .frete-opcao-info {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-  }
-  .frete-opcao-info small {
-    display: block;
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--ink-muted);
-    margin-top: 2px;
-  }
-  .frete-opcao-preco {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--red);
-    white-space: nowrap;
-  }
-  .frete-erro {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 12px;
-    color: var(--red);
-    margin-top: 10px;
-    font-weight: 500;
-  }
-  .frete-link-cep {
-    display: block;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    color: var(--ink-muted);
-    text-decoration: none;
-    margin-top: 8px;
-  }
+  .frete-opcao-info { font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink); }
+  .frete-opcao-info small { display: block; font-size: 11px; font-weight: 400; color: var(--ink-muted); margin-top: 2px; }
+  .frete-opcao-preco { font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 800; color: var(--red); white-space: nowrap; }
+  .frete-erro { font-family: 'Montserrat', sans-serif; font-size: 12px; color: var(--red); margin-top: 10px; font-weight: 500; }
+  .frete-link-cep { display: block; font-family: 'Montserrat', sans-serif; font-size: 11px; color: var(--ink-muted); text-decoration: none; margin-top: 8px; }
   .frete-link-cep:hover { color: var(--red); }
 
   /* ── TOAST ── */
@@ -472,13 +439,13 @@
     box-shadow: 0 16px 40px rgba(198,9,9,.1);
   }
   .outro-card-img {
-    height: 150px;
+    height: 200px;
     background: var(--rose-light);
     display: flex; align-items: center; justify-content: center;
     font-size: 60px;
     overflow: hidden;
   }
-  .outro-card-img img { width: 100%; height: 100%; object-fit: cover; }
+  .outro-card-img img { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
   .outro-card-body { padding: 18px 20px 20px; }
   .outro-card-body h4 {
     font-family: 'Playfair Display', serif;
@@ -561,20 +528,11 @@
     <div class="frete-box">
       <h4>🚚 Calcular frete para entrega</h4>
       <div class="frete-cep-row">
-        <input
-          type="text"
-          id="frete-cep"
-          placeholder="00000-000"
-          maxlength="9"
-          inputmode="numeric"
-          oninput="mascaraCep(this)"
-          onkeydown="if(event.key==='Enter') calcularFrete()"
-        >
+        <input type="text" id="frete-cep" placeholder="00000-000" maxlength="9" inputmode="numeric"
+          oninput="mascaraCep(this)" onkeydown="if(event.key==='Enter') calcularFrete()">
         <button id="frete-btn" onclick="calcularFrete()">Calcular</button>
       </div>
-      <a href="https://buscacepinter.correios.com.br/app/endereco/" target="_blank" class="frete-link-cep">
-        Não sei meu CEP →
-      </a>
+      <a href="https://buscacepinter.correios.com.br/app/endereco/" target="_blank" class="frete-link-cep">Não sei meu CEP →</a>
       <div class="frete-resultado" id="frete-resultado"></div>
     </div>
 
@@ -691,21 +649,12 @@ function mascaraCep(input) {
   if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
   input.value = v;
 }
-
 async function calcularFrete() {
   const cepRaw = document.getElementById('frete-cep').value.replace(/\D/g, '');
   const resultado = document.getElementById('frete-resultado');
   const btn = document.getElementById('frete-btn');
-
-  if (cepRaw.length !== 8) {
-    resultado.innerHTML = '<p class="frete-erro">⚠️ Digite um CEP válido com 8 dígitos.</p>';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.textContent = 'Calculando...';
-  resultado.innerHTML = '';
-
+  if (cepRaw.length !== 8) { resultado.innerHTML = '<p class="frete-erro">⚠️ Digite um CEP válido com 8 dígitos.</p>'; return; }
+  btn.disabled = true; btn.textContent = 'Calculando...'; resultado.innerHTML = '';
   try {
     const resp = await fetch('/api/frete', {
       method: 'POST',
@@ -713,40 +662,18 @@ async function calcularFrete() {
       body: JSON.stringify({ cep: cepRaw, itens: [{ produto_id: PRODUTO.id, quantidade: qtde }] })
     });
     const opcoes = await resp.json();
-
-    if (!resp.ok || opcoes.erro) {
-      resultado.innerHTML = `<p class="frete-erro">⚠️ ${opcoes.erro || 'Não foi possível calcular o frete.'}</p>`;
-      return;
-    }
-
-    if (!Array.isArray(opcoes) || opcoes.length === 0) {
-      resultado.innerHTML = '<p class="frete-erro">Nenhuma opção de frete disponível para este CEP.</p>';
-      return;
-    }
-
+    if (!resp.ok || opcoes.erro) { resultado.innerHTML = `<p class="frete-erro">⚠️ ${opcoes.erro || 'Não foi possível calcular o frete.'}</p>`; return; }
+    if (!Array.isArray(opcoes) || opcoes.length === 0) { resultado.innerHTML = '<p class="frete-erro">Nenhuma opção disponível para este CEP.</p>'; return; }
     resultado.innerHTML = opcoes.slice(0, 3).map(o => `
       <div class="frete-opcao">
-        <div class="frete-opcao-info">
-          ${o.empresa} — ${o.nome}
-          <small>Prazo: até ${o.prazo} dia${o.prazo !== 1 ? 's' : ''} útil${o.prazo !== 1 ? 'eis' : ''}</small>
-        </div>
+        <div class="frete-opcao-info">${o.empresa} — ${o.nome}<small>Prazo: até ${o.prazo} dia${o.prazo !== 1 ? 's' : ''} útil${o.prazo !== 1 ? 'eis' : ''}</small></div>
         <div class="frete-opcao-preco">R$ ${o.preco.toFixed(2).replace('.', ',')}</div>
-      </div>
-    `).join('');
-  } catch (e) {
+      </div>`).join('');
+  } catch(e) {
     resultado.innerHTML = '<p class="frete-erro">⚠️ Erro de conexão. Tente novamente.</p>';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Calcular';
+    btn.disabled = false; btn.textContent = 'Calcular';
   }
-}
-
-// Recalcula frete automaticamente se a quantidade mudar e já houver CEP preenchido
-const _alterarQtdeOriginal = alterarQtde;
-function alterarQtde(delta) {
-  _alterarQtdeOriginal(delta);
-  const cepRaw = document.getElementById('frete-cep').value.replace(/\D/g, '');
-  if (cepRaw.length === 8) calcularFrete();
 }
 
 // inicializa badge

@@ -506,12 +506,12 @@
     </div>
     {% endif %}
 
-    <!-- AVISO -->
+    <!-- AVISO PRAZO -->
     <div class="aviso-agendamento">
-      <div class="aviso-icon">🕐</div>
+      <div class="aviso-icon">⏱️</div>
       <div class="aviso-texto">
-        <strong>Retirada a partir do dia seguinte</strong>
-        <span>Após o pagamento confirmado, você escolhe o dia e horário para buscar sua cesta. A retirada é agendada a partir do <strong>dia seguinte</strong> ao pagamento. Atendemos de seg a sab, das 7h às 21h.</span>
+        <strong>Prazo de preparo: {{ produto.prazo_quantidade }} {{ produto.prazo_unidade }}</strong>
+        <span>Após o pagamento confirmado, sua cesta fica pronta em <strong>{{ produto.prazo_quantidade }} {{ produto.prazo_unidade }}</strong>. Retirada agendada de seg a sab, das 7h às 21h, ou enviamos para todo o Brasil.</span>
       </div>
     </div>
 
@@ -586,7 +586,9 @@ const PRODUTO = {
   id:    '{{ produto.id }}',
   nome:  '{{ produto.nome }}',
   preco: {{ produto.preco }},
-  imagem: '{{ produto.imagem or "" }}'
+  imagem: '{{ produto.imagem or "" }}',
+  prazo_quantidade: {{ produto.prazo_quantidade or 1 }},
+  prazo_unidade: '{{ produto.prazo_unidade or "dias úteis" }}'
 };
 let qtde = 1;
 

@@ -508,6 +508,11 @@ def criar_preferencia():
         descricao += f' + Frete ({data.get("servico_frete", "Envio")})'
 
     # ── Asaas: criar cobrança ──
+    # Desconto de 10% para pagamento via Pix
+    DESCONTO_PIX_PERCENT = Decimal('10')
+    valor_desconto_pix = (total * DESCONTO_PIX_PERCENT / 100).quantize(Decimal('0.01'))
+    valor_com_desconto_pix = total - valor_desconto_pix
+
     cobranca_payload = {
         'customer':          customer_id,
         'billingType':       'UNDEFINED',   # cliente escolhe Pix ou cartão na tela do Asaas
@@ -518,6 +523,14 @@ def criar_preferencia():
         'callback': {
             'successUrl': f'{BASE_URL}/obrigado/{pedido.numero}',
             'autoRedirect': True
+        },
+        # Habilita Pix, cartão e boleto explicitamente
+        'allowedPaymentTypes': ['PIX', 'CREDIT_CARD', 'DEBIT_CARD', 'BOLETO'],
+        # Desconto automático de 10% se pagar via Pix
+        'discount': {
+            'value':            float(DESCONTO_PIX_PERCENT),
+            'dueDateLimitDays': 0,
+            'type':             'PERCENTAGE'
         }
     }
 

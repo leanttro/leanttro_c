@@ -38,6 +38,8 @@ class Produto(db.Model):
     largura     = db.Column(db.Integer, default=30)
     comprimento = db.Column(db.Integer, default=30)
     ativo       = db.Column(db.Boolean, default=True)
+    prazo_quantidade = db.Column(db.Integer, default=1)      # ex: 4
+    prazo_unidade    = db.Column(db.String(20), default='dias úteis')  # horas | dias | dias úteis
     criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
 
     categoria_id = db.Column(db.String, db.ForeignKey('categorias.id'), nullable=True)

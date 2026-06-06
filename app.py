@@ -46,8 +46,11 @@ def asaas_headers():
 def asaas_obter_ou_criar_cliente(nome, email, telefone, cpf_cnpj=None):
     """
     Busca cliente no Asaas pelo email. Se não existir, cria.
+    Se existir mas sem CPF, atualiza com o CPF fornecido.
     Retorna o customer_id do Asaas.
     """
+    cpf_limpo = ''.join(filter(str.isdigit, cpf_cnpj)) if cpf_cnpj else ''
+
     # Tenta buscar por email
     resp = requests.get(
         f'{ASAAS_URL}/customers',
@@ -58,14 +61,24 @@ def asaas_obter_ou_criar_cliente(nome, email, telefone, cpf_cnpj=None):
     if resp.status_code == 200:
         data = resp.json()
         if data.get('data'):
-            return data['data'][0]['id']
+            cliente = data['data'][0]
+            customer_id = cliente['id']
+            # Se o cliente existe mas não tem CPF, atualiza
+            if cpf_limpo and not cliente.get('cpfCnpj'):
+                requests.put(
+                    f'{ASAAS_URL}/customers/{customer_id}',
+                    json={'cpfCnpj': cpf_limpo},
+                    headers=asaas_headers(),
+                    timeout=10
+                )
+            return customer_id
 
     # Cria novo cliente
     payload = {'name': nome, 'email': email}
     if telefone:
         payload['mobilePhone'] = ''.join(filter(str.isdigit, telefone))
-    if cpf_cnpj:
-        payload['cpfCnpj'] = ''.join(filter(str.isdigit, cpf_cnpj))
+    if cpf_limpo:
+        payload['cpfCnpj'] = cpf_limpo
 
     resp = requests.post(
         f'{ASAAS_URL}/customers',
@@ -277,7 +290,7 @@ def sorteio_page():
     s = Sorteio.query.filter_by(ativo=True).first()
     numeros_reservados = []
     if s:
-        numeros_reservados = [n.numero for n in s.numeros]
+        numeros_reservados = [n.numero for n in s.numeros if n.status == 'confirmado']
     return render_template('sorteio.html', sorteio=s, numeros_reservados=numeros_reservados)
 
 @app.route('/api/sorteio-numeros')
@@ -286,7 +299,7 @@ def api_sorteio_numeros():
     s = Sorteio.query.filter_by(ativo=True).first()
     if not s:
         return jsonify({'ativo': False})
-    reservados = [n.numero for n in s.numeros]
+    reservados = [n.numero for n in s.numeros]  # pendentes e confirmados aparecem como reservados no modal
     return jsonify({
         'ativo': True,
         'total': s.total_numeros,
@@ -445,10 +458,11 @@ def criar_preferencia():
             quantidade=qtd
         ))
 
-    # ── Sorteio ──
+    # ── Sorteio: reserva o número escolhido como pendente ──
+    # O número só aparece como confirmado após pagamento (webhook)
     sorteio_ativo = Sorteio.query.filter_by(ativo=True).first()
     if sorteio_ativo:
-        numeros_usados = [n.numero for n in sorteio_ativo.numeros]
+        numeros_usados = [n.numero for n in sorteio_ativo.numeros]  # bloqueia pendentes e confirmados
         disponiveis = [n for n in range(1, sorteio_ativo.total_numeros + 1) if n not in numeros_usados]
         if disponiveis:
             numero_escolhido = data.get('numero_sorteio')
@@ -461,7 +475,8 @@ def criar_preferencia():
                 numero=numero_final,
                 nome_participante=data['nome'],
                 telefone=data.get('telefone', ''),
-                pedido_id=pedido.id
+                pedido_id=pedido.id,
+                status='pendente'
             ))
 
     db.session.commit()
@@ -553,12 +568,18 @@ def webhook_asaas():
 
     if evento in ('PAYMENT_CONFIRMED', 'PAYMENT_RECEIVED') and pedido.status != 'paid':
         pedido.status = 'paid'
+        # Confirma o número do sorteio pendente
+        numero_pendente = NumeroSorteio.query.filter_by(pedido_id=pedido.id, status='pendente').first()
+        if numero_pendente:
+            numero_pendente.status = 'confirmado'
         db.session.commit()
         email_pedido_confirmado(pedido, pedido.itens)
         email_novo_pedido_admin(pedido, pedido.itens)
 
     elif evento in ('PAYMENT_DELETED', 'PAYMENT_REFUNDED', 'PAYMENT_CHARGEBACK_REQUESTED'):
         pedido.status = 'cancelled'
+        # Remove número pendente do sorteio para liberar
+        NumeroSorteio.query.filter_by(pedido_id=pedido.id, status='pendente').delete()
         db.session.commit()
 
     else:
@@ -969,6 +990,17 @@ def admin():
         agendamentos_proximos=agendamentos_proximos,
         config_agenda=config_agenda
     )
+
+@app.cli.command('migrate-sorteio-status')
+def migrate_sorteio_status():
+    """Adiciona coluna status na tabela numeros_sorteio se não existir."""
+    with db.engine.connect() as conn:
+        try:
+            conn.execute(db.text("ALTER TABLE numeros_sorteio ADD COLUMN status VARCHAR(20) DEFAULT 'confirmado'"))
+            conn.commit()
+            print("✅ Coluna status adicionada em numeros_sorteio")
+        except Exception as e:
+            print(f"ℹ️ {e} (pode já existir)")
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 

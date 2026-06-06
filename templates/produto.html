@@ -654,6 +654,7 @@ async function calcularFrete() {
   const resultado = document.getElementById('frete-resultado');
   const btn = document.getElementById('frete-btn');
   if (cepRaw.length !== 8) { resultado.innerHTML = '<p class="frete-erro">⚠️ Digite um CEP válido com 8 dígitos.</p>'; return; }
+  localStorage.setItem('cep_entrega', cepRaw);
   btn.disabled = true; btn.textContent = 'Calculando...'; resultado.innerHTML = '';
   try {
     const resp = await fetch('/api/frete', {

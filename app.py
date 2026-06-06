@@ -47,24 +47,36 @@ def get_config_agenda():
 
 def horarios_disponiveis(pedido_pago_em=None):
     """
-    Retorna lista de dicts {'data': date, 'hora': int} disponíveis
-    a partir de agora + tempo de preparo, respeitando config e bloqueios.
-    Retorna os próximos 7 dias úteis com slots livres.
+    Retorna lista de dicts {'data': date, 'hora': int} disponíveis,
+    respeitando config e bloqueios.
+
+    Regra de data mínima:
+    - A retirada nunca ocorre no mesmo dia do pagamento.
+    - O primeiro dia disponível é sempre pedido_pago_em + 1 dia
+      (ou amanhã, se pedido_pago_em não for informado).
+    - Dentro do dia permitido, todos os slots do horário de funcionamento
+      são oferecidos (sem filtro por hora atual), pois o prazo de 1 dia
+      já é a garantia de preparo suficiente.
     """
     config = get_config_agenda()
-    minutos_preparo = config.minutos_preparo
-    hora_abertura = config.hora_abertura
+    hora_abertura   = config.hora_abertura
     hora_fechamento = config.hora_fechamento
-    max_por_slot = config.max_por_horario
+    max_por_slot    = config.max_por_horario
     dias_permitidos = [int(d) for d in config.dias_semana.split(',')]
 
-    agora = datetime.now()
-    mais_cedo = agora + timedelta(minutes=minutos_preparo)
+    # Data de referência: dia do pagamento (ou hoje se não informado)
+    if pedido_pago_em and isinstance(pedido_pago_em, datetime):
+        data_ref = pedido_pago_em.date()
+    else:
+        data_ref = date.today()
 
-    # Coleta bloqueios dos próximos 14 dias
-    ate = date.today() + timedelta(days=14)
+    # Primeiro dia elegível = dia seguinte ao pagamento (nunca no mesmo dia)
+    primeiro_dia_elegivel = data_ref + timedelta(days=1)
+
+    # Coleta bloqueios dos próximos 14 dias a partir do primeiro dia elegível
+    ate = primeiro_dia_elegivel + timedelta(days=14)
     bloqueios = BloqueioHorario.query.filter(
-        BloqueioHorario.data >= date.today(),
+        BloqueioHorario.data >= primeiro_dia_elegivel,
         BloqueioHorario.data <= ate
     ).all()
 
@@ -82,30 +94,25 @@ def horarios_disponiveis(pedido_pago_em=None):
         return False
 
     slots_disponiveis = []
-    dia_atual = date.today()
+    dia_atual = primeiro_dia_elegivel
 
     for _ in range(14):  # varre até 14 dias à frente
-        if dia_atual.weekday() + 1 in dias_permitidos or (dia_atual.weekday() == 6 and 0 in dias_permitidos):
-            # weekday(): 0=seg,...,6=dom — nossa convenção: 0=dom,1=seg,...,6=sab
-            dia_semana_conv = (dia_atual.weekday() + 1) % 7  # converte: seg=1,...,dom=0
-            if dia_semana_conv in dias_permitidos and not dia_bloqueado(dia_atual):
-                for hora in range(hora_abertura, hora_fechamento):
-                    dt_slot = datetime.combine(dia_atual, datetime.min.time()).replace(hour=hora)
-                    if dt_slot <= mais_cedo:
-                        continue
-                    if hora_bloqueada(dia_atual, hora):
-                        continue
-                    # Conta agendamentos já existentes neste slot
-                    ocupados = Agendamento.query.filter_by(
-                        data_retirada=dia_atual,
-                        hora_retirada=hora
-                    ).filter(Agendamento.status != 'cancelado').count()
-                    if ocupados < max_por_slot:
-                        slots_disponiveis.append({
-                            'data': dia_atual.isoformat(),
-                            'hora': hora,
-                            'label': f"{dia_atual.strftime('%d/%m/%Y')} às {hora:02d}:00"
-                        })
+        # weekday(): 0=seg,...,6=dom — nossa convenção: 0=dom,1=seg,...,6=sab
+        dia_semana_conv = (dia_atual.weekday() + 1) % 7  # seg=1, ..., sáb=6, dom=0
+        if dia_semana_conv in dias_permitidos and not dia_bloqueado(dia_atual):
+            for hora in range(hora_abertura, hora_fechamento):
+                if hora_bloqueada(dia_atual, hora):
+                    continue
+                ocupados = Agendamento.query.filter_by(
+                    data_retirada=dia_atual,
+                    hora_retirada=hora
+                ).filter(Agendamento.status != 'cancelado').count()
+                if ocupados < max_por_slot:
+                    slots_disponiveis.append({
+                        'data': dia_atual.isoformat(),
+                        'hora': hora,
+                        'label': f"{dia_atual.strftime('%d/%m/%Y')} às {hora:02d}:00"
+                    })
         dia_atual += timedelta(days=1)
 
     return slots_disponiveis
@@ -236,15 +243,41 @@ def sorteio_page():
 @app.route('/api/frete', methods=['POST'])
 def calcular_frete():
     data = request.json
-    cep = data.get('cep', '').replace('-', '')
-    produto_id = data.get('produto_id')
+    cep = data.get('cep', '').replace('-', '').strip()
 
-    if not cep or len(cep) != 8:
+    if not cep or len(cep) != 8 or not cep.isdigit():
         return jsonify({'erro': 'CEP inválido'}), 400
 
-    produto = Produto.query.get(produto_id)
-    if not produto:
-        return jsonify({'erro': 'Produto não encontrado'}), 404
+    # Suporta múltiplos itens (carrinho) ou produto único (compatibilidade)
+    itens_cart = data.get('itens', [])
+    produto_id = data.get('produto_id')
+    if not itens_cart and produto_id:
+        itens_cart = [{'produto_id': produto_id, 'quantidade': 1}]
+
+    if not itens_cart:
+        return jsonify({'erro': 'Nenhum produto informado'}), 400
+
+    # Agrega dimensões e peso de todos os itens do carrinho
+    peso_total       = 0.0
+    valor_total      = 0.0
+    altura_max       = 0
+    largura_max      = 0
+    comprimento_max  = 0
+
+    for item in itens_cart:
+        produto = Produto.query.get(item.get('produto_id'))
+        if not produto:
+            continue
+        qtd = int(item.get('quantidade', 1))
+        peso_total      += float(produto.peso or 0) * qtd
+        valor_total     += float(produto.preco or 0) * qtd
+        # Altura e comprimento empilham com a quantidade; largura pega o máximo
+        altura_max      = max(altura_max, int(produto.altura or 10))
+        largura_max     = max(largura_max, int(produto.largura or 10))
+        comprimento_max = max(comprimento_max, int(produto.comprimento or 10))
+
+    if peso_total == 0:
+        return jsonify({'erro': 'Produto(s) não encontrado(s)'}), 404
 
     headers = {
         'Authorization': f'Bearer {ME_TOKEN}',
@@ -255,19 +288,29 @@ def calcular_frete():
 
     payload = {
         'from': {'postal_code': CEP_ORIGEM},
-        'to': {'postal_code': cep},
+        'to':   {'postal_code': cep},
         'package': {
-            'height': produto.altura,
-            'width': produto.largura,
-            'length': produto.comprimento,
-            'weight': produto.peso
+            'height':  altura_max,
+            'width':   largura_max,
+            'length':  comprimento_max,
+            'weight':  peso_total
         },
-        'options': {'insurance_value': float(produto.preco), 'receipt': False, 'own_hand': False},
+        'options': {
+            'insurance_value': valor_total,
+            'receipt':   False,
+            'own_hand':  False
+        },
         'services': '1,2,17'
     }
 
     try:
-        resp = requests.post(f'{ME_URL}/me/shipment/calculate', json=payload, headers=headers, timeout=10)
+        resp = requests.post(
+            f'{ME_URL}/me/shipment/calculate',
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+
         if resp.status_code != 200:
             return jsonify({'erro': f'ME erro {resp.status_code}: {resp.text[:300]}'}), 502
 
@@ -276,16 +319,17 @@ def calcular_frete():
             if s.get('error') or not s.get('price'):
                 continue
             opcoes.append({
-                'id': s['id'],
-                'nome': s['name'],
+                'id':      s['id'],
+                'nome':    s['name'],
                 'empresa': s['company']['name'],
-                'preco': float(s['price']),
-                'prazo': s.get('delivery_time', 7),
-                'logo': s['company'].get('picture', '')
+                'preco':   float(s['price']),
+                'prazo':   s.get('delivery_time', 7),
+                'logo':    s['company'].get('picture', '')
             })
 
         opcoes.sort(key=lambda x: x['preco'])
         return jsonify(opcoes)
+
     except Exception as e:
         return jsonify({'erro': str(e)}), 500
 

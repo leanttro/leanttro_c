@@ -296,6 +296,14 @@ def sorteio_page():
 @app.route('/api/sorteio-numeros')
 def api_sorteio_numeros():
     """Retorna info do sorteio ativo para o modal de escolha de número."""
+    # Limpa pendentes com mais de 30 minutos (pessoa não pagou)
+    expirado = datetime.utcnow() - timedelta(minutes=30)
+    NumeroSorteio.query.filter(
+        NumeroSorteio.status == 'pendente',
+        NumeroSorteio.reservado_em < expirado
+    ).delete()
+    db.session.commit()
+
     s = Sorteio.query.filter_by(ativo=True).first()
     if not s:
         return jsonify({'ativo': False})

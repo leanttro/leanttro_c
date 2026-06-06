@@ -615,6 +615,7 @@ function renderCarrinho() {
       <div class="cart-item-info">
         <div class="cart-item-nome">${item.nome}</div>
         <div class="cart-item-preco-unit">R$ ${parseFloat(item.preco).toFixed(2).replace('.',',')} por unidade</div>
+        ${item.prazo_quantidade ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#fff4f4;border:1px solid #ffe0e0;border-radius:20px;padding:3px 10px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:#c60909">⏱️ Pronto em ${item.prazo_quantidade} ${item.prazo_unidade || 'dias úteis'}</div>` : ''}
       </div>
       <div class="cart-item-right">
         <span class="cart-item-subtotal">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.',',')}</span>

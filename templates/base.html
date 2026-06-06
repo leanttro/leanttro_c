@@ -57,7 +57,7 @@
       border: none; background: none; font-family: inherit;
     }
     .nav-dropdown-trigger:hover,
-    .nav-dropdown:hover .nav-dropdown-trigger {
+    .nav-dropdown.open .nav-dropdown-trigger {
       color: var(--red);
       background: #fdf0f0;
     }
@@ -68,27 +68,27 @@
       stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;
       flex-shrink: 0;
     }
-    .nav-dropdown:hover .chevron { transform: rotate(180deg); }
+    .nav-dropdown.open .chevron { transform: rotate(180deg); }
 
     .nav-dropdown-menu {
       display: none;
       position: absolute;
-      top: calc(100% + 8px);
+      top: 100%;
       left: 0;
       background: #fff;
       border: 1px solid var(--warm);
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(90,62,43,.13);
       min-width: 210px;
-      padding: 8px;
+      padding: 12px 8px 8px;
+      margin-top: 0;
       z-index: 300;
-      animation: dropFade .18s ease;
     }
     @keyframes dropFade {
       from { opacity: 0; transform: translateY(-6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .nav-dropdown:hover .nav-dropdown-menu { display: block; }
+    .nav-dropdown.open .nav-dropdown-menu { display: block; animation: dropFade .18s ease; }
 
     .nav-dropdown-menu a {
       display: flex; align-items: center; gap: 10px;
@@ -246,7 +246,7 @@
     {% set categorias_nav = categorias_globais if categorias_globais is defined else [] %}
     {% if categorias_nav %}
     <div class="nav-dropdown" id="nav-dropdown-cestas">
-      <button class="nav-dropdown-trigger" onclick="toggleDropdownMobile()" aria-expanded="false">
+      <button class="nav-dropdown-trigger" id="nav-dropdown-trigger" aria-expanded="false">
         Cestas
         <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
@@ -326,19 +326,48 @@
     links.classList.toggle('open');
   }
 
-  // ── Dropdown cestas no mobile (acordeão via click) ──
-  function toggleDropdownMobile() {
-    // Só age como acordeão em mobile (largura ≤ 768px)
-    if (window.innerWidth > 768) return;
+  // ── Dropdown cestas: hover com delay no desktop, click no mobile ──
+  (function() {
     const dropdown = document.getElementById('nav-dropdown-cestas');
-    if (dropdown) dropdown.classList.toggle('open');
-  }
+    const trigger  = document.getElementById('nav-dropdown-trigger');
+    if (!dropdown) return;
+
+    let closeTimer = null;
+
+    function openDropdown() {
+      clearTimeout(closeTimer);
+      dropdown.classList.add('open');
+      if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    }
+    function closeDropdown() {
+      closeTimer = setTimeout(() => {
+        dropdown.classList.remove('open');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
+      }, 120);
+    }
+
+    // Desktop: hover
+    dropdown.addEventListener('mouseenter', openDropdown);
+    dropdown.addEventListener('mouseleave', closeDropdown);
+
+    // Mobile: click no trigger
+    if (trigger) {
+      trigger.addEventListener('click', function(e) {
+        if (window.innerWidth <= 768) {
+          e.stopPropagation();
+          dropdown.classList.toggle('open');
+        }
+      });
+    }
+  })();
 
   // Fecha menu ao clicar fora
   document.addEventListener('click', function(e) {
     const nav = document.querySelector('nav');
     if (!nav.contains(e.target)) {
       document.getElementById('nav-links').classList.remove('open');
+      const dd = document.getElementById('nav-dropdown-cestas');
+      if (dd) dd.classList.remove('open');
     }
   });
 </script>

@@ -1228,6 +1228,7 @@ atualizarNavBtns();
     document.getElementById('roleta-overlay').classList.remove('ativo');
     if (comBanner) {
       document.getElementById('roleta-banner').classList.add('ativo');
+      setTimeout(fecharBanner, 5000);
     }
   };
 
@@ -1326,8 +1327,7 @@ atualizarNavBtns();
 
 <!-- ── BANNER FIXO ── -->
 <div id="roleta-banner">
-  <span>🎟️ Número <strong id="banner-num">—</strong> reservado para você!</span>
-  <a href="#cestas" class="banner-btn" onclick="document.getElementById('roleta-banner'); scrollToCestas()">Garantir agora</a>
+  <span>🎟️ Número <strong id="banner-num">—</strong> reservado para você! Garante ao finalizar sua compra 🛒</span>
   <button class="banner-fechar" onclick="fecharBanner()" aria-label="Fechar">✕</button>
 </div>
 {% endif %}

@@ -246,6 +246,7 @@
   <button class="nav-item" onclick="setTab('analytics')"><span class="icon">📊</span> Analytics</button>
   <button class="nav-item" onclick="setTab('sorteio')"><span class="icon">🎟️</span> Sorteio</button>
   <button class="nav-item" onclick="setTab('agenda')"><span class="icon">📅</span> Agenda</button>
+  <button class="nav-item" onclick="setTab('config')"><span class="icon">⚙️</span> Configurações</button>
   <div class="sidebar-footer">
     <a href="/admin/logout">🚪 Sair</a>
   </div>
@@ -798,6 +799,37 @@
     </div>
   </div>
 
+  <!-- ═══ CONFIGURAÇÕES ═══ -->
+  <div id="tab-config" class="tab-content">
+    <div class="page-header">
+      <div class="page-title">Configurações</div>
+    </div>
+
+    <div style="max-width:520px">
+      <div class="card" style="padding:28px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px">PIX Manual</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.5">Quando ativo, o checkout exibe QR Code e chave PIX diretamente<br>em vez de redirecionar para o Asaas. Desative quando a conta Asaas for aprovada.</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:52px;height:28px;flex-shrink:0">
+            <input type="checkbox" id="toggle-pix-manual" style="opacity:0;width:0;height:0" onchange="togglePixManual(this.checked)">
+            <span id="toggle-pix-track" style="position:absolute;inset:0;background:#ccc;border-radius:28px;cursor:pointer;transition:.3s"></span>
+            <span id="toggle-pix-thumb" style="position:absolute;left:3px;top:3px;width:22px;height:22px;background:#fff;border-radius:50%;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></span>
+          </label>
+        </div>
+
+        <div id="pix-manual-status" style="margin-top:16px;padding:10px 14px;border-radius:8px;font-size:12px;font-weight:600;display:none"></div>
+
+        <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+          <strong style="color:var(--text)">Chave PIX:</strong> 55366b92-4559-4b28-88c0-451648a3a907<br>
+          <strong style="color:var(--text)">Favorecido:</strong> Leandro Andrade de Oliveira<br>
+          <strong style="color:var(--text)">WhatsApp:</strong> (11) 97623-2235
+        </div>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <!-- ═══ MODAL: DETALHE DO PEDIDO ═══ -->
@@ -1112,6 +1144,53 @@ function setTab(nome) {
   document.getElementById('tab-' + nome).classList.add('active');
   event.currentTarget.classList.add('active');
   if (nome === 'agenda') carregarBloqueios();
+  if (nome === 'config') carregarStatusPix();
+}
+
+async function carregarStatusPix() {
+  try {
+    const r = await fetch('/api/pix-config');
+    const d = await r.json();
+    const chk = document.getElementById('toggle-pix-manual');
+    chk.checked = d.ativo;
+    atualizarVisualtoggle(d.ativo);
+    mostrarStatusPix(d.ativo);
+  } catch(e) {}
+}
+
+function atualizarVisualtoggle(ativo) {
+  const track = document.getElementById('toggle-pix-track');
+  const thumb = document.getElementById('toggle-pix-thumb');
+  if (track) track.style.background = ativo ? '#22c55e' : '#ccc';
+  if (thumb) thumb.style.left = ativo ? '27px' : '3px';
+}
+
+function mostrarStatusPix(ativo) {
+  const el = document.getElementById('pix-manual-status');
+  if (!el) return;
+  el.style.display = 'block';
+  if (ativo) {
+    el.style.background = '#f0fdf4'; el.style.color = '#15803d'; el.style.border = '1px solid #bbf7d0';
+    el.textContent = '✅ PIX manual ATIVO — clientes veem QR Code e chave PIX no checkout';
+  } else {
+    el.style.background = '#fafafa'; el.style.color = '#6b7280'; el.style.border = '1px solid #e5e7eb';
+    el.textContent = '⚙️ PIX manual INATIVO — checkout usando Asaas normalmente';
+  }
+}
+
+async function togglePixManual(ativo) {
+  atualizarVisualtoggle(ativo);
+  try {
+    await fetch('/admin/config/pix-manual', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ativo })
+    });
+    mostrarStatusPix(ativo);
+    toast(ativo ? 'PIX manual ativado!' : 'PIX manual desativado — usando Asaas');
+  } catch(e) {
+    toast('Erro ao salvar configuração', 'error');
+  }
 }
 
 // ── TOAST ──

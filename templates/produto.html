@@ -1,6 +1,137 @@
 {% extends "base.html" %}
-{% block title %}{{ produto.nome }} — Cesta de Presentes{% endblock %}
-{% block description %}{{ produto.descricao }}{% endblock %}
+{% block title %}{{ produto.nome }} — Cesta de Presentes Artesanal | São Paulo{% endblock %}
+{% block description %}{{ produto.descricao | truncate(155, True, '...') }} Embalagem premium, laço e cartão personalizado. Entrega em São Paulo ou retirada grátis.{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block canonical %}https://www.cestadepresentes.com.br/produto/{{ produto.slug }}{% endblock %}
+
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ produto.nome }} — Cesta de Presentes{% endblock %}
+{% block og_description %}{{ produto.descricao | truncate(155, True, '...') }}{% endblock %}
+{% block og_image %}{{ produto.imagem if produto.imagem and produto.imagem.startswith('http') else 'https://res.cloudinary.com/dturwhclq/image/upload/v1780790447/Cesta_de_Presentes_250_x_250_px_1_dhp7jt.png' }}{% endblock %}
+{% block og_image_width %}1200{% endblock %}
+{% block og_image_height %}800{% endblock %}
+{% block og_image_alt %}{{ produto.nome }} — Cesta de Presentes Artesanal{% endblock %}
+{% block tw_title %}{{ produto.nome }} — Cesta de Presentes{% endblock %}
+{% block tw_description %}{{ produto.descricao | truncate(120, True, '...') }}{% endblock %}
+{% block tw_image %}{{ produto.imagem if produto.imagem and produto.imagem.startswith('http') else 'https://res.cloudinary.com/dturwhclq/image/upload/v1780790447/Cesta_de_Presentes_250_x_250_px_1_dhp7jt.png' }}{% endblock %}
+
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Product",
+      "name": "{{ produto.nome }}",
+      "description": "{{ produto.descricao | replace('"', '\\"') }}",
+      "url": "https://www.cestadepresentes.com.br/produto/{{ produto.slug }}",
+      "image": "{{ produto.imagem if produto.imagem and produto.imagem.startswith('http') else 'https://res.cloudinary.com/dturwhclq/image/upload/v1780790447/Cesta_de_Presentes_250_x_250_px_1_dhp7jt.png' }}",
+      "brand": {
+        "@type": "Brand",
+        "name": "Cesta de Presentes"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "{{ '%.2f'|format(produto.preco) }}",
+        "priceCurrency": "BRL",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.cestadepresentes.com.br/produto/{{ produto.slug }}",
+        "seller": {
+          "@type": "Organization",
+          "name": "Cesta de Presentes"
+        },
+        "priceValidUntil": "{{ (now().year + 1) ~ '-12-31' if now is defined else '2027-12-31' }}",
+        "shippingDetails": {
+          "@type": "OfferShippingDetails",
+          "shippingRate": {
+            "@type": "MonetaryAmount",
+            "value": "0",
+            "currency": "BRL"
+          },
+          "shippingDestination": {
+            "@type": "DefinedRegion",
+            "addressCountry": "BR",
+            "addressRegion": "SP"
+          },
+          "deliveryTime": {
+            "@type": "ShippingDeliveryTime",
+            "businessDays": {
+              "@type": "OpeningHoursSpecification",
+              "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"]
+            },
+            "cutoffTime": "12:00:00-03:00",
+            "handlingTime": {
+              "@type": "QuantitativeValue",
+              "minValue": 1,
+              "maxValue": 2,
+              "unitCode": "DAY"
+            },
+            "transitTime": {
+              "@type": "QuantitativeValue",
+              "minValue": 1,
+              "maxValue": 3,
+              "unitCode": "DAY"
+            }
+          }
+        }
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Início",
+          "item": "https://www.cestadepresentes.com.br/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Cestas",
+          "item": "https://www.cestadepresentes.com.br/#cestas"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "{{ produto.nome }}",
+          "item": "https://www.cestadepresentes.com.br/produto/{{ produto.slug }}"
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Como funciona a entrega da {{ produto.nome }}?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Entregamos em São Paulo e região pelo Melhor Envio, ou você pode retirar grátis no nosso ponto de retirada. O prazo de preparo é de {{ produto.prazo_quantidade }} {{ produto.prazo_unidade or 'dias úteis' }}."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Posso personalizar a cesta {{ produto.nome }}?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sim! Todas as nossas cestas incluem cartão personalizado com a sua mensagem. Entre em contato pelo WhatsApp para personalizações especiais."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quais são as formas de pagamento?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Aceitamos PIX (com 10% de desconto) e cartão de crédito em até 3x sem juros."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
+{% endblock %}
 
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">

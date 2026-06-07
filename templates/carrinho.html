@@ -319,6 +319,32 @@
     color: var(--ink);
     font-size: 17px;
   }
+  .pix-desconto-box {
+    background: #f0fdf4;
+    border: 1.5px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-top: 10px;
+    font-family: 'Montserrat', sans-serif;
+  }
+  .pix-desconto-box .pix-tag {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    color: #16a34a; display: block; margin-bottom: 4px;
+  }
+  .pix-desconto-box .pix-valor {
+    font-size: 22px; font-weight: 900;
+    color: #16a34a; display: block; line-height: 1;
+  }
+  .pix-desconto-box .pix-economia {
+    font-size: 11px; color: #4ade80; margin-top: 3px; display: block;
+  }
+  .parcelado-box {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; color: var(--ink-muted);
+    text-align: center; margin-top: 8px;
+  }
+  .parcelado-box strong { color: var(--ink); font-weight: 700; }
 
   /* ── BTN PAGAR ── */
   #btn-pagar {
@@ -530,6 +556,12 @@
           <span>Total</span>
           <span id="total-valor">R$ 0,00</span>
         </div>
+        <div class="pix-desconto-box">
+          <span class="pix-tag">💸 Pagando no Pix</span>
+          <span class="pix-valor" id="pix-valor">R$ 0,00</span>
+          <span class="pix-economia" id="pix-economia">Você economiza R$ 0,00</span>
+        </div>
+        <p class="parcelado-box">ou em até <strong id="parcelado-label">3x de R$ 0,00</strong> sem juros no cartão</p>
       </div>
 
       <button id="btn-pagar" onclick="pagar()">
@@ -660,6 +692,17 @@ function atualizarResumo() {
   `).join('');
 
   document.getElementById('total-valor').textContent = 'R$ ' + total.toFixed(2).replace('.',',');
+
+  // Pix e parcelado
+  const pixVal = total * 0.9;
+  const economia = total * 0.1;
+  const parcela = total / 3;
+  const pixEl = document.getElementById('pix-valor');
+  const econEl = document.getElementById('pix-economia');
+  const parcEl = document.getElementById('parcelado-label');
+  if (pixEl) pixEl.textContent = 'R$ ' + pixVal.toFixed(2).replace('.',',');
+  if (econEl) econEl.textContent = 'Você economiza R$ ' + economia.toFixed(2).replace('.',',');
+  if (parcEl) parcEl.textContent = '3x de R$ ' + parcela.toFixed(2).replace('.',',');
 }
 
 function setEntrega(tipo, el) {

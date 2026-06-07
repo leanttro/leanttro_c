@@ -1,6 +1,72 @@
 {% extends "base.html" %}
-{% block title %}Sorteio do Mês — Cestas de Presentes{% endblock %}
-{% block description %}Participe do nosso sorteio! Compre uma cesta e concorra automaticamente, ou adquira números extras pelo WhatsApp.{% endblock %}
+{% block title %}Sorteio do Mês — Concorra a uma Cesta de Presentes | São Paulo{% endblock %}
+{% block description %}{% if sorteio %}Concorra a {{ sorteio.titulo }}! Compre uma cesta e ganhe um número automaticamente, ou adquira números extras por R$ {{ "%.0f"|format(sorteio.valor_numero) }}. Sorteio em {{ sorteio.data_sorteio.strftime('%d/%m/%Y') if sorteio.data_sorteio else 'breve' }}.{% else %}Participe do nosso sorteio! Compre uma cesta e concorra automaticamente. Entrega em São Paulo.{% endif %}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block canonical %}https://www.cestadepresentes.com.br/sorteio{% endblock %}
+
+{% block og_title %}{% if sorteio %}Sorteio: {{ sorteio.titulo }} — Cesta de Presentes{% else %}Sorteio do Mês — Cesta de Presentes{% endif %}{% endblock %}
+{% block og_description %}{% if sorteio %}Concorra a {{ sorteio.titulo }}! Compre uma cesta e participe automaticamente.{% else %}Participe do sorteio mensal! Compre uma cesta e concorra.{% endif %}{% endblock %}
+{% block og_image %}{% if sorteio and sorteio.imagem and sorteio.imagem.startswith('http') %}{{ sorteio.imagem }}{% else %}https://res.cloudinary.com/dturwhclq/image/upload/v1780790447/Cesta_de_Presentes_250_x_250_px_1_dhp7jt.png{% endif %}{% endblock %}
+{% block og_image_alt %}Sorteio Cesta de Presentes{% endblock %}
+
+{% block jsonld %}
+{% if sorteio %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Event",
+      "name": "Sorteio: {{ sorteio.titulo }}",
+      "description": "Concorra a {{ sorteio.titulo }}. Compre uma cesta e ganhe um número automaticamente, ou adquira números extras por R$ {{ '%.0f'|format(sorteio.valor_numero) }} cada.",
+      "url": "https://www.cestadepresentes.com.br/sorteio",
+      "image": "{% if sorteio.imagem and sorteio.imagem.startswith('http') %}{{ sorteio.imagem }}{% else %}https://res.cloudinary.com/dturwhclq/image/upload/v1780790447/Cesta_de_Presentes_250_x_250_px_1_dhp7jt.png{% endif %}",
+      {% if sorteio.data_sorteio %}
+      "startDate": "{{ sorteio.data_sorteio.strftime('%Y-%m-%d') }}",
+      "endDate": "{{ sorteio.data_sorteio.strftime('%Y-%m-%d') }}",
+      {% endif %}
+      "eventStatus": "https://schema.org/EventScheduled",
+      "eventAttendanceMode": "https://schema.org/OnlineEventAttendanceMode",
+      "location": {
+        "@type": "VirtualLocation",
+        "url": "https://www.cestadepresentes.com.br/sorteio"
+      },
+      "organizer": {
+        "@type": "Organization",
+        "name": "Cesta de Presentes",
+        "url": "https://www.cestadepresentes.com.br"
+      },
+      "offers": {
+        "@type": "Offer",
+        "name": "Número do sorteio",
+        "price": "{{ '%.2f'|format(sorteio.valor_numero) }}",
+        "priceCurrency": "BRL",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.cestadepresentes.com.br/sorteio"
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Início",
+          "item": "https://www.cestadepresentes.com.br/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Sorteio do Mês",
+          "item": "https://www.cestadepresentes.com.br/sorteio"
+        }
+      ]
+    }
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
 
 {% block head %}
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Nunito:wght@700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">

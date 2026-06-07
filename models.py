@@ -137,6 +137,17 @@ class BloqueioHorario(db.Model):
     motivo      = db.Column(db.String(200))
     criado_em   = db.Column(db.DateTime, default=datetime.utcnow)
 
+# ─── CONFIG GERAL ────────────────────────────────────────────────
+
+class ConfigGeral(db.Model):
+    __tablename__ = 'config_geral'
+    id                  = db.Column(db.Integer, primary_key=True)
+    pix_manual_ativo    = db.Column(db.Boolean, default=False)
+    pix_chave           = db.Column(db.String(200), default='55366b92-4559-4b28-88c0-451648a3a907')
+    pix_nome            = db.Column(db.String(200), default='Leandro Andrade de Oliveira')
+    pix_cidade          = db.Column(db.String(100), default='Sao Paulo')
+    wpp_numero          = db.Column(db.String(30),  default='5511976232235')
+
 class Agendamento(db.Model):
     __tablename__ = 'agendamentos'
     id            = db.Column(db.String, primary_key=True, default=gen_uuid)

@@ -353,6 +353,28 @@
     padding-top: 24px; border-top: 1px solid var(--border);
   }
   .cesta-card.destaque .cesta-preco { border-color: rgba(255,255,255,0.12); }
+  .preco-de {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; color: var(--ink-muted);
+    text-decoration: line-through; display: block;
+  }
+  .preco-pix-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; font-weight: 700;
+    color: var(--red); letter-spacing: .06em;
+    text-transform: uppercase; display: block; margin-bottom: 1px;
+  }
+  .preco-pix {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 26px; font-weight: 900;
+    color: var(--red); line-height: 1; letter-spacing: -.02em; display: block;
+  }
+  .preco-parcelado {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; color: var(--ink-muted);
+    margin-top: 3px; display: block;
+  }
+  .preco-parcelado strong { color: var(--ink); font-weight: 700; }
   .preco-label {
     font-family: 'Montserrat', sans-serif;
     font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -871,8 +893,10 @@
           {% endif %}
           <div class="cesta-preco">
             <div>
-              <span class="preco-label">A partir de</span>
-              <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+              <span class="preco-de">R$ {{ "%.0f"|format(produto.preco) }}</span>
+              <span class="preco-pix-label">Pix</span>
+              <span class="preco-pix">R$ {{ "%.0f"|format(produto.preco * 0.9) }}</span>
+              <span class="preco-parcelado">ou 3x de <strong>R$ {{ "%.2f"|format(produto.preco / 3) }}</strong> s/ juros</span>
             </div>
             <a href="/produto/{{ produto.slug }}" class="btn-primary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 001.99 1.61h9.72a2 2 0 001.98-1.71l1.64-9.29H6"/></svg>

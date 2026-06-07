@@ -182,6 +182,76 @@ def horarios_disponiveis(pedido_pago_em=None):
 
 # ─── ROTAS PÚBLICAS ──────────────────────────────────────────────
 
+# ─── SEO ─────────────────────────────────────────────────────────
+
+@app.route('/robots.txt')
+def robots():
+    from flask import Response
+    content = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /admin\n"
+        "Disallow: /admin/\n"
+        "Disallow: /api/\n"
+        f"Sitemap: {BASE_URL}/sitemap.xml\n"
+    )
+    return Response(content, mimetype='text/plain')
+
+@app.route('/sitemap.xml')
+def sitemap():
+    from flask import Response
+    from datetime import timezone
+
+    today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    urls = []
+
+    # Páginas estáticas
+    static_pages = [
+        ('/', '1.0', 'daily'),
+        ('/sorteio', '0.7', 'weekly'),
+    ]
+    for path, priority, freq in static_pages:
+        urls.append(f"""  <url>
+    <loc>{BASE_URL}{path}</loc>
+    <changefreq>{freq}</changefreq>
+    <priority>{priority}</priority>
+    <lastmod>{today}</lastmod>
+  </url>""")
+
+    # Produtos
+    produtos_ativos = Produto.query.filter_by(ativo=True).all()
+    for p in produtos_ativos:
+        lastmod = p.atualizado_em.strftime('%Y-%m-%d') if hasattr(p, 'atualizado_em') and p.atualizado_em else today
+        image_tag = f"\n    <image:image><image:loc>{p.imagem}</image:loc></image:image>" if p.imagem and p.imagem.startswith('http') else ''
+        urls.append(f"""  <url>
+    <loc>{BASE_URL}/produto/{p.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>{lastmod}</lastmod>{image_tag}
+  </url>""")
+
+    # Categorias
+    categorias_ativas = Categoria.query.filter_by(ativo=True).all()
+    for cat in categorias_ativas:
+        urls.append(f"""  <url>
+    <loc>{BASE_URL}/categoria/{cat.slug}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>{today}</lastmod>
+  </url>""")
+
+    sitemap_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+        '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+        + '\n'.join(urls)
+        + '\n</urlset>'
+    )
+    return Response(sitemap_xml, mimetype='application/xml')
+
+# ─── ROTAS PÚBLICAS ──────────────────────────────────────────────
+
 @app.route('/')
 def index():
     produtos = Produto.query.filter_by(ativo=True).order_by(Produto.preco).all()

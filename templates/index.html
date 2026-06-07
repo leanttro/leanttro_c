@@ -40,13 +40,32 @@
     background: var(--red);
     color: #fff;
     text-align: center;
-    padding: 12px 24px;
+    padding: 0 24px;
     font-family: 'Montserrat', sans-serif;
     font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.05em;
+    overflow: hidden;
+    position: relative;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   .urgencia-bar strong { font-weight: 700; }
+  .urgencia-msg {
+    position: absolute;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+  }
+  .urgencia-msg.ativo {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
 
   /* ── HERO ── */
   .hero {
@@ -419,14 +438,277 @@
   @media (max-width: 480px) {
     .hero-logo { width: clamp(120px, 52vw, 180px); }
   }
+
+  /* ── MODAL ROLETA ── */
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(0.88) translateY(24px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes simPop {
+    0%   { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+    65%  { opacity: 1; transform: scale(1.15) rotate(3deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes bannerSlide {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes faixaSpin {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(var(--spin-end)); }
+  }
+
+  #roleta-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(10,10,10,0.75);
+    backdrop-filter: blur(5px);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #roleta-overlay.ativo { display: flex; }
+
+  #roleta-modal {
+    background: #fff;
+    border-radius: 24px;
+    max-width: 400px;
+    width: 100%;
+    padding: 40px 32px 32px;
+    text-align: center;
+    position: relative;
+    animation: modalIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+  }
+
+  #roleta-close {
+    position: absolute; top: 14px; right: 16px;
+    background: none; border: none; cursor: pointer;
+    font-size: 20px; color: #ccc; line-height: 1;
+    transition: color 0.2s; padding: 4px;
+  }
+  #roleta-close:hover { color: #666; }
+
+  .roleta-pretitulo {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 10px;
+  }
+  .roleta-titulo {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px; line-height: 1.25;
+  }
+  .roleta-titulo em { font-style: italic; color: var(--red); }
+  .roleta-sub {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; color: var(--ink-muted);
+    margin-bottom: 28px; line-height: 1.65;
+  }
+
+  /* ── MÁQUINA ── */
+  .roleta-maquina-wrap {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 24px;
+  }
+  .roleta-coluna {
+    background: var(--ink);
+    border-radius: 12px;
+    width: 100px;
+    height: 76px;
+    overflow: hidden;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .roleta-coluna::before,
+  .roleta-coluna::after {
+    content: '';
+    position: absolute; left: 0; right: 0; height: 24px; z-index: 2;
+    pointer-events: none;
+  }
+  .roleta-coluna::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(26,26,26,0.95), transparent);
+  }
+  .roleta-coluna::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(26,26,26,0.95), transparent);
+  }
+  .roleta-sel {
+    position: absolute; top: 50%; left: 6px; right: 6px;
+    height: 32px; margin-top: -16px;
+    border: 2px solid var(--red);
+    border-radius: 6px; z-index: 3; pointer-events: none;
+  }
+  .roleta-faixa {
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .roleta-item {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px; font-weight: 800;
+    color: rgba(255,255,255,0.25);
+    height: 38px; line-height: 38px;
+    width: 100%; text-align: center;
+    flex-shrink: 0; letter-spacing: 0.05em;
+  }
+  .roleta-item.sel { color: #fff; }
+
+  #btn-girar {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--red); color: #fff;
+    border: none; cursor: pointer;
+    padding: 15px 32px; border-radius: var(--btn-radius);
+    width: 100%; transition: background 0.2s, transform 0.15s;
+    margin-bottom: 10px;
+  }
+  #btn-girar:hover:not(:disabled) { background: var(--red-dark); transform: translateY(-1px); }
+  #btn-girar:disabled { background: #ddd; color: #aaa; cursor: not-allowed; }
+
+  /* ── FASE 2: resultado ── */
+  #roleta-fase2 { display: none; }
+  #roleta-fase2.ativo { display: block; }
+
+  .sim-badge {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 52px; font-weight: 900;
+    color: #fff; background: var(--red);
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    animation: simPop 0.55s cubic-bezier(0.22,1,0.36,1) both;
+    box-shadow: 0 8px 32px rgba(198,9,9,0.45);
+  }
+
+  .escolha-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; color: var(--ink-muted);
+    margin-bottom: 14px; line-height: 1.6;
+  }
+  .escolha-label strong { color: var(--ink); }
+
+  .numero-input-wrap {
+    display: flex; gap: 8px; margin-bottom: 8px;
+  }
+  #numero-escolhido {
+    flex: 1;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 22px; font-weight: 800;
+    text-align: center; color: var(--ink);
+    border: 2px solid var(--border);
+    border-radius: 12px; padding: 12px 16px;
+    outline: none; transition: border-color 0.2s;
+    -moz-appearance: textfield;
+  }
+  #numero-escolhido::-webkit-outer-spin-button,
+  #numero-escolhido::-webkit-inner-spin-button { -webkit-appearance: none; }
+  #numero-escolhido:focus { border-color: var(--red); }
+
+  #btn-reservar {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    background: var(--red); color: #fff;
+    border: none; cursor: pointer;
+    padding: 12px 20px; border-radius: 12px;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+  }
+  #btn-reservar:hover { background: var(--red-dark); transform: translateY(-1px); }
+
+  #erro-numero {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; color: var(--red);
+    min-height: 16px; margin-bottom: 8px;
+    display: none;
+  }
+  #erro-numero.ativo { display: block; }
+
+  .ver-disponiveis-link {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; color: var(--ink-muted);
+    margin-bottom: 16px; display: block;
+  }
+  .ver-disponiveis-link a {
+    color: var(--red); font-weight: 600; text-decoration: underline;
+  }
+
+  .roleta-aviso {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; color: #ccc;
+    line-height: 1.6; margin-top: 12px;
+  }
+
+  /* ── BANNER FIXO ── */
+  #roleta-banner {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--ink);
+    z-index: 9000;
+    padding: 13px 20px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 13px; color: #fff;
+    align-items: center;
+    justify-content: center;
+    gap: 14px; flex-wrap: wrap;
+    border-top: 2px solid var(--red);
+  }
+  #roleta-banner.ativo {
+    display: flex;
+    animation: bannerSlide 0.4s ease both;
+  }
+  #roleta-banner strong { color: var(--rose); font-size: 15px; }
+  .banner-btn {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: var(--red); color: #fff;
+    border: none; cursor: pointer;
+    padding: 9px 20px; border-radius: 50px;
+    text-decoration: none; white-space: nowrap;
+    transition: background 0.2s;
+  }
+  .banner-btn:hover { background: var(--red-dark); }
+  .banner-fechar {
+    background: none; border: none; color: rgba(255,255,255,0.35);
+    cursor: pointer; font-size: 18px; padding: 4px;
+    transition: color 0.2s; flex-shrink: 0;
+  }
+  .banner-fechar:hover { color: #fff; }
+
+  @media (max-width: 480px) {
+    #roleta-modal { padding: 32px 18px 28px; }
+    .roleta-titulo { font-size: 21px; }
+    .roleta-coluna { width: 80px; }
+    .roleta-item { font-size: 14px; }
+  }
+
 </style>
 {% endblock %}
 
 {% block content %}
 
-<div class="urgencia-bar">
-  <strong>Dia dos Namorados — 12 de junho.</strong> Últimas unidades disponíveis. Garanta agora.
+<div class="urgencia-bar" id="urgencia-bar">
+  <span class="urgencia-msg ativo" id="msg-0">🎁 <strong>Sorteio ativo!</strong> Todo pedido concorre a uma cesta especial — <a href="/sorteio" style="color:#fff;text-decoration:underline;font-weight:700;">ver o sorteio</a></span>
+  <span class="urgencia-msg" id="msg-1">💸 <strong>10% de desconto no Pix!</strong> Pague via Pix e economize na hora — sem cupom, automático.</span>
+  <span class="urgencia-msg" id="msg-2">💝 <strong>Dia dos Namorados — 12 de junho.</strong> Garanta sua cesta a tempo!</span>
 </div>
+<script>
+(function() {
+  const msgs = document.querySelectorAll('.urgencia-msg');
+  let atual = 0;
+  setInterval(function() {
+    msgs[atual].classList.remove('ativo');
+    atual = (atual + 1) % msgs.length;
+    msgs[atual].classList.add('ativo');
+  }, 4000);
+})();
+</script>
 
 <!-- HERO -->
 <section class="hero">
@@ -751,5 +1033,172 @@ function toggleGrade() {
 buildDots();
 atualizarNavBtns();
 </script>
+
+{% if sorteio %}
+<script>
+(function() {
+  const TOTAL = {{ sorteio.total_numeros }};
+  const PALAVRAS = ['SIM', 'NÃO', 'SIM', 'SIM', 'NÃO', 'SIM', 'NÃO', 'SIM', 'SIM', 'NÃO'];
+  // Sequência sempre termina em SIM nas duas colunas
+  const SEQ_ESQ = ['NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','SIM'];
+  const SEQ_DIR = ['SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM','NÃO','SIM'];
+
+  function montarFaixa(id, seq) {
+    const el = document.getElementById(id);
+    el.innerHTML = '';
+    // Padding topo: 2 itens invisíveis para a animação começar certo
+    for (let i = 0; i < 2; i++) {
+      const d = document.createElement('div');
+      d.className = 'roleta-item';
+      d.textContent = seq[0];
+      el.appendChild(d);
+    }
+    seq.forEach((txt, i) => {
+      const d = document.createElement('div');
+      d.className = 'roleta-item' + (i === seq.length - 1 ? ' sel' : '');
+      d.textContent = txt;
+      el.appendChild(d);
+    });
+  }
+
+  function girarRoleta() {
+    const btn = document.getElementById('btn-girar');
+    btn.disabled = true;
+    btn.textContent = '🎰 Girando...';
+
+    montarFaixa('faixa-esq', SEQ_ESQ);
+    montarFaixa('faixa-dir', SEQ_DIR);
+
+    const altItem = 38; // px por item
+    // queremos parar no último item (SIM) centrado na janela de 76px
+    // centro da janela = 38px, item centrado = offset - (38/2 - 38/2) = offset
+    // total itens = 2 padding + seq.length
+    const totalEsq = 2 + SEQ_ESQ.length;
+    const totalDir = 2 + SEQ_DIR.length;
+    // deslocamento: mover até o último item ficar no centro (posição 1 = índice 1 do topo)
+    const deslEsq = (totalEsq - 3) * altItem; // -3 = centraliza o último
+    const deslDir = (totalDir - 3) * altItem;
+
+    requestAnimationFrame(() => {
+      const fe = document.getElementById('faixa-esq');
+      const fd = document.getElementById('faixa-dir');
+      fe.style.transition = 'transform 2.8s cubic-bezier(0.15, 0.7, 0.1, 1)';
+      fe.style.transform = `translateY(-${deslEsq}px)`;
+      fd.style.transition = 'transform 3.1s cubic-bezier(0.15, 0.7, 0.1, 1)';
+      fd.style.transform = `translateY(-${deslDir}px)`;
+    });
+
+    setTimeout(mostrarFase2, 3300);
+  }
+
+  function mostrarFase2() {
+    document.getElementById('roleta-fase1').style.display = 'none';
+    document.getElementById('roleta-fase2').classList.add('ativo');
+  }
+
+  function reservarNumero() {
+    const input = document.getElementById('numero-escolhido');
+    const erro  = document.getElementById('erro-numero');
+    const n = parseInt(input.value);
+    if (!n || n < 1 || n > TOTAL) {
+      erro.textContent = `Digite um número entre 1 e ${TOTAL}.`;
+      erro.classList.add('ativo');
+      return;
+    }
+    // Salva para o checkout
+    sessionStorage.setItem('numero_sorteio', n);
+    document.getElementById('banner-num').textContent = String(n).padStart(2, '0');
+    fecharRoleta(true);
+  }
+
+  window.limparErro = function() {
+    const erro = document.getElementById('erro-numero');
+    erro.classList.remove('ativo');
+  };
+
+  window.fecharRoleta = function(comBanner) {
+    document.getElementById('roleta-overlay').classList.remove('ativo');
+    if (comBanner) {
+      document.getElementById('roleta-banner').classList.add('ativo');
+    }
+  };
+
+  window.fecharBanner = function() {
+    document.getElementById('roleta-banner').classList.remove('ativo');
+  };
+
+  window.scrollToCestas = function() {
+    const el = document.getElementById('cestas');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  window.girarRoleta = girarRoleta;
+
+  // Abre sempre, após 5 segundos
+  setTimeout(function() {
+    document.getElementById('roleta-overlay').classList.add('ativo');
+  }, 5000);
+})();
+</script>
+{% endif %}
+
+
+
+{% if sorteio %}
+<!-- ── MODAL ROLETA ── -->
+<div id="roleta-overlay">
+  <div id="roleta-modal">
+    <button id="roleta-close" onclick="fecharRoleta()" aria-label="Fechar">✕</button>
+
+    <!-- FASE 1: roleta -->
+    <div id="roleta-fase1">
+      <div class="roleta-pretitulo">🎰 Sua sorte está aqui</div>
+      <h2 class="roleta-titulo">Gire e <em>descubra</em>!</h2>
+      <p class="roleta-sub">Compre qualquer cesta e concorra ao sorteio.<br>Gire para ver se você ganhou o direito de escolher seu número!</p>
+
+      <div class="roleta-maquina-wrap">
+        <div class="roleta-coluna" id="col-esq">
+          <div class="roleta-sel"></div>
+          <div class="roleta-faixa" id="faixa-esq"></div>
+        </div>
+        <div class="roleta-coluna" id="col-dir">
+          <div class="roleta-sel"></div>
+          <div class="roleta-faixa" id="faixa-dir"></div>
+        </div>
+      </div>
+
+      <button id="btn-girar" onclick="girarRoleta()">🎰 Girar agora!</button>
+      <p class="roleta-aviso">Toda compra garante um número no sorteio.</p>
+    </div>
+
+    <!-- FASE 2: ganhou! -->
+    <div id="roleta-fase2">
+      <div class="sim-badge">SIM</div>
+      <div class="roleta-pretitulo">🎉 Parabéns!</div>
+      <h2 class="roleta-titulo">Você ganhou o direito de <em>escolher!</em></h2>
+      <p class="escolha-label">Digite o número que você quer reservar<br><strong>(de 1 a {{ sorteio.total_numeros }})</strong></p>
+
+      <div class="numero-input-wrap">
+        <input type="number" id="numero-escolhido" min="1" max="{{ sorteio.total_numeros }}" placeholder="Ex: 07" oninput="limparErro()">
+        <button id="btn-reservar" onclick="reservarNumero()">Quero esse!</button>
+      </div>
+      <div id="erro-numero"></div>
+
+      <span class="ver-disponiveis-link">
+        <a href="/sorteio" target="_blank">Ver números disponíveis →</a>
+      </span>
+
+      <p class="roleta-aviso">O número é confirmado após o pagamento da cesta.<br>Frete do prêmio por conta do ganhador.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── BANNER FIXO ── -->
+<div id="roleta-banner">
+  <span>🎟️ Número <strong id="banner-num">—</strong> reservado para você!</span>
+  <a href="#cestas" class="banner-btn" onclick="document.getElementById('roleta-banner'); scrollToCestas()">Garantir agora</a>
+  <button class="banner-fechar" onclick="fecharBanner()" aria-label="Fechar">✕</button>
+</div>
+{% endif %}
 
 {% endblock %}

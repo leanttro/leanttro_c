@@ -865,7 +865,13 @@ async function finalizarPedido(numeroSorteio) {
   });
 
   const data = await resp.json();
-  if (data.init_point) {
+  if (data.pix_manual) {
+    // Modo PIX manual: mostra tela de pagamento
+    localStorage.removeItem('carrinho');
+    mostrarPixManual(data);
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg> Pagar com segurança';
+  } else if (data.init_point) {
     localStorage.removeItem('carrinho');
     window.location.href = data.init_point;
   } else {
@@ -873,6 +879,66 @@ async function finalizarPedido(numeroSorteio) {
     btn.disabled = false;
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg> Pagar com segurança';
   }
+}
+
+function gerarPixCopiaCola(chave, nome, cidade, valor) {
+  function campo(id, val) {
+    const v = val.substring(0, 99);
+    return id + String(v.length).padStart(2,'0') + v;
+  }
+  const gui  = campo('00', 'br.gov.bcb.pix') + campo('01', chave);
+  const info = campo('26', gui);
+  const tx   = campo('05', '***');
+  const nome_clean = nome.normalize('NFD').replace(/[\u0300-\u036f]/g,'').substring(0,25);
+  const cidade_clean = cidade.normalize('NFD').replace(/[\u0300-\u036f]/g,'').substring(0,15);
+  const val_str = valor.toFixed(2);
+
+  let emv = '000201'
+    + info
+    + '52040000'
+    + '5303986'
+    + '54' + String(val_str.length).padStart(2,'0') + val_str
+    + '5802BR'
+    + '59' + String(nome_clean.length).padStart(2,'0') + nome_clean
+    + '60' + String(cidade_clean.length).padStart(2,'0') + cidade_clean
+    + tx
+    + '6304';
+
+  // CRC16-CCITT
+  let crc = 0xFFFF;
+  for (let i = 0; i < emv.length; i++) {
+    crc ^= emv.charCodeAt(i) << 8;
+    for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (crc << 1) ^ 0x1021 : crc << 1;
+  }
+  return emv + (crc & 0xFFFF).toString(16).toUpperCase().padStart(4,'0');
+}
+
+function mostrarPixManual(d) {
+  const modal = document.getElementById('modal-pix-manual');
+  const pixStr = gerarPixCopiaCola(d.pix_chave, d.pix_nome, d.pix_cidade, d.valor_pix);
+
+  document.getElementById('pix-m-valor').textContent   = 'R$ ' + d.valor_pix.toFixed(2).replace('.',',');
+  document.getElementById('pix-m-numero').textContent  = d.numero;
+  document.getElementById('pix-m-chave').textContent   = d.pix_chave;
+  document.getElementById('pix-m-nome').textContent    = d.pix_nome;
+
+  // QR Code via API pública
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixStr)}`;
+  document.getElementById('pix-m-qr').src = qrUrl;
+
+  // Botão copiar
+  document.getElementById('btn-copiar-pix').onclick = function() {
+    navigator.clipboard.writeText(pixStr).then(() => {
+      this.textContent = '✅ Copiado!';
+      setTimeout(() => this.textContent = '📋 Copiar código PIX', 2000);
+    });
+  };
+
+  // Botão WhatsApp
+  const msg = encodeURIComponent(`Olá! Fiz o PIX do pedido *${d.numero}* no valor de R$ ${d.valor_pix.toFixed(2).replace('.',',')}. Segue o comprovante 👇`);
+  document.getElementById('btn-wpp-comprovante').href = `https://wa.me/${d.wpp}?text=${msg}`;
+
+  modal.classList.add('open');
 }
 
 // inicializa
@@ -906,6 +972,40 @@ atualizarHeaderCarrinho();
       <button class="btn-modal-skip" onclick="finalizarPedido(null)">Número aleatório</button>
       <button class="btn-modal-ok" id="btn-confirmar-num" onclick="confirmarNumero()" disabled>Confirmar número</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL PIX MANUAL -->
+<div class="modal-overlay" id="modal-pix-manual" style="z-index:10000">
+  <div class="modal-box" style="max-width:400px;text-align:center;padding:32px 24px">
+    <div style="font-size:36px;margin-bottom:8px">💸</div>
+    <h3 style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:800;color:var(--ink);margin-bottom:4px">Pague via PIX</h3>
+    <p style="font-family:'Montserrat',sans-serif;font-size:13px;color:var(--ink-muted);margin-bottom:20px">10% de desconto aplicado! Após o pagamento, envie o comprovante no WhatsApp para confirmarmos seu pedido.</p>
+
+    <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:14px;padding:16px;margin-bottom:16px">
+      <div style="font-family:'Montserrat',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#16a34a;margin-bottom:6px">Valor com desconto PIX</div>
+      <div id="pix-m-valor" style="font-family:'Montserrat',sans-serif;font-size:32px;font-weight:900;color:#15803d;line-height:1">R$ 0,00</div>
+      <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:#16a34a;margin-top:4px">Pedido <strong id="pix-m-numero"></strong></div>
+    </div>
+
+    <img id="pix-m-qr" src="" alt="QR Code PIX" style="width:160px;height:160px;border-radius:12px;border:1px solid var(--border);display:block;margin:0 auto 16px">
+
+    <div style="background:var(--rose-light);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px;text-align:left">
+      <div style="font-family:'Montserrat',sans-serif;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:6px">Dados do PIX</div>
+      <div style="font-family:'Montserrat',sans-serif;font-size:12px;color:var(--ink);margin-bottom:4px"><strong>Favorecido:</strong> <span id="pix-m-nome"></span></div>
+      <div style="font-family:'Montserrat',sans-serif;font-size:11px;color:var(--ink-muted);word-break:break-all"><strong>Chave:</strong> <span id="pix-m-chave"></span></div>
+    </div>
+
+    <button id="btn-copiar-pix" style="width:100%;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;background:var(--ink);color:#fff;border:none;border-radius:12px;padding:14px;cursor:pointer;margin-bottom:10px;transition:background .2s">
+      📋 Copiar código PIX
+    </button>
+
+    <a id="btn-wpp-comprovante" href="#" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;font-family:'Montserrat',sans-serif;font-size:13px;font-weight:700;background:#25d366;color:#fff;border-radius:12px;padding:14px;text-decoration:none;margin-bottom:16px">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.554 4.118 1.523 5.847L.057 23.882l6.212-1.43A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.007-1.371l-.36-.213-3.687.849.878-3.574-.234-.373A9.818 9.818 0 1 1 12 21.818z"/></svg>
+      Enviar comprovante no WhatsApp
+    </a>
+
+    <p style="font-family:'Montserrat',sans-serif;font-size:10px;color:var(--ink-muted);line-height:1.6">Seu pedido será confirmado após verificarmos o comprovante.<br>Em horário comercial respondemos em minutos!</p>
   </div>
 </div>
 

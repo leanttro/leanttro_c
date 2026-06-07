@@ -479,6 +479,8 @@
     position: relative;
     animation: modalIn 0.45s cubic-bezier(0.22,1,0.36,1) both;
     box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+    max-height: 92vh;
+    overflow-y: auto;
   }
 
   #roleta-close {
@@ -681,11 +683,61 @@
   }
   .banner-fechar:hover { color: #fff; }
 
+  /* ── PRÊMIO PREVIEW ── */
+  .premio-preview-img {
+    width: 100%; height: 160px;
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 14px;
+    background: var(--rose-light);
+  }
+  .premio-preview-img img {
+    width: 100%; height: 100%; object-fit: cover;
+  }
+  .premio-preview-body {
+    background: var(--rose-light);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    text-align: left;
+    margin-bottom: 4px;
+  }
+  .premio-preview-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--red); margin-bottom: 6px;
+  }
+  .premio-preview-titulo {
+    font-family: 'Playfair Display', serif;
+    font-size: 17px; font-weight: 700;
+    color: var(--ink); margin-bottom: 6px; line-height: 1.3;
+  }
+  .premio-preview-desc {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; color: var(--ink-muted);
+    line-height: 1.65; margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .premio-preview-data {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 11px; font-weight: 700;
+    color: var(--red);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 5px 14px;
+    display: inline-block;
+  }
+
   @media (max-width: 480px) {
     #roleta-modal { padding: 32px 18px 28px; }
     .roleta-titulo { font-size: 21px; }
     .roleta-coluna { width: 80px; }
     .roleta-item { font-size: 14px; }
+    .premio-preview-img { height: 130px; }
   }
 
 </style>
@@ -1096,7 +1148,7 @@ atualizarNavBtns();
     document.getElementById('roleta-fase2').classList.add('ativo');
   }
 
-  function reservarNumero() {
+  window.reservarNumero = function reservarNumero() {
     const input = document.getElementById('numero-escolhido');
     const erro  = document.getElementById('erro-numero');
     const n = parseInt(input.value);
@@ -1174,9 +1226,26 @@ atualizarNavBtns();
     <!-- FASE 2: ganhou! -->
     <div id="roleta-fase2">
       <div class="sim-badge">SIM</div>
-      <div class="roleta-pretitulo">🎉 Parabéns!</div>
-      <h2 class="roleta-titulo">Você ganhou o direito de <em>escolher!</em></h2>
-      <p class="escolha-label">Digite o número que você quer reservar<br><strong>(de 1 a {{ sorteio.total_numeros }})</strong></p>
+      <div class="roleta-pretitulo">🎉 Parabéns! Você ganhou o direito de escolher!</div>
+
+      {% if sorteio.imagem %}
+      <div class="premio-preview-img">
+        <img src="{{ sorteio.imagem }}" alt="{{ sorteio.titulo }}">
+      </div>
+      {% endif %}
+
+      <div class="premio-preview-body">
+        <div class="premio-preview-label">🏆 Prêmio em disputa</div>
+        <div class="premio-preview-titulo">{{ sorteio.titulo }}</div>
+        {% if sorteio.descricao %}
+        <div class="premio-preview-desc">{{ sorteio.descricao }}</div>
+        {% endif %}
+        {% if sorteio.data_sorteio %}
+        <div class="premio-preview-data">📅 Sorteio em {{ sorteio.data_sorteio.strftime('%d/%m/%Y') }}</div>
+        {% endif %}
+      </div>
+
+      <p class="escolha-label" style="margin-top:18px;">Escolha seu número <strong>(de 1 a {{ sorteio.total_numeros }})</strong></p>
 
       <div class="numero-input-wrap">
         <input type="number" id="numero-escolhido" min="1" max="{{ sorteio.total_numeros }}" placeholder="Ex: 07" oninput="limparErro()">

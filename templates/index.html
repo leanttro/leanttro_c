@@ -387,6 +387,12 @@
     line-height: 1; letter-spacing: -0.02em;
   }
   .cesta-card.destaque .preco-valor { color: var(--rose); }
+  .cesta-card.destaque .preco-de { color: rgba(255,255,255,0.4); }
+  .cesta-card.destaque .preco-pix-label { color: var(--rose); }
+  .cesta-card.destaque .preco-pix { color: #fff; }
+  .cesta-card.destaque .preco-parcelado { color: rgba(255,255,255,0.5); }
+  .cesta-card.destaque .preco-parcelado strong { color: rgba(255,255,255,0.85); }
+  .cesta-card.destaque .preco-label { color: rgba(255,255,255,0.35); }
 
   /* Estado vazio filtro */
   .cestas-empty {
@@ -707,13 +713,14 @@
 
   /* ── PRÊMIO PREVIEW ── */
   .premio-preview-img {
-    width: 100%; height: 160px;
+    width: 100%;
     border-radius: 14px; overflow: hidden;
     margin-bottom: 14px;
     background: var(--rose-light);
   }
   .premio-preview-img img {
-    width: 100%; height: 100%; object-fit: cover;
+    width: 100%; height: auto; max-height: 200px;
+    object-fit: contain; display: block;
   }
   .premio-preview-body {
     background: var(--rose-light);
@@ -759,7 +766,7 @@
     .roleta-titulo { font-size: 21px; }
     .roleta-coluna { width: 80px; }
     .roleta-item { font-size: 14px; }
-    .premio-preview-img { height: 130px; }
+    .premio-preview-img { max-height: 160px; }
   }
 
 </style>
@@ -1235,10 +1242,16 @@ atualizarNavBtns();
 
   window.girarRoleta = girarRoleta;
 
-  // Abre sempre, após 5 segundos
-  setTimeout(function() {
-    document.getElementById('roleta-overlay').classList.add('ativo');
-  }, 5000);
+  // Abre uma vez por dia
+  const POPUP_KEY = 'roleta_last_shown';
+  const hoje = new Date().toDateString();
+  const ultimaVez = localStorage.getItem(POPUP_KEY);
+  if (ultimaVez !== hoje) {
+    setTimeout(function() {
+      document.getElementById('roleta-overlay').classList.add('ativo');
+      localStorage.setItem(POPUP_KEY, hoje);
+    }, 5000);
+  }
 })();
 </script>
 {% endif %}

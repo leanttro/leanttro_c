@@ -225,16 +225,98 @@
     .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
     .empty-state p { color: var(--muted); font-size: 14px; }
 
+    /* ── MOBILE NAV BAR ── */
+    .mobile-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      background: var(--surface); border-top: 1px solid var(--border);
+      padding: 6px 0 env(safe-area-inset-bottom, 6px);
+    }
+    .mobile-nav-inner {
+      display: flex; justify-content: space-around; align-items: center;
+    }
+    .mobile-nav-item {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 6px 10px; border-radius: 8px; border: none; background: none;
+      color: var(--muted); font-size: 10px; font-family: 'Inter', sans-serif;
+      cursor: pointer; transition: color .15s; min-width: 48px;
+    }
+    .mobile-nav-item .mn-icon { font-size: 20px; line-height: 1; }
+    .mobile-nav-item.active { color: var(--accent); }
+    .mobile-nav-item.active .mn-icon { transform: scale(1.1); }
+
+    /* ── MOBILE HEADER ── */
+    .mobile-header {
+      display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 150;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 14px 16px; align-items: center; gap: 8px;
+    }
+    .mobile-header-logo { font-size: 15px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 6px; }
+
     @media (max-width: 900px) {
       .sidebar { display: none; }
-      .main { margin-left: 0; padding: 20px; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
+      .mobile-nav { display: flex; }
+      .mobile-header { display: flex; }
+      .main { margin-left: 0; padding: 16px; padding-top: 68px; padding-bottom: 80px; }
+      .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
       .form-grid, .form-grid-3, .config-grid { grid-template-columns: 1fr; }
       .detail-grid, .agenda-grid { grid-template-columns: 1fr; }
+      /* Make all table wrappers scroll horizontally */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table { min-width: 500px; }
+      /* Toolbar wraps nicely */
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-box { min-width: unset; }
+      /* Stat values smaller on mobile */
+      .stat-value { font-size: 22px; }
+      /* Page header stacks */
+      .page-header { margin-bottom: 16px; }
+      /* Products grid single column */
+      .products-grid { grid-template-columns: 1fr; }
+      /* Modal full width */
+      .modal { max-width: 100%; margin: 0; border-radius: 14px 14px 0 0; }
+      .modal-backdrop { align-items: flex-end; padding: 0; }
+      /* Rastreio form stacks */
+      .rastreio-form { flex-direction: column; align-items: flex-start; }
+      .rastreio-form input { width: 100%; }
+      /* Agenda stats 1 col on very small */
+    }
+
+    @media (max-width: 480px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+      .stat-value { font-size: 20px; }
+      .btn { font-size: 12px; padding: 8px 14px; }
+      .page-title { font-size: 18px; }
     }
   </style>
 </head>
 <body>
+
+<!-- ── MOBILE HEADER ── -->
+<header class="mobile-header">
+  <div class="mobile-header-logo"><span>🎁</span> Cesta Admin</div>
+</header>
+
+<!-- ── MOBILE BOTTOM NAV ── -->
+<nav class="mobile-nav">
+  <div class="mobile-nav-inner">
+    <button class="mobile-nav-item active" onclick="setTab('pedidos')" id="mnav-pedidos">
+      <span class="mn-icon">📦</span>Pedidos
+    </button>
+    <button class="mobile-nav-item" onclick="setTab('produtos')" id="mnav-produtos">
+      <span class="mn-icon">🛒</span>Produtos
+    </button>
+    <button class="mobile-nav-item" onclick="setTab('sorteio')" id="mnav-sorteio">
+      <span class="mn-icon">🎟️</span>Sorteio
+    </button>
+    <button class="mobile-nav-item" onclick="setTab('agenda')" id="mnav-agenda">
+      <span class="mn-icon">📅</span>Agenda
+    </button>
+    <button class="mobile-nav-item" onclick="setTab('config')" id="mnav-config">
+      <span class="mn-icon">⚙️</span>Config
+    </button>
+  </div>
+</nav>
 
 <!-- ── SIDEBAR ── -->
 <nav class="sidebar">
@@ -1141,10 +1223,14 @@
 function setTab(nome) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('tab-' + nome).classList.add('active');
-  event.currentTarget.classList.add('active');
+  if (event && event.currentTarget) event.currentTarget.classList.add('active');
+  const mnavEl = document.getElementById('mnav-' + nome);
+  if (mnavEl) mnavEl.classList.add('active');
   if (nome === 'agenda') carregarBloqueios();
   if (nome === 'config') carregarStatusPix();
+  window.scrollTo(0, 0);
 }
 
 async function carregarStatusPix() {

@@ -746,7 +746,7 @@
 {% block content %}
 
 <div class="urgencia-bar" id="urgencia-bar">
-  <span class="urgencia-msg ativo" id="msg-0">🎁 <strong>Sorteio ativo!</strong> Todo pedido concorre a uma cesta especial — <a href="/sorteio" style="color:#fff;text-decoration:underline;font-weight:700;">ver o sorteio</a></span>
+  <span class="urgencia-msg ativo" id="msg-0">🎰 <strong>Sorteio ativo!</strong> Rode a roleta e escolha seu número da sorte — <a href="#" onclick="event.preventDefault();document.getElementById('roleta-overlay').classList.add('ativo');" style="color:#fff;text-decoration:underline;font-weight:700;">girar agora!</a></span>
   <span class="urgencia-msg" id="msg-1">💸 <strong>10% de desconto no Pix!</strong> Pague via Pix e economize na hora — sem cupom, automático.</span>
   <span class="urgencia-msg" id="msg-2">💝 <strong>Dia dos Namorados — 12 de junho.</strong> Garanta sua cesta a tempo!</span>
 </div>
@@ -1148,18 +1148,43 @@ atualizarNavBtns();
     document.getElementById('roleta-fase2').classList.add('ativo');
   }
 
-  window.reservarNumero = function reservarNumero() {
-    const input = document.getElementById('numero-escolhido');
-    const erro  = document.getElementById('erro-numero');
+  window.reservarNumero = async function reservarNumero() {
+    const input  = document.getElementById('numero-escolhido');
+    const erro   = document.getElementById('erro-numero');
+    const btnRes = document.getElementById('btn-reservar');
     const n = parseInt(input.value);
+
     if (!n || n < 1 || n > TOTAL) {
       erro.textContent = `Digite um número entre 1 e ${TOTAL}.`;
       erro.classList.add('ativo');
       return;
     }
-    // Salva para o checkout
+
+    // Consulta números reservados na API
+    btnRes.disabled = true;
+    btnRes.textContent = 'Verificando...';
+
+    try {
+      const resp = await fetch('/api/sorteio-numeros');
+      const data = await resp.json();
+      const reservados = data.reservados || [];
+
+      if (reservados.includes(n)) {
+        erro.textContent = 'Esse número já foi reservado, escolha outro.';
+        erro.classList.add('ativo');
+        btnRes.disabled = false;
+        btnRes.textContent = 'Quero esse!';
+        return;
+      }
+    } catch(e) {
+      // Se a API falhar, deixa passar (backend decide no checkout)
+    }
+
+    // Disponível — salva para o checkout
     sessionStorage.setItem('numero_sorteio', n);
     document.getElementById('banner-num').textContent = String(n).padStart(2, '0');
+    btnRes.disabled = false;
+    btnRes.textContent = 'Quero esse!';
     fecharRoleta(true);
   }
 

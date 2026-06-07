@@ -835,7 +835,7 @@ async function pagarPix() {
   });
 }
 
-function pagar() {
+async function pagar() {
   const nome  = document.getElementById('nome').value.trim();
   const email = document.getElementById('email').value.trim();
   const cpf   = document.getElementById('cpf').value.replace(/\D/g,'');

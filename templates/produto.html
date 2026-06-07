@@ -163,33 +163,43 @@
 
   /* ── PRECO BOX ── */
   .preco-box {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     background: var(--off-white);
     border: 1.5px solid var(--border);
     border-radius: 16px;
     padding: 20px 24px;
     margin-bottom: 16px;
   }
-  .preco-box .preco-label {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: .1em;
-    text-transform: uppercase;
-    color: var(--ink-muted);
-    display: block;
-    margin-bottom: 4px;
+  .preco-box-top {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  .preco-box .preco-valor {
+  .preco-box .preco-de {
     font-family: 'Montserrat', sans-serif;
-    font-size: 38px;
-    font-weight: 900;
-    color: var(--red);
-    line-height: 1;
-    letter-spacing: -.02em;
+    font-size: 12px; color: var(--ink-muted);
+    text-decoration: line-through; display: block; margin-bottom: 2px;
   }
+  .preco-box .preco-pix-label {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 10px; font-weight: 700;
+    color: var(--red); letter-spacing: .08em;
+    text-transform: uppercase; display: block; margin-bottom: 2px;
+  }
+  .preco-box .preco-pix {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 38px; font-weight: 900;
+    color: var(--red); line-height: 1; letter-spacing: -.02em; display: block;
+  }
+  .preco-box .preco-parcelado {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px; color: var(--ink-muted);
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .preco-box .preco-parcelado strong { color: var(--ink); font-weight: 700; }
 
   /* ── QTDE ── */
   .qtde-wrap {
@@ -517,15 +527,19 @@
 
     <!-- PREÇO + QTDE -->
     <div class="preco-box">
-      <div>
-        <span class="preco-label">Valor</span>
-        <span class="preco-valor">R$ {{ "%.0f"|format(produto.preco) }}</span>
+      <div class="preco-box-top">
+        <div>
+          <span class="preco-de">R$ {{ "%.0f"|format(produto.preco) }}</span>
+          <span class="preco-pix-label">Pix</span>
+          <span class="preco-pix">R$ {{ "%.0f"|format(produto.preco * 0.9) }}</span>
+        </div>
+        <div class="qtde-wrap">
+          <button class="qtde-btn" onclick="alterarQtde(-1)">−</button>
+          <span class="qtde-num" id="qtde">1</span>
+          <button class="qtde-btn" onclick="alterarQtde(1)">+</button>
+        </div>
       </div>
-      <div class="qtde-wrap">
-        <button class="qtde-btn" onclick="alterarQtde(-1)">−</button>
-        <span class="qtde-num" id="qtde">1</span>
-        <button class="qtde-btn" onclick="alterarQtde(1)">+</button>
-      </div>
+      <p class="preco-parcelado">ou em até <strong>3x de R$ {{ "%.2f"|format(produto.preco / 3) }}</strong> sem juros no cartão</p>
     </div>
 
     <!-- FRETE -->

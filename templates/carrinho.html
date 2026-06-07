@@ -653,7 +653,7 @@ function renderCarrinho() {
         ${item.prazo_quantidade ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:#fff4f4;border:1px solid #ffe0e0;border-radius:20px;padding:3px 10px;font-family:'Montserrat',sans-serif;font-size:11px;font-weight:600;color:#c60909">⏱️ Pronto em ${item.prazo_quantidade} ${item.prazo_unidade || 'dias úteis'}</div>` : ''}
       </div>
       <div class="cart-item-right">
-        <span class="cart-item-subtotal">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.',',')}</span>
+        <span class="cart-item-subtotal">R$ ${(parseFloat(item.preco) * item.quantidade).toFixed(2).replace('.',',')}</span>
         <div class="qtde-wrap">
           <button class="qtde-btn" onclick="alterarQtde(${idx}, -1)">−</button>
           <span class="qtde-num">${item.quantidade}</span>
@@ -683,14 +683,14 @@ function removerItem(idx) {
 
 function atualizarResumo() {
   carrinho = getCarrinho();
-  const subtotal = carrinho.reduce((s, i) => s + i.preco * i.quantidade, 0);
+  const subtotal = carrinho.reduce((s, i) => s + parseFloat(i.preco) * i.quantidade, 0);
   const total = subtotal + freteValor;
 
   const resumoItens = document.getElementById('resumo-itens');
   resumoItens.innerHTML = carrinho.map(i => `
     <div class="total-row">
       <span>${i.nome} × ${i.quantidade}</span>
-      <span>R$ ${(i.preco * i.quantidade).toFixed(2).replace('.',',')}</span>
+      <span>R$ ${(parseFloat(i.preco) * i.quantidade).toFixed(2).replace('.',',')}</span>
     </div>
   `).join('');
 

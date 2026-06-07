@@ -531,7 +531,7 @@
         <div>
           <span class="preco-de">R$ {{ "%.0f"|format(produto.preco) }}</span>
           <span class="preco-pix-label">Pix</span>
-          <span class="preco-pix">R$ {{ "%.0f"|format(produto.preco * 0.9) }}</span>
+          <span class="preco-pix">R$ {{ "%.0f"|format(produto.preco | float * 0.9) }}</span>
         </div>
         <div class="qtde-wrap">
           <button class="qtde-btn" onclick="alterarQtde(-1)">−</button>
@@ -539,7 +539,7 @@
           <button class="qtde-btn" onclick="alterarQtde(1)">+</button>
         </div>
       </div>
-      <p class="preco-parcelado">ou em até <strong>3x de R$ {{ "%.2f"|format(produto.preco / 3) }}</strong> sem juros no cartão</p>
+      <p class="preco-parcelado">ou em até <strong>3x de R$ {{ "%.2f"|format(produto.preco | float / 3) }}</strong> sem juros no cartão</p>
     </div>
 
     <!-- FRETE -->

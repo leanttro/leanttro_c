@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, jsonify, abort, session, redirect, url_for
-from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agendamento, BloqueioHorario, ConfigAgenda, Categoria
+from models import db, Produto, Pedido, ItemPedido, Sorteio, NumeroSorteio, Agendamento, BloqueioHorario, ConfigAgenda, Categoria, ConfigGeral
 from emails import email_pedido_confirmado, email_pedido_enviado, email_novo_pedido_admin
 from filters import register_filters
 from dotenv import load_dotenv
@@ -96,6 +96,14 @@ def get_config_agenda():
     config = ConfigAgenda.query.first()
     if not config:
         config = ConfigAgenda()
+        db.session.add(config)
+        db.session.commit()
+    return config
+
+def get_config_geral():
+    config = ConfigGeral.query.first()
+    if not config:
+        config = ConfigGeral()
         db.session.add(config)
         db.session.commit()
     return config
@@ -489,6 +497,23 @@ def criar_preferencia():
 
     db.session.commit()
 
+    # ── Verifica modo PIX manual ──
+    cfg = get_config_geral()
+    if cfg.pix_manual_ativo:
+        DESCONTO_PIX_PERCENT = Decimal('10')
+        valor_com_desconto_pix = (total * (1 - DESCONTO_PIX_PERCENT / 100)).quantize(Decimal('0.01'))
+        return jsonify({
+            'pix_manual':   True,
+            'numero':       pedido.numero,
+            'pedido_id':    pedido.id,
+            'valor_total':  float(total),
+            'valor_pix':    float(valor_com_desconto_pix),
+            'pix_chave':    cfg.pix_chave,
+            'pix_nome':     cfg.pix_nome,
+            'pix_cidade':   cfg.pix_cidade,
+            'wpp':          cfg.wpp_numero
+        })
+
     # ── Asaas: criar/buscar cliente ──
     try:
         customer_id = asaas_obter_ou_criar_cliente(
@@ -859,6 +884,30 @@ def admin_listar_numeros(sorteio_id):
     } for n in s.numeros]
     return jsonify(numeros)
 
+# ─── API: CONFIG PIX MANUAL ──────────────────────────────────────
+
+@app.route('/api/pix-config')
+def api_pix_config():
+    """Retorna se o PIX manual está ativo e os dados necessários pro frontend."""
+    cfg = get_config_geral()
+    return jsonify({
+        'ativo':   cfg.pix_manual_ativo,
+        'chave':   cfg.pix_chave,
+        'nome':    cfg.pix_nome,
+        'cidade':  cfg.pix_cidade,
+        'wpp':     cfg.wpp_numero
+    })
+
+@app.route('/admin/config/pix-manual', methods=['POST'])
+def admin_toggle_pix_manual():
+    if not admin_logado(): abort(401)
+    cfg = get_config_geral()
+    data = request.json or {}
+    if 'ativo' in data:
+        cfg.pix_manual_ativo = bool(data['ativo'])
+    db.session.commit()
+    return jsonify({'ok': True, 'ativo': cfg.pix_manual_ativo})
+
 # ─── ADMIN: AGENDA ────────────────────────────────────────────────
 
 @app.route('/admin/agenda')
@@ -1041,6 +1090,14 @@ def migrate_sorteio_status():
             print("✅ Coluna status adicionada em numeros_sorteio")
         except Exception as e:
             print(f"ℹ️ {e} (pode já existir)")
+
+@app.cli.command('migrate-config-geral')
+def migrate_config_geral():
+    """Cria tabela config_geral se não existir."""
+    with app.app_context():
+        db.create_all()
+        get_config_geral()  # garante que o registro padrão existe
+        print("✅ Tabela config_geral criada/verificada")
 
 # ─── INICIALIZAÇÃO ────────────────────────────────────────────────
 

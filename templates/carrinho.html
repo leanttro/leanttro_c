@@ -922,7 +922,8 @@ async function finalizarPedido(numeroSorteio) {
       endereco:        document.getElementById('endereco')?.value || '',
       servico_frete:   servicoFrete,
       valor_frete:     freteValor,
-      numero_sorteio:  numeroSorteio
+      numero_sorteio:  numeroSorteio,
+      forcar_cartao:   true
     })
   });
 

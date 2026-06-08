@@ -569,7 +569,8 @@ def criar_preferencia():
 
     # ── Verifica modo PIX manual ──
     cfg = get_config_geral()
-    if cfg.pix_manual_ativo:
+    forcar_cartao = data.get('forcar_cartao', False)
+    if cfg.pix_manual_ativo and not forcar_cartao:
         DESCONTO_PIX_PERCENT = Decimal('10')
         valor_com_desconto_pix = (total * (1 - DESCONTO_PIX_PERCENT / 100)).quantize(Decimal('0.01'))
         return jsonify({

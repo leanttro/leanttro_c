@@ -826,7 +826,9 @@ async function pagarPix() {
     })
   }).then(r => r.json()).then(data => {
     if (data.pix_manual) {
+      const carrinhoBackup = [...carrinho];
       localStorage.removeItem('carrinho');
+      carrinho = carrinhoBackup;
       mostrarPixManual(data);
     } else if (data.init_point) {
       localStorage.removeItem('carrinho');
@@ -850,7 +852,7 @@ async function pagar() {
   if (!cpf || cpf.length !== 11) return alert('Preencha o CPF corretamente');
   if (tipoEntrega === 'envio' && !servicoFrete) return alert('Selecione uma opção de frete');
 
-  carrinho = getCarrinho();
+  if (!carrinho.length) carrinho = getCarrinho();
   if (!carrinho.length) return alert('Carrinho vazio');
 
   // Busca números disponíveis do sorteio
